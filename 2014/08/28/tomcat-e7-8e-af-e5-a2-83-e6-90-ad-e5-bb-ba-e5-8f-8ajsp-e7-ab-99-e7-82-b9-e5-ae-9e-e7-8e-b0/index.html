@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.8.0">
+    
+
+    
+
+    
+
+
+
+    <meta charset="utf-8">
+    
+    
+    
+    
+    <title>Tomcat环境搭建及jsp站点实现 | 运维人 | Devops、Linux、Kubernetes、Docker、Flask、Python、Shell</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    
+    <meta name="theme-color" content="#3F51B5">
+    
+    
+    <meta name="keywords" content="Java,jdk,tomcat">
+    <meta name="description" content="安装JDK(配置java环境)： 环境：CentOS6.5_x86-64bit 一、先安装JVM 1.使用7版本的jdk(到官网下载相应的软件包到本地http://www.oracle.com/technetwork/java/javase/downloads/java-archive-downloads-javase7-521261.html#jre-7u9-oth-JPR) [root@l">
+<meta name="keywords" content="Java,jdk,tomcat">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Tomcat环境搭建及jsp站点实现">
+<meta property="og:url" content="https://blog.sctux.com/2014/08/28/tomcat-e7-8e-af-e5-a2-83-e6-90-ad-e5-bb-ba-e5-8f-8ajsp-e7-ab-99-e7-82-b9-e5-ae-9e-e7-8e-b0/index.html">
+<meta property="og:site_name" content="运维人">
+<meta property="og:description" content="安装JDK(配置java环境)： 环境：CentOS6.5_x86-64bit 一、先安装JVM 1.使用7版本的jdk(到官网下载相应的软件包到本地http://www.oracle.com/technetwork/java/javase/downloads/java-archive-downloads-javase7-521261.html#jre-7u9-oth-JPR) [root@l">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2014/08/wpid-d698a595a631e5b1f4c10780198b6dc9_c8b5d927-ed11-4825-ac80-c5f047b7c4a0.jpg">
+<meta property="og:image" content="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2014/08/tomcat.png)">
+<meta property="og:image" content="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2014/08/tomcat1.png">
+<meta property="og:image" content="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2014/08/tomcat2.png">
+<meta property="og:image" content="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2014/08/tomcat3.png">
+<meta property="og:image" content="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2014/08/tomcat4.png">
+<meta property="og:image" content="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2014/08/tomcat5.png">
+<meta property="og:updated_time" content="2018-12-19T14:39:54.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Tomcat环境搭建及jsp站点实现">
+<meta name="twitter:description" content="安装JDK(配置java环境)： 环境：CentOS6.5_x86-64bit 一、先安装JVM 1.使用7版本的jdk(到官网下载相应的软件包到本地http://www.oracle.com/technetwork/java/javase/downloads/java-archive-downloads-javase7-521261.html#jre-7u9-oth-JPR) [root@l">
+<meta name="twitter:image" content="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2014/08/wpid-d698a595a631e5b1f4c10780198b6dc9_c8b5d927-ed11-4825-ac80-c5f047b7c4a0.jpg">
+    
+    <link rel="shortcut icon" href="/favicon.ico">
+    <link rel="stylesheet" href="/css/style.css?v=1.7.2">
+    <script>window.lazyScripts=[]</script>
+
+    <!-- custom head -->
+    
+
+</head>
+
+<body>
+    <div id="loading" class="active"></div>
+
+    <aside id="menu">
+  <div class="inner flex-row-vertical">
+    <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menu-off">
+        <i class="icon icon-lg icon-close"></i>
+    </a>
+    <div class="brand-wrap" style="background-image:url(/img/brand.jpg)">
+      <div class="brand">
+        <a href="/" class="avatar waves-effect waves-circle waves-light">
+          <img src="/img/avatar.jpg">
+        </a>
+        <hgroup class="introduce">
+          <h5 class="nickname">OutMan</h5>
+          <a href="mailto:2399447849@qq.com" title="2399447849@qq.com" class="mail">2399447849@qq.com</a>
+        </hgroup>
+      </div>
+    </div>
+    <div class="scroll-wrap flex-col">
+      <ul class="nav">
+        
+            <li class="waves-block waves-effect">
+              <a href="/">
+                <i class="icon icon-lg icon-home"></i>
+                主页
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/archives">
+                <i class="icon icon-lg icon-archives"></i>
+                归档
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/tags">
+                <i class="icon icon-lg icon-tags"></i>
+                标签
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/categories">
+                <i class="icon icon-lg icon-th-list"></i>
+                分类
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://github.com/guomaoqiu" target="_blank">
+                <i class="icon icon-lg icon-github"></i>
+                Github
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/works">
+                <i class="icon icon-lg icon-hand-peace-o"></i>
+                作品
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="http://demo.sctux.com" target="_blank">
+                <i class="icon icon-lg icon-link"></i>
+                DevOpsPlatform
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="http://resume.sctux.com/" target="_blank">
+                <i class="icon icon-lg icon-heart"></i>
+                我的简历
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/about">
+                <i class="icon icon-lg icon-user"></i>
+                关于我
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://blog.sctux.com/2019/02/27/skilltree/Skilltree.jpg" target="_blank">
+                <i class="icon icon-lg icon-tree"></i>
+                我的技能树
+              </a>
+            </li>
+        
+      </ul>
+    </div>
+  </div>
+</aside>
+
+    <main id="main">
+        <header class="top-header" id="header">
+    <div class="flex-row">
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light on" id="menu-toggle">
+          <i class="icon icon-lg icon-navicon"></i>
+        </a>
+        <div class="flex-col header-title ellipsis">Tomcat环境搭建及jsp站点实现</div>
+        
+        <div class="search-wrap" id="search-wrap">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="back">
+                <i class="icon icon-lg icon-chevron-left"></i>
+            </a>
+            <input type="text" id="key" class="search-input" autocomplete="off" placeholder="输入感兴趣的关键字">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="search">
+                <i class="icon icon-lg icon-search"></i>
+            </a>
+        </div>
+        
+        
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menuShare">
+            <i class="icon icon-lg icon-share-alt"></i>
+        </a>
+        
+    </div>
+</header>
+<header class="content-header post-header">
+
+    <div class="container fade-scale">
+        <h1 class="title">Tomcat环境搭建及jsp站点实现</h1>
+        <h5 class="subtitle">
+            
+                <time datetime="2014-08-28T03:31:53.000Z" itemprop="datePublished" class="page-time">
+  2014-08-28
+</time>
+
+
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/Web相关/">Web相关</a></li></ul>
+
+            
+        </h5>
+    </div>
+
+    
+
+
+</header>
+
+
+<div class="container body-wrap">
+    
+
+<article id="post-tomcat-e7-8e-af-e5-a2-83-e6-90-ad-e5-bb-ba-e5-8f-8ajsp-e7-ab-99-e7-82-b9-e5-ae-9e-e7-8e-b0"
+  class="post-article article-type-post fade" itemprop="blogPost">
+
+    <div class="post-card">
+        <h1 class="post-card-title">Tomcat环境搭建及jsp站点实现</h1>
+        <div class="post-meta">
+            <time class="post-time" title="2014-08-28 11:31:53" datetime="2014-08-28T03:31:53.000Z" itemprop="datePublished">2014-08-28</time>
+
+            
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/Web相关/">Web相关</a></li></ul>
+
+
+
+            
+
+        </div>
+        <div class="post-content" id="post-content" itemprop="postContent">
+            <p>  安装JDK(配置java环境)： 环境：CentOS6.5_x86-64bit 一、先安装JVM 1.使用7版本的jdk(到官网下载相应的软件包到本地<a href="http://www.oracle.com/technetwork/java/javase/downloads/java-archive-downloads-javase7-521261.html#jre-7u9-oth-JPR" target="_blank" rel="noopener">http://www.oracle.com/technetwork/java/javase/downloads/java-archive-downloads-javase7-521261.html#jre-7u9-oth-JPR</a>)</p>
+<p>[root@localhost ~]# rpm -ivh jdk-7u9-linux-x64.rpm<br>Preparing… ########################################### [100%]<br>1:jdk ########################################### [100%]<br>Unpacking JAR files…<br>rt.jar…<br>Error: Could not open input file: /usr/java/jdk1.7.0_09/jre/lib/rt.pack<br>jsse.jar..<br>Error: Could not open input file: /usr/java/jdk1.7.0_09/jre/lib/jsse.pack<br>charsets.jar…<br>Error: Could not open input file: /usr/java/jdk1.7.0_09/jre/lib/charsets.pack<br>tools.jar…<br>Error: Could not open input file: /usr/java/jdk1.7.0_09/lib/tools.pack<br>localedata.jar…<br>Error: Could not open input file: /usr/java/jdk1.7.0_09/jre/lib/ext/localedata.pack</p>
+<p>#-&gt;以上那些错误可以忽略，不影响jdk到安装和使用</p>
+<p>2.安装后生成的文件：</p>
+<p>[root@localhost ~]# cd /usr/java/<br>[root@localhost java]# ll<br>total 4<br>lrwxrwxrwx 1 root root 16 May 6 10:58 default -&gt; /usr/java/latest<br>drwxr-xr-x 10 root root 4096 May 6 10:58 jdk1.7.0_09<br>lrwxrwxrwx 1 root root 21 May 6 10:58 latest -&gt; /usr/java/jdk1.7.0_09</p>
+<p>3.修改java环境变量：</p>
+<p>[root@localhost ~]# vim /etc/profile.d/java.sh<br>export JAVA_HOME=/usr/java/latest<br>export PATH=$JAVA_HOME/bin:$PATH<br>[root@localhost ~]# . /etc/profile.d/java.sh</p>
+<p>4.测试java环境是否可用.</p>
+<p>[root@localhost java]# java -version<br>java version “1.7.0_09”<br>Java(TM) SE Runtime Environment (build 1. 7.0_09-b05)<br>Java HotSpot(TM) 64-Bit Server VM (build 23.5-b02, mixed mode)<br>[root@localhost java]#</p>
+<p>此时只是部署好了java环境,而并非运行任何的JAVA程序,而Tomcat就是运行在这个环境上面的JAVA程序 二、安装配置tomcat 1.获取软件包并解压安装：</p>
+<p>[root@localhost ~]# wget <a href="http://apache.fayea.com/apache-mirror/tomcat/tomcat-7/v7.0.55/bin/apache-tomcat-7.0.55.tar.gz" target="_blank" rel="noopener">http://apache.fayea.com/apache-mirror/tomcat/tomcat-7/v7.0.55/bin/apache-tomcat-7.0.55.tar.gz</a><br>[root@localhost ~]# tar -xf apache-tomcat-7.0.55.tar.gz -C /usr/local/<br>[root@localhost ~]# cd /usr/local/<br>[root@localhost local]# ln -sv apache-tomcat-7.0.5 tomcat<br>`tomcat’ -&gt; `apache-tomcat-7.0.55’<br>[root@localhost local]# cd tomcat/<br>[root@localhost tomcat]#</p>
+<p>2.更改tomcat环境变量：</p>
+<p>[root@localhost ~]# vim /etc/profile.d/tomcat.sh<br>export CATALINA_HOME=/usr/local/tomcat<br>export PATH=$CATALINA_HOME/bin/:$PATH<br>[root@localhost ~]# . /etc/profile.d/tomcat</p>
+<p>3.启动tomcat</p>
+<p>[root@localhost tomcat]# catalina.sh start</p>
+<p>4.验证是否启动</p>
+<p>[root@localhost tomcat]# ss -tunlp | grep java<br>tcp LISTEN 0 100 :::8080 :::<em> users:((“java”,25953,42))<br>tcp LISTEN 0 1 ::ffff:127.0.0.1:8005 :::</em> users:((“java”,25953,46))<br>tcp LISTEN 0 100 :::8009 :::* users:((“java”,25953,43))</p>
+<p>#—&gt;注意三个端口，每一个单独的java程序都是由一个jvm来运行的.<br>[root@localhost tomcat]# jps<br>25953 Bootstrap #—&gt;这个进程是tomcat启动时为了实现其加速的一个程序.有这个进程则表示启动成功.<br>25995 Jps<br>[root@localhost tomcat]#</p>
+<p>5.网页访问测试：<a href="http://IP:8080" target="_blank" rel="noopener">http://IP:8080</a> 现在tomcat已经启动了,注意上图中的三个按钮,后续说. [<figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2014/08/wpid-d698a595a631e5b1f4c10780198b6dc9_c8b5d927-ed11-4825-ac80-c5f047b7c4a0.jpg" alt="wpid-d698a595a631e5b1f4c10780198b6dc9_c8b5d927-ed11-4825-ac80-c5f047b7c4a0.jpg](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2014/08/wpid-d698a595a631e5b1f4c10780198b6dc9_c8b5d927-ed11-4825-ac80-c5f047b7c4a0-600x348.jpg)" title="">
+                </div>
+                <div class="image-caption">wpid-d698a595a631e5b1f4c10780198b6dc9_c8b5d927-ed11-4825-ac80-c5f047b7c4a0.jpg](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2014/08/wpid-d698a595a631e5b1f4c10780198b6dc9_c8b5d927-ed11-4825-ac80-c5f047b7c4a0-600x348.jpg)</div>
+            </figure> 6.为了方便管理tomcat，为其提供SysV管理脚本.</p>
+<p>[root@localhost ~]# vim /etc/rc.d/init.d/tomcat</p>
+<p>#!/bin/sh<br># Tomcat init script for Linux.<br>#<br># chkconfig: 2345 96 14<br># description: The Apache Tomcat servlet/JSP container.<br>JAVA_HOME=/usr/java/latest<br>CATALINA_HOME=/usr/local/tomcat<br>export JAVA_HOME CATALINA_HOME<br>. /etc/init.d/functions</p>
+<p>case $1 in<br>start)<br>  $CATALINA_HOME/bin/catalina.sh start &amp;&gt;/dev/null;;<br>stop)<br>  $CATALINA_HOME/bin/catalina.sh stop &amp;&gt;/dev/null;;<br>  restart)<br>$CATALINA_HOME/bin/catalina.sh stop &amp;&gt;/dev/null<br>  sleep 2<br>  $CATALINA_HOME/bin/catalina.sh start &amp;&gt;/dev/null;;<br>*)<br>  echo “Usage:`basename $0` {start|stop|restart}”<br>exit 1<br>;;<br>esac<br>[root@localhost ~]# chmod +X /etc/rc.d/init.d/tomcat<br>[root@localhost ~]# chkconfig –add tomcat</p>
+<p>#-&gt;通过上面这个服务控制脚本就可以控制tomcat的启动、关闭等操作了;</p>
+<p>7.Tomcat 配置文件配置层次： Tomcat是一个基于组件的服务器，它的构成组件都是可配置的，其中最外层的给件是CATALINA SERVLET容器，其他的组件按照一定的格式要求配置在这个顶层容器中。Tomcat的各个组件是server.xml文件中配置的，Tomcat服务器默认情况下对各种组件都有默认的实现，下面通过分析server.xml文件来理解Tomcat的各个组件是如何组织的。</p>
+<server>    #—&gt;顶层组件，代表一个服务器<br>     <service>    #—&gt;顶层组件，是Connector的集合，将连接器关联至engine；因此一个service内部可以有多个connector，但只能有一个engine<br>          <connector>    #—&gt;连接器类组件，代表通信接口<br>          <engine>    #—&gt;容器类组件，为特定的Service组件处理所有客户请求，可包含多个Host<br>               <host>    #—&gt;为特定的虚拟主机处理所有客户请求<br>                    <context>    #—&gt;为特定的WEB应用处理所有客户请求<br>                    </context><br>               </host><br>               <host><br>               </host><br>          </engine><br>     </connector></service><br></server>
+
+<p>详述这些组件： <strong>顶级组件：</strong>位于整个配置的顶层； <strong>容器类：</strong>可以包含其它组件的组件；<br>     engine: 核心容器，catalina引擎，负责通过connector接收用户请求,在一个engin内部可以有多个host<br>     host: 类似于httpd中的虚拟主机；支持基于FQDN的虚拟主机<br>     context: 最内层的容器类组件，一个context代表一个web应用程序；配置context的主要目的，指定对应的webapp的根目录；还能为webapp指定额外的属性，如部署方式等； <strong>连接器组件：</strong>连接用户请求至tomcat； 两类连接器： 1.基于HTTP 协议 2.基于AJP 二进制协议,使用httpd反向代理用户请求至tomcat时,在httpd和tomcat之间使用.被嵌套类的组件：位于一个容器当中，不能包含其它组件； <strong>被嵌套类的组件：</strong>位于一个容器当中，不能包含其它组件； valve: 拦截请求并在将其转至对应的webapp之前进行某种处理操作；可以用于任何容器中；<br>          access log valve:<br>          remote address filter value: 基于IP做访问控制<br>          logger: 日志记录器，用于记录组件 内部的状态信息(可用于除context之外的任何容器中)<br>          realm: 可以用于任何容器类的组件中，关联一个用户认证库，实现认证和授权；<br>          UserDatabaseRealm: 使用JNDI自定义的用户认证库；<br>          MemoryRealm: tomcat-users.xml中<br>          JDBCRealm: 基于JDBC连接至数据库中查找用户； <strong>部署:</strong>使用类加载器,为webapp准备好其依赖所有类. 8.服务端口说明： 在我们启动之后有3个端口：8005，8009，8080 <strong>8005</strong>  ==&gt;位于server顶级组件当中,它监听于本地&lt;127.0.0.1&gt; 通过这个port我们可以直接在本地关闭tomcat应用程序,以及java进程. 如下： (1)在本机安装telnet ; </p>
+<p>[root@localhost ~]# yum install -y telnet</p>
+<p>(2)连接本机8005port,发送”SHUTDOWN”指令</p>
+<p>[root@localhost ~]# telnet localhost 8005  #–&gt;telnet本地8005port<br>Trying ::1…<br>telnet: connect to address ::1: Connection refused<br>Trying 127.0.0.1…<br>Connected to localhost.<br>Escape character is ‘^]‘.<br>SHUTDOWN     #–&gt;发送”SHUTDOWN”指令！<br>Connection closed by foreign host.<br>[root@node1 ~]# ss -tunlp | grep java  #–&gt;此时再去检查端口,显示没有,说明我们通过telnet已经发送指令将其关闭成功啦,危险系数较高,配置服务安全性时需注意！<br>[root@node1 ~]# service tomcat start   #–&gt;再次启动,检查端口正常否.<br>[root@node1 ~]# ss -tunlp | grep java<br>tcp    LISTEN     0      100                   :::8080                 :::<em>      users:((“java”,6430,42))<br>tcp    LISTEN     0      1       ::ffff:127.0.0.1:8005                 :::</em>      users:((“java”,6430,46))<br>tcp    LISTEN     0      100                   :::8009                 :::*      users:((“java”,6430,43))<br>[root@node1 ~]#</p>
+<p><strong> 8009，8080  ==&gt;</strong>前面已说到了在连接器组件当中有个<connector>,他们在这个组件当中分别对应了两种协议. 8009   基于AJD协议 8080  基于http协议,当然在<connector>中可以添加各种参数,例如”address”等,默认配置文件中没有指定ip地址,默认就是监听所有.这个端口一般修改为80. 三、虚拟主机定义： (1)创建网页目录：</connector></connector></p>
+<p>[root@node1 ~]# mkdir /www/webapps/ROOT</p>
+<p>(2)创建网页测试文件:</p>
+<p>[root@localhost ~]# vim /www/webapps/ROOT/index.jsp<br>&lt;%@ page language=”java” %&gt;<br>&lt;%@ page import=”java.util.*” %&gt;</p>
+<html><br>  <head><meta name="generator" content="Hexo 3.8.0"><br>    <title>JSP test page.</title><br>  </head><br>  <body><br>    &lt;% out.println(“Hello,world!”); %&gt;<br>  </body><br></html>
+
+<p>(3)修改配置文件如下：</p>
+<p>[root@node1 ~]# vim /usr/local/tomcat/conf/server.xml<br>……<br>……<br>  <connector port="80" protocol="HTTP/1.1" connectiontimeout="20000" redirectport="8443"><br>…..<br>…..</connector></p>
+<p><host name="www.aaa.com" appbase="/www/webapps" unpackwars="true" autodeploy="true"><br>             <context path="" docbase="ROOT" reloadable="true"><br>         <valve classname="org.apache.catalina.valves.AccessLogValve" directory="logs" #-="">日志保存格式<br>                        prefix=”<a href="http://www.aaa.www_log.&quot;" target="_blank" rel="noopener">www.aaa.www_log.&quot;</a> suffix=”.txt”<br>                        pattern=”%h %l %u %t &quot;%r&quot; %s %b” /&gt;<br></valve></context></host><br>……<br>……</p>
+<p>(4)重启服务测试：</p>
+<p>[root@localhost ~]# service tomcat restart</p>
+<p>[<figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2014/08/tomcat.png)" alt="tomcat](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2014/08/tomcat.png)" title="注意:此处我已经对该服务器做了解析.">
+                </div>
+                <div class="image-caption">注意:此处我已经对该服务器做了解析.</div>
+            </figure>虚拟主机的别名机制：</p>
+<p>[root@node1 ~]# vim /usr/local/tomcat/conf/server.xml<br>……<br>……<br>  <connector port="80" protocol="HTTP/1.1" connectiontimeout="20000" redirectport="8443"><br>…..<br>…..</connector></p>
+<p><host name="www.aaa.com" appbase="/www/webapps" unpackwars="true" autodeploy="true"><br>             <context path="" docbase="ROOT" reloadable="true"><br>             <context path="/bbs" docbase="/www/webapps/bbsapp" reloadable="true">  #—&gt;在原有虚拟主机中添加一个Context<br>         <valve classname="org.apache.catalina.valves.AccessLogValve" directory="logs" #-="">日志保存格式<br>                        prefix=”<a href="http://www.aaa.www_log.&quot;" target="_blank" rel="noopener">www.aaa.www_log.&quot;</a> suffix=”.txt”<br>                        pattern=”%h %l %u %t &quot;%r&quot; %s %b” /&gt;<br></valve></context></context></host><br>……</p>
+<p>#—&gt;创建目录bbsapp<br>[root@localhost ~]# mkdir /www/webapps/bbsapp </p>
+<p>#—&gt;创建测试文件<br>[root@localhost ~]# cp /www/webapps/ROOT/index.jsp /www/webapps/bbsapp/index.jsp</p>
+<p>#—&gt;编辑测试文件,与上面的不同即可<br>[root@localhost ~]# vim /www/webapps/bbsapp/index.jsp</p>
+<p>#—&gt;重启服务测试<br>[root@localhost ~]# service tomcat restart<br>[root@localhost ~]#<br>……</p>
+<p><a href="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2014/08/tomcat1.png" target="_blank" rel="noopener"><img src="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2014/08/tomcat1.png" alt="tomcat"></a> 四、服务状态信息&amp;Dashboard: 在最前面的那种图片当中我们看到了tomcat服务的默认界面有三个按钮： <a href="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2014/08/tomcat2.png" target="_blank" rel="noopener"><img src="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2014/08/tomcat2.png" alt="tomcat"></a>   当我们点击”Server Status”时,需要身份验证： <a href="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2014/08/tomcat3.png" target="_blank" rel="noopener"><img src="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2014/08/tomcat3.png" alt="tomcat"></a> 点击”取消”,网页会提示我们如何去修改,并能够登录查看状态等信息. <a href="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2014/08/tomcat4.png" target="_blank" rel="noopener"><img src="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2014/08/tomcat4.png" alt="tomcat"></a>  那就去修改这个配置文件吧：</p>
+<p>[root@localhost ~]# vim /usr/local/tomcat/conf/tomcat-users.xml<br>……<br>……</p>
+<p><role rolename="manager-gui"></role></p>
+<p><user username="tomcat" password="tomcat" roles="manager-gui"><br>……<br>……</user></p>
+<p>#—&gt;重启服务<br>[root@varnish ~]# service tomcat restart</p>
+<p>#—&gt;#测试：(这里只是状态界面,如果想看其他请看帮助信息)</p>
+<p>[<figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2014/08/tomcat5.png" alt="tomcat](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2014/08/tomcat5.png)" title="">
+                </div>
+                <div class="image-caption">tomcat](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2014/08/tomcat5.png)</div>
+            </figure></p>
+
+        </div>
+
+        <blockquote class="post-copyright">
+    
+    <div class="content">
+        
+<span class="post-time">
+    最后更新时间：<time datetime="2018-12-19T14:39:54.000Z" itemprop="dateUpdated">2018-12-19 22:39:54</time>
+</span><br>
+
+
+        
+        该文链接：<a href="/2014/08/28/tomcat-e7-8e-af-e5-a2-83-e6-90-ad-e5-bb-ba-e5-8f-8ajsp-e7-ab-99-e7-82-b9-e5-ae-9e-e7-8e-b0/" target="_blank" rel="external">https://blog.sctux.com/2014/08/28/tomcat-e7-8e-af-e5-a2-83-e6-90-ad-e5-bb-ba-e5-8f-8ajsp-e7-ab-99-e7-82-b9-e5-ae-9e-e7-8e-b0/</a>
+        
+    </div>
+    
+    <footer>
+        <a href="https://blog.sctux.com">
+            <img src="/img/avatar.jpg" alt="OutMan">
+            OutMan
+        </a>
+    </footer>
+</blockquote>
+
+        
+<div class="page-reward">
+    <a id="rewardBtn" href="javascript:;" class="page-reward-btn waves-effect waves-circle waves-light">赏</a>
+</div>
+
+
+
+        <div class="post-footer">
+            
+	<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java/">Java</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/jdk/">jdk</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/tomcat/">tomcat</a></li></ul>
+
+
+            
+<div class="page-share-wrap">
+    
+
+<div class="page-share" id="pageShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://blog.sctux.com/2014/08/28/tomcat-e7-8e-af-e5-a2-83-e6-90-ad-e5-bb-ba-e5-8f-8ajsp-e7-ab-99-e7-82-b9-e5-ae-9e-e7-8e-b0/&title=《Tomcat环境搭建及jsp站点实现》 — 运维人&pic=https://blog.sctux.com/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://blog.sctux.com/2014/08/28/tomcat-e7-8e-af-e5-a2-83-e6-90-ad-e5-bb-ba-e5-8f-8ajsp-e7-ab-99-e7-82-b9-e5-ae-9e-e7-8e-b0/&title=《Tomcat环境搭建及jsp站点实现》 — 运维人&source=😊" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.sctux.com/2014/08/28/tomcat-e7-8e-af-e5-a2-83-e6-90-ad-e5-bb-ba-e5-8f-8ajsp-e7-ab-99-e7-82-b9-e5-ae-9e-e7-8e-b0/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《Tomcat环境搭建及jsp站点实现》 — 运维人&url=https://blog.sctux.com/2014/08/28/tomcat-e7-8e-af-e5-a2-83-e6-90-ad-e5-bb-ba-e5-8f-8ajsp-e7-ab-99-e7-82-b9-e5-ae-9e-e7-8e-b0/&via=https://blog.sctux.com" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=https://blog.sctux.com/2014/08/28/tomcat-e7-8e-af-e5-a2-83-e6-90-ad-e5-bb-ba-e5-8f-8ajsp-e7-ab-99-e7-82-b9-e5-ae-9e-e7-8e-b0/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+
+    <a href="javascript:;" id="shareFab" class="page-share-fab waves-effect waves-circle">
+        <i class="icon icon-share-alt icon-lg"></i>
+    </a>
+</div>
+
+
+
+        </div>
+    </div>
+
+    
+<nav class="post-nav flex-row flex-justify-between">
+  
+    <div class="waves-block waves-effect prev">
+      <a href="/2014/10/31/lvskeepalived/" id="post-prev" class="post-nav-link">
+        <div class="tips"><i class="icon icon-angle-left icon-lg icon-pr"></i> Prev</div>
+        <h4 class="title">LVS+Keepalived</h4>
+      </a>
+    </div>
+  
+
+  
+    <div class="waves-block waves-effect next">
+      <a href="/2014/08/27/snmp-e5-8d-8f-e8-ae-ae-e8-af-a6-e8-a7-a3/" id="post-next" class="post-nav-link">
+        <div class="tips">Next <i class="icon icon-angle-right icon-lg icon-pl"></i></div>
+        <h4 class="title">Snmp协议详解</h4>
+      </a>
+    </div>
+  
+</nav>
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Valine Comments -->
+    <div class="comments vcomment" id="comments"></div>
+    <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+    <script src="//unpkg.com/valine@latest/dist/Valine.min.js"></script>
+    <!-- Valine Comments script -->
+    <script>
+        var GUEST_INFO = ['nick','mail','link'];
+        var guest_info = 'nick,mail,link'.split(',').filter(function(item){
+          return GUEST_INFO.indexOf(item) > -1
+        });
+        new Valine({
+            el: '#comments',
+            notify: 'true' == 'true',
+            verify: 'true' == 'true',
+            appId: "lHxnnDHJXDgMoFpCbdx8A4q7-gzGzoHsz",
+            appKey: "W8H2NuO8chyDlCEQzionLuuV",
+            avatar: "monsterid",
+            placeholder: "来都来了，说点啥子吧~🌹 (友情提醒，留下正确的邮箱地址可以第一时间获取评论反馈)",
+            guest_info: guest_info.length == 0 ? GUEST_INFO : guest_info,
+            pageSize: "10"
+        })
+    </script>
+    <!-- Valine Comments end -->
+
+
+
+
+
+
+
+</article>
+
+<div id="reward" class="page-modal reward-lay">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <h3 class="reward-title">
+        <i class="icon icon-quote-left"></i>
+        谢谢大爷~
+        <i class="icon icon-quote-right"></i>
+    </h3>
+    <div class="reward-content">
+        
+        <div class="reward-code">
+            <img id="rewardCode" src="/img/wechat.jpg" alt="打赏二维码">
+        </div>
+        
+        <label class="reward-toggle">
+            <input id="rewardToggle" type="checkbox" class="reward-toggle-check" data-wechat="/img/wechat.jpg" data-alipay="/img/alipay.jpg">
+            <div class="reward-toggle-ctrol">
+                <span class="reward-toggle-item wechat">微信</span>
+                <span class="reward-toggle-label"></span>
+                <span class="reward-toggle-item alipay">支付宝</span>
+            </div>
+        </label>
+        
+    </div>
+</div>
+
+
+
+</div>
+
+        <footer class="footer">
+    <div class="top">
+        
+
+        <p>
+            
+            <span>博客内容遵循 <a rel="license" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh">知识共享 署名 - 非商业性 - 相同方式共享 4.0 国际协议</a></span>
+        </p>
+    </div>
+    <div class="bottom">
+        <p><span>OutMan &copy; 2013 - 2019</span>
+            <span>
+                
+                <a href="http://www.miitbeian.gov.cn/" target="_blank">蜀ICP备007号-1</a><br>
+                
+                Power by <a href="http://hexo.io/" target="_blank">Hexo</a> Theme <a href="https://github.com/yscoder/hexo-theme-indigo" target="_blank">indigo</a>
+            </span>
+        </p>
+    </div>
+</footer>
+
+    </main>
+    <div class="mask" id="mask"></div>
+<a href="javascript:;" id="gotop" class="waves-effect waves-circle waves-light"><span class="icon icon-lg icon-chevron-up"></span></a>
+
+
+
+<div class="global-share" id="globalShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://blog.sctux.com/2014/08/28/tomcat-e7-8e-af-e5-a2-83-e6-90-ad-e5-bb-ba-e5-8f-8ajsp-e7-ab-99-e7-82-b9-e5-ae-9e-e7-8e-b0/&title=《Tomcat环境搭建及jsp站点实现》 — 运维人&pic=https://blog.sctux.com/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://blog.sctux.com/2014/08/28/tomcat-e7-8e-af-e5-a2-83-e6-90-ad-e5-bb-ba-e5-8f-8ajsp-e7-ab-99-e7-82-b9-e5-ae-9e-e7-8e-b0/&title=《Tomcat环境搭建及jsp站点实现》 — 运维人&source=😊" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.sctux.com/2014/08/28/tomcat-e7-8e-af-e5-a2-83-e6-90-ad-e5-bb-ba-e5-8f-8ajsp-e7-ab-99-e7-82-b9-e5-ae-9e-e7-8e-b0/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《Tomcat环境搭建及jsp站点实现》 — 运维人&url=https://blog.sctux.com/2014/08/28/tomcat-e7-8e-af-e5-a2-83-e6-90-ad-e5-bb-ba-e5-8f-8ajsp-e7-ab-99-e7-82-b9-e5-ae-9e-e7-8e-b0/&via=https://blog.sctux.com" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=https://blog.sctux.com/2014/08/28/tomcat-e7-8e-af-e5-a2-83-e6-90-ad-e5-bb-ba-e5-8f-8ajsp-e7-ab-99-e7-82-b9-e5-ae-9e-e7-8e-b0/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+<div class="page-modal wx-share" id="wxShare">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <img src="//api.qrserver.com/v1/create-qr-code/?data=https://blog.sctux.com/2014/08/28/tomcat-e7-8e-af-e5-a2-83-e6-90-ad-e5-bb-ba-e5-8f-8ajsp-e7-ab-99-e7-82-b9-e5-ae-9e-e7-8e-b0/" alt="微信分享二维码">
+</div>
+
+
+
+
+    <script src="//cdn.bootcss.com/node-waves/0.7.4/waves.min.js"></script>
+<script>
+var BLOG = { ROOT: '/', SHARE: true, REWARD: true };
+
+
+</script>
+
+<script src="/js/main.min.js?v=1.7.2"></script>
+
+
+<div class="search-panel" id="search-panel">
+    <ul class="search-result" id="search-result"></ul>
+</div>
+<template id="search-tpl">
+<li class="item">
+    <a href="{path}" class="waves-block waves-effect">
+        <div class="title ellipsis" title="{title}">{title}</div>
+        <div class="flex-row flex-middle">
+            <div class="tags ellipsis">
+                {tags}
+            </div>
+            <time class="flex-col time">{date}</time>
+        </div>
+    </a>
+</li>
+</template>
+
+<script src="/js/search.min.js?v=1.7.2" async></script>
+
+
+
+
+
+
+
+
+<script>
+(function() {
+    var OriginTitile = document.title, titleTime;
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            document.title = '老弟，死哪儿去啦~！';
+            clearTimeout(titleTime);
+        } else {
+            document.title = '(つェ⊂)咦!老弟来啦!';
+            titleTime = setTimeout(function() {
+                document.title = OriginTitile;
+            },2000);
+        }
+    });
+})();
+</script>
+
+
+
+</body>
+</html>

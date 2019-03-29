@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.8.0">
+    
+
+    
+
+    
+
+
+
+    <meta charset="utf-8">
+    
+    
+    
+    
+    <title>如何使用Celery(芹菜)异步神器执行后台任务 | 运维人 | Devops、Linux、Kubernetes、Docker、Flask、Python、Shell</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    
+    <meta name="theme-color" content="#3F51B5">
+    
+    
+    <meta name="keywords" content="Celery,Python">
+    <meta name="description" content="关于异步的知识网上很多，这里就直接上代码，目前结合Flask这个Python框架实现后台任务的执行操作； 1.需要了解的知识点: 了解生产消费模型或者发布订阅模式来实现消息队列 了解异步、同步之间的差别  2.实现过程(1)目录结构├── LICENSE ├── README.md ├── app                     // Flask APP应用 │   ├── __init_">
+<meta name="keywords" content="Celery,Python">
+<meta property="og:type" content="article">
+<meta property="og:title" content="如何使用Celery(芹菜)异步神器执行后台任务">
+<meta property="og:url" content="https://blog.sctux.com/2017/11/24/ru-he-shi-yongcelery-qin-cai-yi-bu-shen-qi-zhi-xin/index.html">
+<meta property="og:site_name" content="运维人">
+<meta property="og:description" content="关于异步的知识网上很多，这里就直接上代码，目前结合Flask这个Python框架实现后台任务的执行操作； 1.需要了解的知识点: 了解生产消费模型或者发布订阅模式来实现消息队列 了解异步、同步之间的差别  2.实现过程(1)目录结构├── LICENSE ├── README.md ├── app                     // Flask APP应用 │   ├── __init_">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2017/11/15115172368997.jpg">
+<meta property="og:image" content="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2017/11/15115170661909.jpg">
+<meta property="og:image" content="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2017/11/15115174358505.jpg">
+<meta property="og:image" content="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2017/11/15115175046963.jpg">
+<meta property="og:image" content="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2017/11/15115178118958.jpg">
+<meta property="og:image" content="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2017/11/15115175573963.jpg">
+<meta property="og:image" content="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2017/11/15115176602486.jpg">
+<meta property="og:image" content="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2017/11/15115182402670.jpg">
+<meta property="og:image" content="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2017/11/15115182685942.jpg">
+<meta property="og:image" content="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2017/11/15115213514662.jpg">
+<meta property="og:image" content="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2017/11/15115182945362.jpg">
+<meta property="og:updated_time" content="2018-12-19T14:39:54.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="如何使用Celery(芹菜)异步神器执行后台任务">
+<meta name="twitter:description" content="关于异步的知识网上很多，这里就直接上代码，目前结合Flask这个Python框架实现后台任务的执行操作； 1.需要了解的知识点: 了解生产消费模型或者发布订阅模式来实现消息队列 了解异步、同步之间的差别  2.实现过程(1)目录结构├── LICENSE ├── README.md ├── app                     // Flask APP应用 │   ├── __init_">
+<meta name="twitter:image" content="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2017/11/15115172368997.jpg">
+    
+    <link rel="shortcut icon" href="/favicon.ico">
+    <link rel="stylesheet" href="/css/style.css?v=1.7.2">
+    <script>window.lazyScripts=[]</script>
+
+    <!-- custom head -->
+    
+
+</head>
+
+<body>
+    <div id="loading" class="active"></div>
+
+    <aside id="menu">
+  <div class="inner flex-row-vertical">
+    <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menu-off">
+        <i class="icon icon-lg icon-close"></i>
+    </a>
+    <div class="brand-wrap" style="background-image:url(/img/brand.jpg)">
+      <div class="brand">
+        <a href="/" class="avatar waves-effect waves-circle waves-light">
+          <img src="/img/avatar.jpg">
+        </a>
+        <hgroup class="introduce">
+          <h5 class="nickname">OutMan</h5>
+          <a href="mailto:2399447849@qq.com" title="2399447849@qq.com" class="mail">2399447849@qq.com</a>
+        </hgroup>
+      </div>
+    </div>
+    <div class="scroll-wrap flex-col">
+      <ul class="nav">
+        
+            <li class="waves-block waves-effect">
+              <a href="/">
+                <i class="icon icon-lg icon-home"></i>
+                主页
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/archives">
+                <i class="icon icon-lg icon-archives"></i>
+                归档
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/tags">
+                <i class="icon icon-lg icon-tags"></i>
+                标签
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/categories">
+                <i class="icon icon-lg icon-th-list"></i>
+                分类
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://github.com/guomaoqiu" target="_blank">
+                <i class="icon icon-lg icon-github"></i>
+                Github
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/works">
+                <i class="icon icon-lg icon-hand-peace-o"></i>
+                作品
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="http://demo.sctux.com" target="_blank">
+                <i class="icon icon-lg icon-link"></i>
+                DevOpsPlatform
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="http://resume.sctux.com/" target="_blank">
+                <i class="icon icon-lg icon-heart"></i>
+                我的简历
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/about">
+                <i class="icon icon-lg icon-user"></i>
+                关于我
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://blog.sctux.com/2019/02/27/skilltree/Skilltree.jpg" target="_blank">
+                <i class="icon icon-lg icon-tree"></i>
+                我的技能树
+              </a>
+            </li>
+        
+      </ul>
+    </div>
+  </div>
+</aside>
+
+    <main id="main">
+        <header class="top-header" id="header">
+    <div class="flex-row">
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light on" id="menu-toggle">
+          <i class="icon icon-lg icon-navicon"></i>
+        </a>
+        <div class="flex-col header-title ellipsis">如何使用Celery(芹菜)异步神器执行后台任务</div>
+        
+        <div class="search-wrap" id="search-wrap">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="back">
+                <i class="icon icon-lg icon-chevron-left"></i>
+            </a>
+            <input type="text" id="key" class="search-input" autocomplete="off" placeholder="输入感兴趣的关键字">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="search">
+                <i class="icon icon-lg icon-search"></i>
+            </a>
+        </div>
+        
+        
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menuShare">
+            <i class="icon icon-lg icon-share-alt"></i>
+        </a>
+        
+    </div>
+</header>
+<header class="content-header post-header">
+
+    <div class="container fade-scale">
+        <h1 class="title">如何使用Celery(芹菜)异步神器执行后台任务</h1>
+        <h5 class="subtitle">
+            
+                <time datetime="2017-11-24T01:13:10.000Z" itemprop="datePublished" class="page-time">
+  2017-11-24
+</time>
+
+
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/自动化运维/">自动化运维</a></li></ul>
+
+            
+        </h5>
+    </div>
+
+    
+
+
+</header>
+
+
+<div class="container body-wrap">
+    
+    <aside class="post-widget">
+        <nav class="post-toc-wrap post-toc-shrink" id="post-toc">
+            <h4>TOC</h4>
+            <ol class="post-toc"><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#1-需要了解的知识点"><span class="post-toc-number">1.</span> <span class="post-toc-text">1.需要了解的知识点:</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#2-实现过程"><span class="post-toc-number">2.</span> <span class="post-toc-text">2.实现过程</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-4"><a class="post-toc-link" href="#1-目录结构"><span class="post-toc-number">2.1.</span> <span class="post-toc-text">(1)目录结构</span></a></li><li class="post-toc-item post-toc-level-4"><a class="post-toc-link" href="#2-指定broker-backend-此处使用redis"><span class="post-toc-number">2.2.</span> <span class="post-toc-text">(2)指定broker/backend(此处使用redis)</span></a></li><li class="post-toc-item post-toc-level-4"><a class="post-toc-link" href="#3-这里我将任务写到了视图函数中"><span class="post-toc-number">2.3.</span> <span class="post-toc-text">(3)这里我将任务写到了视图函数中</span></a></li></ol></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#部分代码"><span class="post-toc-number">3.</span> <span class="post-toc-text">部分代码</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#部分代码-1"><span class="post-toc-number">4.</span> <span class="post-toc-text">部分代码</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-4"><a class="post-toc-link" href="#4-如何撤销一个任务呢"><span class="post-toc-number">4.1.</span> <span class="post-toc-text">(4)如何撤销一个任务呢?</span></a></li><li class="post-toc-item post-toc-level-4"><a class="post-toc-link" href="#ok，以上就是Celery-的基本使用。"><span class="post-toc-number">4.2.</span> <span class="post-toc-text">ok，以上就是Celery 的基本使用。</span></a></li></ol></li></ol>
+        </nav>
+    </aside>
+
+
+<article id="post-ru-he-shi-yongcelery-qin-cai-yi-bu-shen-qi-zhi-xin" class="post-article article-type-post fade" itemprop="blogPost">
+
+    <div class="post-card">
+        <h1 class="post-card-title">如何使用Celery(芹菜)异步神器执行后台任务</h1>
+        <div class="post-meta">
+            <time class="post-time" title="2017-11-24 09:13:10" datetime="2017-11-24T01:13:10.000Z" itemprop="datePublished">2017-11-24</time>
+
+            
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/自动化运维/">自动化运维</a></li></ul>
+
+
+
+            
+
+        </div>
+        <div class="post-content" id="post-content" itemprop="postContent">
+            <p>关于异步的知识网上很多，这里就直接上代码，目前结合Flask这个Python框架实现后台任务的执行操作；</p>
+<h3 id="1-需要了解的知识点"><a href="#1-需要了解的知识点" class="headerlink" title="1.需要了解的知识点:"></a>1.需要了解的知识点:</h3><ul>
+<li>了解生产消费模型或者发布订阅模式来实现消息队列</li>
+<li>了解异步、同步之间的差别</li>
+</ul>
+<h3 id="2-实现过程"><a href="#2-实现过程" class="headerlink" title="2.实现过程"></a>2.实现过程</h3><h4 id="1-目录结构"><a href="#1-目录结构" class="headerlink" title="(1)目录结构"></a>(1)目录结构</h4><pre><code>├── LICENSE
+├── README.md
+├── app                     // Flask APP应用
+│   ├── __init__.py 
+│   ├── auth
+│   ├── email.py
+│   ├── main
+│   ├── models.py
+│   ├── salt
+│   ├── static
+│   └── templates
+├── config.py               // 通用配置
+├── config.pyc
+├── manager.py
+├── migrations
+│   ├── README
+│   ├── alembic.ini
+│   ├── env.py
+│   └── versions
+└── requirements.txt
+</code></pre><h4 id="2-指定broker-backend-此处使用redis"><a href="#2-指定broker-backend-此处使用redis" class="headerlink" title="(2)指定broker/backend(此处使用redis)"></a>(2)指定broker/backend(此处使用redis)</h4><p>vim app/__init__.py</p>
+<pre><code>// 部分代码
+from celery import Celery
+
+app = Flask(__name__)
+
+broker = &apos;redis://127.0.0.1:6379&apos;
+backend = &apos;redis://127.0.0.1:6379/0&apos;
+
+celery = Celery(app.name, broker=broker, backend=backend)
+
+// 部分代码
+</code></pre><p>以上引入了Celery,指定了Celery的生产消费端都为我们的redis</p>
+<h4 id="3-这里我将任务写到了视图函数中"><a href="#3-这里我将任务写到了视图函数中" class="headerlink" title="(3)这里我将任务写到了视图函数中"></a>(3)这里我将任务写到了视图函数中</h4><p>vim app/main/views.py</p>
+<ul>
+<li><p>(1 创建一个任务函数, 并且将这个任务绑定上了celery的标记</p>
+<h3 id="部分代码"><a href="#部分代码" class="headerlink" title="部分代码"></a>部分代码</h3><p>@celery.task(bind=True)<br>def update_cbt_resource(self):</p>
+<pre><code>&apos;&apos;&apos;
+@summary: 创建一个需要后台去执行的任务，我这里只是举个栗子
+&apos;&apos;&apos;
+result=commands.getoutput(&quot;sleep 20 &amp;&amp; echo &apos;ok&apos;&quot;)
+return result
+</code></pre></li>
+</ul>
+<ul>
+<li><p>(2 创建一个执行任务请求函数</p>
+<h3 id="部分代码-1"><a href="#部分代码-1" class="headerlink" title="部分代码"></a>部分代码</h3><p>@main.route(‘/execute_task/&lt;update_env&gt;’, methods=[‘GET’, ‘POST’])<br>def execute_task(update_env):</p>
+<pre><code>&quot;&quot;&quot;
+@summary: 请求函数入口
+&quot;&quot;&quot;
+# 这里用最笨的办法执行了在我们web中点击执行任务之前去检查celery这个服务是否存在，如果不存在会提示用户    
+result = commands.getoutput(&quot;ps -ef | grep celery | grep -v grep&quot;)
+if not result:
+    return jsonify({&quot;result&quot;:False,&quot;message&quot;:u&apos;未发现Celery进程，请检查该服务是否正常启动&apos;})
+
+ # 将前面写的任务函数直接调用apply_async属性
+task = update_cbt_resource.apply_async()
+
+ # 这里就可以获取到这个任务一开始执行就返回的一些属性
+ # 比如任务ID, 任务状态
+data = {
+    &quot;task_id&quot;: task.id,
+    &quot;task_status&quot;: task.status
+}
+
+# 将以上的信息作为这请求函数的返回
+result = {&quot;result&quot;:True,&quot;data&quot;:data,&quot;message&quot;:u&apos;执行开始&apos;}
+return jsonify(result)
+</code></pre></li>
+</ul>
+<ul>
+<li>(3 创建一个任务状态查询的函数</li>
+</ul>
+<p>一般任务触发之后我们想要知道这个任务的执行状态，是处于哪个阶段的，各个状态已经在官网详细说明了；有兴趣的直接看<a href="http://docs.celeryproject.org/en/master/userguide/tasks.html?highlight=built-in-states" target="_blank" rel="noopener">官网</a></p>
+<pre><code>### 部分的代码
+@main.route(&apos;/task_result&apos;, methods=[&apos;GET&apos;])
+@login_required
+def task_result():
+    &apos;&apos;&apos;
+    @summary: 任务的状态是通过task_id来获取,在触发了任务之后,通过前端js轮询请求这个函数，就可以得到该任务的当前执行状态
+    &apos;&apos;&apos;
+    # 点击执行按钮前端会传一个task_id到后端,这里使用form的方式获取到task_id
+    task_id = json.loads(request.form.get(&apos;data&apos;))[&apos;task_id&apos;]
+
+    # AsyncResult，它的作用是被用来检查任务状态，等待任务执行完毕或获取任务结果，如果任务失败，它会返回异常信息或者调用栈。
+    the_task = update_cbt_resource.AsyncResult(task_id)
+
+    print(&quot;任务：{0} 当前的 state 为：{1}&quot;.format(task_id, the_task.state))
+
+     # 执the_task.state
+    if  the_task.state  == &apos;PROGRESS&apos;:
+        print the_task.info.get(&apos;i&apos;, 0)
+        result = {&apos;state&apos;: &apos;progress&apos;,&quot;result_data&quot;:the_task.result}
+    elif  the_task.state  == &apos;SUCCESS&apos;:
+        result = {&apos;state&apos;: &quot;success&quot;, &quot;result_data&quot;:the_task.result}
+    elif  the_task.state  == &apos;PENDING&apos;:
+        result = {&apos;state&apos;: &apos;waitting&apos;,&quot;result_data&quot;:the_task.result}
+    elif  the_task.state  == &apos;REVOKED&apos;:
+        result = { &apos;state&apos;: &apos;revoke&apos;, &quot;result_data&quot;:the_task.result}
+        print the_task.result
+    else:
+        result = {&apos;state&apos;: the_task.state,&apos;progress&apos;:0,&quot;result_data&quot;:the_task.result}
+    return jsonify(result)
+</code></pre><ul>
+<li>(4 尝试在前端页面点击执行任务<br><img src="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2017/11/15115172368997.jpg" alt="">￼<br>Oops! 这就是上面进行celery进程判断之后得到的提示信息，那下面就把celery启动起来吧<figure class="highlight clean"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">    </span><br><span class="line">*   (<span class="number">5</span> 启动Celey服务</span><br><span class="line">    </span><br><span class="line"></span><br><span class="line">    celery worker -A manager.celery -l debug</span><br><span class="line">    ### 我这里是本地使用的virtualenv环境</span><br></pre></td></tr></table></figure></li>
+</ul>
+<p><img src="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2017/11/15115170661909.jpg" alt="">￼<br>ok, 现在启动了celery服务之后我们在前台执行一下:<br><img src="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2017/11/15115174358505.jpg" alt="">￼<br>通过点击执行后我们看日志：<br><img src="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2017/11/15115175046963.jpg" alt="">￼</p>
+<p>任务执行完毕了；<br><img src="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2017/11/15115178118958.jpg" alt="">￼</p>
+<p>再看看Flask的日志,这就是通过js轮询请求这个task_resul函数的结果<br><img src="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2017/11/15115175573963.jpg" alt="">￼<br>再来看看redis中的内容,这就将结果保存到了backend中<br><img src="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2017/11/15115176602486.jpg" alt="">￼</p>
+<h4 id="4-如何撤销一个任务呢"><a href="#4-如何撤销一个任务呢" class="headerlink" title="(4)如何撤销一个任务呢?"></a>(4)如何撤销一个任务呢?</h4><p>还是通过task_id来实现。视图函数中编写一个任务的函数</p>
+<pre><code>### 部分代码
+@main.route(&apos;/cancel_task/&apos;, methods=[&apos;GET&apos;, &apos;POST&apos;])
+@login_required
+def cancel_task():
+     # 通过前端的取消按钮来获取到这个任务的id
+    task_id = json.loads(request.form.get(&apos;data&apos;))[&apos;task_id&apos;]
+    try:
+        celery.control.revoke(task_id, terminate=True, signal=&apos;SIGKILL&apos;)
+        return Response(json.dumps({&apos;result&apos;:True,&quot;message&quot;: &quot;取消任务完成&quot; }))
+    except Exception,e:
+        return Response(json.dumps({&apos;result&apos;: True, &quot;message&quot;: u&apos;取消任务失败.{0}&apos;.format(e)}))
+</code></pre><p>执行过程如下:<br><img src="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2017/11/15115182402670.jpg" alt="">￼<br><img src="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2017/11/15115182685942.jpg" alt="">￼<br><img src="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2017/11/15115213514662.jpg" alt="">￼</p>
+<p><figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2017/11/15115182945362.jpg" alt="" title="">
+                </div>
+                <div class="image-caption"></div>
+            </figure>￼<br>需要注意的是,在上面视图函数中的这段代码其实有也可以撤销</p>
+<pre><code>task = update_cbt_resource.apply_async()
+task.revoke() 
+</code></pre><p>但是这种方式只是撤销，如果任务已经在执行撤销则无效;所以我这里可以使用下面的方法来撤销</p>
+<pre><code># 通过task_id撤销
+celery.control.revoke(task_id)
+# 撤销正在执行的任务，默认使用TERM信号
+celery.control.revoke(task_id, terminate=True)
+# 撤销正在执行的任务，默认使用KILL信号
+celery.control.revoke(task_id, terminate=True, signal=&apos;SIGKILL&apos;)
+#在官网文档中也可以将多个task_id组成列表形式然后同时撤销多个任务
+celery.control.revoke([task_id1,task_id2,task_id3,task_id4.......])
+</code></pre><h4 id="ok，以上就是Celery-的基本使用。"><a href="#ok，以上就是Celery-的基本使用。" class="headerlink" title="ok，以上就是Celery 的基本使用。"></a>ok，以上就是Celery 的基本使用。</h4>
+        </div>
+
+        <blockquote class="post-copyright">
+    
+    <div class="content">
+        
+<span class="post-time">
+    最后更新时间：<time datetime="2018-12-19T14:39:54.000Z" itemprop="dateUpdated">2018-12-19 22:39:54</time>
+</span><br>
+
+
+        
+        该文链接：<a href="/2017/11/24/ru-he-shi-yongcelery-qin-cai-yi-bu-shen-qi-zhi-xin/" target="_blank" rel="external">https://blog.sctux.com/2017/11/24/ru-he-shi-yongcelery-qin-cai-yi-bu-shen-qi-zhi-xin/</a>
+        
+    </div>
+    
+    <footer>
+        <a href="https://blog.sctux.com">
+            <img src="/img/avatar.jpg" alt="OutMan">
+            OutMan
+        </a>
+    </footer>
+</blockquote>
+
+        
+<div class="page-reward">
+    <a id="rewardBtn" href="javascript:;" class="page-reward-btn waves-effect waves-circle waves-light">赏</a>
+</div>
+
+
+
+        <div class="post-footer">
+            
+	<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Celery/">Celery</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Python/">Python</a></li></ul>
+
+
+            
+<div class="page-share-wrap">
+    
+
+<div class="page-share" id="pageShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://blog.sctux.com/2017/11/24/ru-he-shi-yongcelery-qin-cai-yi-bu-shen-qi-zhi-xin/&title=《如何使用Celery(芹菜)异步神器执行后台任务》 — 运维人&pic=https://blog.sctux.com/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://blog.sctux.com/2017/11/24/ru-he-shi-yongcelery-qin-cai-yi-bu-shen-qi-zhi-xin/&title=《如何使用Celery(芹菜)异步神器执行后台任务》 — 运维人&source=😊" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.sctux.com/2017/11/24/ru-he-shi-yongcelery-qin-cai-yi-bu-shen-qi-zhi-xin/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《如何使用Celery(芹菜)异步神器执行后台任务》 — 运维人&url=https://blog.sctux.com/2017/11/24/ru-he-shi-yongcelery-qin-cai-yi-bu-shen-qi-zhi-xin/&via=https://blog.sctux.com" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=https://blog.sctux.com/2017/11/24/ru-he-shi-yongcelery-qin-cai-yi-bu-shen-qi-zhi-xin/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+
+    <a href="javascript:;" id="shareFab" class="page-share-fab waves-effect waves-circle">
+        <i class="icon icon-share-alt icon-lg"></i>
+    </a>
+</div>
+
+
+
+        </div>
+    </div>
+
+    
+<nav class="post-nav flex-row flex-justify-between">
+  
+    <div class="waves-block waves-effect prev">
+      <a href="/2018/03/08/ru-he-li-yonggit-webhook-jin-xing-bu-shu/" id="post-prev" class="post-nav-link">
+        <div class="tips"><i class="icon icon-angle-left icon-lg icon-pr"></i> Prev</div>
+        <h4 class="title">如何利用Git Webhook 进行部署</h4>
+      </a>
+    </div>
+  
+
+  
+    <div class="waves-block waves-effect next">
+      <a href="/2017/06/04/redis-ji-qun-xiang-xi-da-jian-zhi-nan/" id="post-next" class="post-nav-link">
+        <div class="tips">Next <i class="icon icon-angle-right icon-lg icon-pl"></i></div>
+        <h4 class="title">Redis集群详细搭建指南</h4>
+      </a>
+    </div>
+  
+</nav>
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Valine Comments -->
+    <div class="comments vcomment" id="comments"></div>
+    <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+    <script src="//unpkg.com/valine@latest/dist/Valine.min.js"></script>
+    <!-- Valine Comments script -->
+    <script>
+        var GUEST_INFO = ['nick','mail','link'];
+        var guest_info = 'nick,mail,link'.split(',').filter(function(item){
+          return GUEST_INFO.indexOf(item) > -1
+        });
+        new Valine({
+            el: '#comments',
+            notify: 'true' == 'true',
+            verify: 'true' == 'true',
+            appId: "lHxnnDHJXDgMoFpCbdx8A4q7-gzGzoHsz",
+            appKey: "W8H2NuO8chyDlCEQzionLuuV",
+            avatar: "monsterid",
+            placeholder: "来都来了，说点啥子吧~🌹 (友情提醒，留下正确的邮箱地址可以第一时间获取评论反馈)",
+            guest_info: guest_info.length == 0 ? GUEST_INFO : guest_info,
+            pageSize: "10"
+        })
+    </script>
+    <!-- Valine Comments end -->
+
+
+
+
+
+
+
+</article>
+
+<div id="reward" class="page-modal reward-lay">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <h3 class="reward-title">
+        <i class="icon icon-quote-left"></i>
+        谢谢大爷~
+        <i class="icon icon-quote-right"></i>
+    </h3>
+    <div class="reward-content">
+        
+        <div class="reward-code">
+            <img id="rewardCode" src="/img/wechat.jpg" alt="打赏二维码">
+        </div>
+        
+        <label class="reward-toggle">
+            <input id="rewardToggle" type="checkbox" class="reward-toggle-check" data-wechat="/img/wechat.jpg" data-alipay="/img/alipay.jpg">
+            <div class="reward-toggle-ctrol">
+                <span class="reward-toggle-item wechat">微信</span>
+                <span class="reward-toggle-label"></span>
+                <span class="reward-toggle-item alipay">支付宝</span>
+            </div>
+        </label>
+        
+    </div>
+</div>
+
+
+
+</div>
+
+        <footer class="footer">
+    <div class="top">
+        
+
+        <p>
+            
+            <span>博客内容遵循 <a rel="license" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh">知识共享 署名 - 非商业性 - 相同方式共享 4.0 国际协议</a></span>
+        </p>
+    </div>
+    <div class="bottom">
+        <p><span>OutMan &copy; 2013 - 2019</span>
+            <span>
+                
+                <a href="http://www.miitbeian.gov.cn/" target="_blank">蜀ICP备007号-1</a><br>
+                
+                Power by <a href="http://hexo.io/" target="_blank">Hexo</a> Theme <a href="https://github.com/yscoder/hexo-theme-indigo" target="_blank">indigo</a>
+            </span>
+        </p>
+    </div>
+</footer>
+
+    </main>
+    <div class="mask" id="mask"></div>
+<a href="javascript:;" id="gotop" class="waves-effect waves-circle waves-light"><span class="icon icon-lg icon-chevron-up"></span></a>
+
+
+
+<div class="global-share" id="globalShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://blog.sctux.com/2017/11/24/ru-he-shi-yongcelery-qin-cai-yi-bu-shen-qi-zhi-xin/&title=《如何使用Celery(芹菜)异步神器执行后台任务》 — 运维人&pic=https://blog.sctux.com/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://blog.sctux.com/2017/11/24/ru-he-shi-yongcelery-qin-cai-yi-bu-shen-qi-zhi-xin/&title=《如何使用Celery(芹菜)异步神器执行后台任务》 — 运维人&source=😊" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.sctux.com/2017/11/24/ru-he-shi-yongcelery-qin-cai-yi-bu-shen-qi-zhi-xin/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《如何使用Celery(芹菜)异步神器执行后台任务》 — 运维人&url=https://blog.sctux.com/2017/11/24/ru-he-shi-yongcelery-qin-cai-yi-bu-shen-qi-zhi-xin/&via=https://blog.sctux.com" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=https://blog.sctux.com/2017/11/24/ru-he-shi-yongcelery-qin-cai-yi-bu-shen-qi-zhi-xin/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+<div class="page-modal wx-share" id="wxShare">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <img src="//api.qrserver.com/v1/create-qr-code/?data=https://blog.sctux.com/2017/11/24/ru-he-shi-yongcelery-qin-cai-yi-bu-shen-qi-zhi-xin/" alt="微信分享二维码">
+</div>
+
+
+
+
+    <script src="//cdn.bootcss.com/node-waves/0.7.4/waves.min.js"></script>
+<script>
+var BLOG = { ROOT: '/', SHARE: true, REWARD: true };
+
+
+</script>
+
+<script src="/js/main.min.js?v=1.7.2"></script>
+
+
+<div class="search-panel" id="search-panel">
+    <ul class="search-result" id="search-result"></ul>
+</div>
+<template id="search-tpl">
+<li class="item">
+    <a href="{path}" class="waves-block waves-effect">
+        <div class="title ellipsis" title="{title}">{title}</div>
+        <div class="flex-row flex-middle">
+            <div class="tags ellipsis">
+                {tags}
+            </div>
+            <time class="flex-col time">{date}</time>
+        </div>
+    </a>
+</li>
+</template>
+
+<script src="/js/search.min.js?v=1.7.2" async></script>
+
+
+
+
+
+
+
+
+<script>
+(function() {
+    var OriginTitile = document.title, titleTime;
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            document.title = '老弟，死哪儿去啦~！';
+            clearTimeout(titleTime);
+        } else {
+            document.title = '(つェ⊂)咦!老弟来啦!';
+            titleTime = setTimeout(function() {
+                document.title = OriginTitile;
+            },2000);
+        }
+    });
+})();
+</script>
+
+
+
+</body>
+</html>

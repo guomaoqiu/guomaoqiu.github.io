@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.8.0">
+    
+
+    
+
+    
+
+
+
+    <meta charset="utf-8">
+    
+    
+    
+    
+    <title>09-K8s集群搭建---监控展示界面安装 | 运维人 | Devops、Linux、Kubernetes、Docker、Flask、Python、Shell</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    
+    <meta name="theme-color" content="#3F51B5">
+    
+    
+    <meta name="keywords" content="k8s集群搭建">
+    <meta name="description" content="1. 简介Heapster提供了整个集群的资源监控，并支持持久化数据存储到InfluxDB、Google Cloud Monitoring或者其他的存储后端。Heapster从kubelet提供的API采集节点和容器的资源占用。另外，Heapster的 /metrics API提供了Prometheus格式的数据。InfluxDB是一个开源分布式时序、事件和指标数据库；而Grafana则是Infl">
+<meta name="keywords" content="k8s集群搭建">
+<meta property="og:type" content="article">
+<meta property="og:title" content="09-K8s集群搭建---监控展示界面安装">
+<meta property="og:url" content="https://blog.sctux.com/2018/06/08/09k8s-ji-qun-da-jianjian-kong-zhan-shi-jie-mian-an/index.html">
+<meta property="og:site_name" content="运维人">
+<meta property="og:description" content="1. 简介Heapster提供了整个集群的资源监控，并支持持久化数据存储到InfluxDB、Google Cloud Monitoring或者其他的存储后端。Heapster从kubelet提供的API采集节点和容器的资源占用。另外，Heapster的 /metrics API提供了Prometheus格式的数据。InfluxDB是一个开源分布式时序、事件和指标数据库；而Grafana则是Infl">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2018/06/15284524671834.jpg">
+<meta property="og:image" content="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2018/07/15319972498850.jpg">
+<meta property="og:image" content="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2018/07/15319972699157.jpg">
+<meta property="og:updated_time" content="2018-12-19T14:39:54.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="09-K8s集群搭建---监控展示界面安装">
+<meta name="twitter:description" content="1. 简介Heapster提供了整个集群的资源监控，并支持持久化数据存储到InfluxDB、Google Cloud Monitoring或者其他的存储后端。Heapster从kubelet提供的API采集节点和容器的资源占用。另外，Heapster的 /metrics API提供了Prometheus格式的数据。InfluxDB是一个开源分布式时序、事件和指标数据库；而Grafana则是Infl">
+<meta name="twitter:image" content="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2018/06/15284524671834.jpg">
+    
+    <link rel="shortcut icon" href="/favicon.ico">
+    <link rel="stylesheet" href="/css/style.css?v=1.7.2">
+    <script>window.lazyScripts=[]</script>
+
+    <!-- custom head -->
+    
+
+</head>
+
+<body>
+    <div id="loading" class="active"></div>
+
+    <aside id="menu">
+  <div class="inner flex-row-vertical">
+    <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menu-off">
+        <i class="icon icon-lg icon-close"></i>
+    </a>
+    <div class="brand-wrap" style="background-image:url(/img/brand.jpg)">
+      <div class="brand">
+        <a href="/" class="avatar waves-effect waves-circle waves-light">
+          <img src="/img/avatar.jpg">
+        </a>
+        <hgroup class="introduce">
+          <h5 class="nickname">OutMan</h5>
+          <a href="mailto:2399447849@qq.com" title="2399447849@qq.com" class="mail">2399447849@qq.com</a>
+        </hgroup>
+      </div>
+    </div>
+    <div class="scroll-wrap flex-col">
+      <ul class="nav">
+        
+            <li class="waves-block waves-effect">
+              <a href="/">
+                <i class="icon icon-lg icon-home"></i>
+                主页
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/archives">
+                <i class="icon icon-lg icon-archives"></i>
+                归档
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/tags">
+                <i class="icon icon-lg icon-tags"></i>
+                标签
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/categories">
+                <i class="icon icon-lg icon-th-list"></i>
+                分类
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://github.com/guomaoqiu" target="_blank">
+                <i class="icon icon-lg icon-github"></i>
+                Github
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/works">
+                <i class="icon icon-lg icon-hand-peace-o"></i>
+                作品
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="http://demo.sctux.com" target="_blank">
+                <i class="icon icon-lg icon-link"></i>
+                DevOpsPlatform
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="http://resume.sctux.com/" target="_blank">
+                <i class="icon icon-lg icon-heart"></i>
+                我的简历
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/about">
+                <i class="icon icon-lg icon-user"></i>
+                关于我
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://blog.sctux.com/2019/02/27/skilltree/Skilltree.jpg" target="_blank">
+                <i class="icon icon-lg icon-tree"></i>
+                我的技能树
+              </a>
+            </li>
+        
+      </ul>
+    </div>
+  </div>
+</aside>
+
+    <main id="main">
+        <header class="top-header" id="header">
+    <div class="flex-row">
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light on" id="menu-toggle">
+          <i class="icon icon-lg icon-navicon"></i>
+        </a>
+        <div class="flex-col header-title ellipsis">09-K8s集群搭建---监控展示界面安装</div>
+        
+        <div class="search-wrap" id="search-wrap">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="back">
+                <i class="icon icon-lg icon-chevron-left"></i>
+            </a>
+            <input type="text" id="key" class="search-input" autocomplete="off" placeholder="输入感兴趣的关键字">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="search">
+                <i class="icon icon-lg icon-search"></i>
+            </a>
+        </div>
+        
+        
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menuShare">
+            <i class="icon icon-lg icon-share-alt"></i>
+        </a>
+        
+    </div>
+</header>
+<header class="content-header post-header">
+
+    <div class="container fade-scale">
+        <h1 class="title">09-K8s集群搭建---监控展示界面安装</h1>
+        <h5 class="subtitle">
+            
+                <time datetime="2018-06-08T08:20:52.000Z" itemprop="datePublished" class="page-time">
+  2018-06-08
+</time>
+
+
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/k8s/">k8s</a></li></ul>
+
+            
+        </h5>
+    </div>
+
+    
+
+
+</header>
+
+
+<div class="container body-wrap">
+    
+    <aside class="post-widget">
+        <nav class="post-toc-wrap post-toc-shrink" id="post-toc">
+            <h4>TOC</h4>
+            <ol class="post-toc"><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#1-简介"><span class="post-toc-number">1.</span> <span class="post-toc-text">1. 简介</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#2-安装配置Heapster、InfluxDB和Grafana"><span class="post-toc-number">2.</span> <span class="post-toc-text">2. 安装配置Heapster、InfluxDB和Grafana</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#3-配置Docker-Socks5代理-为下载所需镜像做准备"><span class="post-toc-number">3.</span> <span class="post-toc-text">3. 配置Docker Socks5代理(为下载所需镜像做准备)</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#4-关键点说明"><span class="post-toc-number">4.</span> <span class="post-toc-text">4. 关键点说明:</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-4"><a class="post-toc-link" href="#修改-grafana-yaml文件"><span class="post-toc-number">4.0.1.</span> <span class="post-toc-text">修改 grafana.yaml文件</span></a></li></ol></li></ol><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#5-执行"><span class="post-toc-number">5.</span> <span class="post-toc-text">5. 执行</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-4"><a class="post-toc-link" href="#检查执行结果"><span class="post-toc-number">5.0.1.</span> <span class="post-toc-text">检查执行结果</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-5"><a class="post-toc-link" href="#1-检查Deployment"><span class="post-toc-number">5.0.1.1.</span> <span class="post-toc-text">1. 检查Deployment</span></a></li><li class="post-toc-item post-toc-level-5"><a class="post-toc-link" href="#2-检查POD"><span class="post-toc-number">5.0.1.2.</span> <span class="post-toc-text">2. 检查POD</span></a></li><li class="post-toc-item post-toc-level-5"><a class="post-toc-link" href="#3-检查Service"><span class="post-toc-number">5.0.1.3.</span> <span class="post-toc-text">3. 检查Service</span></a></li><li class="post-toc-item post-toc-level-5"><a class="post-toc-link" href="#4-检查-kubernets-dashboard-界面，看是显示各-Nodes、Pods-的-CPU、内存、负载等利用率曲线图"><span class="post-toc-number">5.0.1.4.</span> <span class="post-toc-text">4. 检查 kubernets dashboard 界面，看是显示各 Nodes、Pods 的 CPU、内存、负载等利用率曲线图</span></a></li><li class="post-toc-item post-toc-level-5"><a class="post-toc-link" href="#5-Grafana的访问"><span class="post-toc-number">5.0.1.5.</span> <span class="post-toc-text">5. Grafana的访问:</span></a></li></ol></li></ol></li>
+        </nav>
+    </aside>
+
+
+<article id="post-09k8s-ji-qun-da-jianjian-kong-zhan-shi-jie-mian-an" class="post-article article-type-post fade" itemprop="blogPost">
+
+    <div class="post-card">
+        <h1 class="post-card-title">09-K8s集群搭建---监控展示界面安装</h1>
+        <div class="post-meta">
+            <time class="post-time" title="2018-06-08 16:20:52" datetime="2018-06-08T08:20:52.000Z" itemprop="datePublished">2018-06-08</time>
+
+            
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/k8s/">k8s</a></li></ul>
+
+
+
+            
+
+        </div>
+        <div class="post-content" id="post-content" itemprop="postContent">
+            <h2 id="1-简介"><a href="#1-简介" class="headerlink" title="1. 简介"></a>1. 简介</h2><p>Heapster提供了整个集群的资源监控，并支持持久化数据存储到InfluxDB、Google Cloud Monitoring或者其他的存储后端。<br>Heapster从kubelet提供的API采集节点和容器的资源占用。另外，Heapster的 /metrics API提供了Prometheus格式的数据。<br>InfluxDB是一个开源分布式时序、事件和指标数据库；而Grafana则是InfluxDB的 dashboard，提供了强大的图表展示功能。它们常被组合使用展示图表化的监控数据，也可以将Zabbix作为数据源，进行zabbix的监控数据展示。<br>Heapster、InfluxDB和Grafana均以Pod的形式启动和运行，其中Heapster需要与Kubernetes Master进行安全连接。</p>
+<h2 id="2-安装配置Heapster、InfluxDB和Grafana"><a href="#2-安装配置Heapster、InfluxDB和Grafana" class="headerlink" title="2. 安装配置Heapster、InfluxDB和Grafana"></a>2. 安装配置Heapster、InfluxDB和Grafana</h2><p><a href="https://github.com/kubernetes/heapster/releases" target="_blank" rel="noopener">到Heapster获取安装包:</a></p>
+<pre><code>[root@linux-node1 tmp]# wget https://github.com/kubernetes/heapster/archive/v1.5.3.tar.gz
+[root@linux-node1 tmp]# tar -xf v1.5.3.tar.gz &amp;&amp; cd heapster-1.5.3/deploy/kube-config/influxdb/
+[root@linux-node1 kube-config]# ll influxdb/
+total 12
+-rw-rw-r-- 1 root root 2290 May  1 05:13 grafana.yaml
+-rw-rw-r-- 1 root root 1114 May  1 05:13 heapster.yaml
+-rw-rw-r-- 1 root root  974 May  1 05:13 influxdb.yaml
+[root@linux-node1 kube-config]# ll rbac/
+total 4
+-rw-rw-r-- 1 root root 264 May  1 05:13 heapster-rbac.yaml
+[root@linux-node1 kube-config]#
+
+# 以上是所需要用到的文件
+</code></pre><h2 id="3-配置Docker-Socks5代理-为下载所需镜像做准备"><a href="#3-配置Docker-Socks5代理-为下载所需镜像做准备" class="headerlink" title="3. 配置Docker Socks5代理(为下载所需镜像做准备)"></a>3. 配置Docker Socks5代理(为下载所需镜像做准备)</h2><p>由于某国的 &amp;@#￥%&amp;￥&amp;&amp;*R#￥…… 你懂的. 导致一些镜像无法pull 我这边利用自己搭建的梯子来进行代理</p>
+<pre><code>[root@linux-node1 kube-config]# grep &quot;gcr.io&quot; influxdb/heapster.yaml
+        image: gcr.io/google_containers/heapster-amd64:v1.5.3
+[root@linux-node1 kube-config]#
+
+# 修改docker服务文件配置, 在[Service]部分添加你自己的ss服务器地址
+[root@linux-node1 kube-config]# vim /usr/lib/systemd/system/docker.service
+......
+......
+[Service]
+Environment=&quot;ALL_PROXY=socks5://192.168.56.1:1080&quot;
+......
+......
+</code></pre><p>将其复制到其他所有节点，并重载、重启Docker服务, 直接pull一下验证即可</p>
+<pre><code>[root@linux-node1 kube-config]# docker pull gcr.io/google_containers/heapster-amd64:v1.5.3
+</code></pre><h2 id="4-关键点说明"><a href="#4-关键点说明" class="headerlink" title="4. 关键点说明:"></a>4. 关键点说明:</h2><pre><code>[root@linux-node1 kube-config]# more influxdb/heapster.yaml
+......
+......
+     - /heapster
+        - --source=kubernetes:https://kubernetes.default
+        - --sink=influxdb:http://monitoring-influxdb.kube-system.svc:8086
+......
+......
+</code></pre><ul>
+<li>source：配置采集源，为Master URL地址：–source=kubernetes:<a href="https://kubernetes.default" target="_blank" rel="noopener">https://kubernetes.default</a></li>
+<li>sink：配置后端存储系统，使用InfluxDB系统：–sink=influxdb:<a href="http://monitoring-influxdb:8086" target="_blank" rel="noopener">http://monitoring-influxdb:8086</a></li>
+</ul>
+<p>这里保持默认即可</p>
+<p>【注意】：URL中的主机名地址使用的是InfluxDB的Service名字，这需要DNS服务正常工作，如果没有配置DNS服务，则也可以使用Service的ClusterIP地址。<br>另外，InfluxDB服务的名称没有加上命名空间，是因为Heapster服务与InfluxDB服务属于相同的命名空间kube-system。也可以使用上命名空间的全服务名，例如：<code>http://monitoring-influxdb.kube-system:8086</code></p>
+<h4 id="修改-grafana-yaml文件"><a href="#修改-grafana-yaml文件" class="headerlink" title="修改 grafana.yaml文件"></a>修改 grafana.yaml文件</h4><pre><code>[root@linux-node1 kube-config]# vim influxdb/grafana.yaml
+......
+......
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    # For use as a Cluster add-on (https://github.com/kubernetes/kubernetes/tree/master/cluster/addons)
+    # If you are NOT using this as an addon, you should comment out this line.
+    kubernetes.io/cluster-service: &apos;true&apos;
+    kubernetes.io/name: monitoring-grafana
+  name: monitoring-grafana
+  namespace: kube-system
+spec:
+  # In a production setup, we recommend accessing Grafana through an external Loadbalancer
+  # or through a public IP.
+  # type: LoadBalancer
+  # You could also use NodePort to expose the service at a randomly-generated port
+  type: NodePort # 去掉注释即可
+  ports:
+  - port: 80
+    targetPort: 3000
+  selector:
+    k8s-app: grafana
+......
+......
+</code></pre><ul>
+<li>定义端口类型为 NodePort，将Grafana暴露在宿主机Node的端口上，以便后续浏览器访问 grafana 的 admin UI 界面</li>
+</ul>
+<h2 id="5-执行"><a href="#5-执行" class="headerlink" title="5. 执行"></a>5. 执行</h2><pre><code>[root@linux-node1 kube-config]# kubectl create -f influxdb/ &amp;&amp; kubectl create -f rbac/
+deployment.extensions &quot;monitoring-grafana&quot; created
+service &quot;monitoring-grafana&quot; created
+serviceaccount &quot;heapster&quot; created
+deployment.extensions &quot;heapster&quot; created
+service &quot;heapster&quot; created
+deployment.extensions &quot;monitoring-influxdb&quot; created
+service &quot;monitoring-influxdb&quot; created
+clusterrolebinding.rbac.authorization.k8s.io &quot;heapster&quot; created
+</code></pre><h4 id="检查执行结果"><a href="#检查执行结果" class="headerlink" title="检查执行结果"></a>检查执行结果</h4><h5 id="1-检查Deployment"><a href="#1-检查Deployment" class="headerlink" title="1. 检查Deployment"></a>1. 检查Deployment</h5><pre><code>[root@linux-node1 kube-config]# kubectl get deployments -n kube-system -o wide | grep -E &apos;heapster|monitoring&apos;
+heapster               1         1         1            1           11s       heapster               gcr.io/google_containers/heapster-amd64:v1.5.3             k8s-app=heapster,task=monitoring
+monitoring-grafana     1         1         1            1           11s       grafana                gcr.io/google_containers/heapster-grafana-amd64:v4.4.3     k8s-app=grafana,task=monitoring
+monitoring-influxdb    1         1         1            1           11s       influxdb               gcr.io/google_containers/heapster-influxdb-amd64:v1.3.3    k8s-app=influxdb,task=monitoring
+</code></pre><h5 id="2-检查POD"><a href="#2-检查POD" class="headerlink" title="2. 检查POD"></a>2. 检查POD</h5><pre><code>[root@linux-node1 kube-config]# kubectl get pods -n kube-system -o wide | grep -E &apos;heapster|monitoring&apos;
+heapster-589b7db6c9-pwrks               1/1       Running   0          32s       10.2.97.77   192.168.56.13
+monitoring-grafana-d8c8d486c-l9dhx      1/1       Running   0          33s       10.2.97.76   192.168.56.13
+monitoring-influxdb-54bd58b4c9-q489p    1/1       Running   0          33s       10.2.70.76   192.168.56.12
+</code></pre><h5 id="3-检查Service"><a href="#3-检查Service" class="headerlink" title="3. 检查Service"></a>3. 检查Service</h5><pre><code>[root@linux-node1 kube-config]# kubectl get service -n kube-system -o wide | grep -E &apos;heapster|monitoring&apos;
+heapster               ClusterIP   10.1.102.233   &lt;none&gt;        80/TCP          50s       k8s-app=heapster
+monitoring-grafana     NodePort    10.1.18.167    &lt;none&gt;        80:21240/TCP    50s       k8s-app=grafana
+monitoring-influxdb    ClusterIP   10.1.244.92    &lt;none&gt;        8086/TCP        50s       k8s-app=influxdb
+</code></pre><h5 id="4-检查-kubernets-dashboard-界面，看是显示各-Nodes、Pods-的-CPU、内存、负载等利用率曲线图"><a href="#4-检查-kubernets-dashboard-界面，看是显示各-Nodes、Pods-的-CPU、内存、负载等利用率曲线图" class="headerlink" title="4. 检查 kubernets dashboard 界面，看是显示各 Nodes、Pods 的 CPU、内存、负载等利用率曲线图"></a>4. 检查 kubernets dashboard 界面，看是显示各 Nodes、Pods 的 CPU、内存、负载等利用率曲线图</h5><figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2018/06/15284524671834.jpg" alt="" title="">
+                </div>
+                <div class="image-caption"></div>
+            </figure>
+<h5 id="5-Grafana的访问"><a href="#5-Grafana的访问" class="headerlink" title="5. Grafana的访问:"></a>5. Grafana的访问:</h5><p>上面我们不是修改了官方提供的那个grafana.yaml中的那个NodePort嘛，所以我们访问就是<br><a href="http://NodeIP:NodePort" target="_blank" rel="noopener">http://NodeIP:NodePort</a><br><img src="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2018/07/15319972498850.jpg" alt=""><br><figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2018/07/15319972699157.jpg" alt="" title="">
+                </div>
+                <div class="image-caption"></div>
+            </figure></p>
+
+        </div>
+
+        <blockquote class="post-copyright">
+    
+    <div class="content">
+        
+<span class="post-time">
+    最后更新时间：<time datetime="2018-12-19T14:39:54.000Z" itemprop="dateUpdated">2018-12-19 22:39:54</time>
+</span><br>
+
+
+        
+        该文链接：<a href="/2018/06/08/09k8s-ji-qun-da-jianjian-kong-zhan-shi-jie-mian-an/" target="_blank" rel="external">https://blog.sctux.com/2018/06/08/09k8s-ji-qun-da-jianjian-kong-zhan-shi-jie-mian-an/</a>
+        
+    </div>
+    
+    <footer>
+        <a href="https://blog.sctux.com">
+            <img src="/img/avatar.jpg" alt="OutMan">
+            OutMan
+        </a>
+    </footer>
+</blockquote>
+
+        
+<div class="page-reward">
+    <a id="rewardBtn" href="javascript:;" class="page-reward-btn waves-effect waves-circle waves-light">赏</a>
+</div>
+
+
+
+        <div class="post-footer">
+            
+	<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/k8s集群搭建/">k8s集群搭建</a></li></ul>
+
+
+            
+<div class="page-share-wrap">
+    
+
+<div class="page-share" id="pageShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://blog.sctux.com/2018/06/08/09k8s-ji-qun-da-jianjian-kong-zhan-shi-jie-mian-an/&title=《09-K8s集群搭建---监控展示界面安装》 — 运维人&pic=https://blog.sctux.com/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://blog.sctux.com/2018/06/08/09k8s-ji-qun-da-jianjian-kong-zhan-shi-jie-mian-an/&title=《09-K8s集群搭建---监控展示界面安装》 — 运维人&source=😊" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.sctux.com/2018/06/08/09k8s-ji-qun-da-jianjian-kong-zhan-shi-jie-mian-an/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《09-K8s集群搭建---监控展示界面安装》 — 运维人&url=https://blog.sctux.com/2018/06/08/09k8s-ji-qun-da-jianjian-kong-zhan-shi-jie-mian-an/&via=https://blog.sctux.com" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=https://blog.sctux.com/2018/06/08/09k8s-ji-qun-da-jianjian-kong-zhan-shi-jie-mian-an/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+
+    <a href="javascript:;" id="shareFab" class="page-share-fab waves-effect waves-circle">
+        <i class="icon icon-share-alt icon-lg"></i>
+    </a>
+</div>
+
+
+
+        </div>
+    </div>
+
+    
+<nav class="post-nav flex-row flex-justify-between">
+  
+    <div class="waves-block waves-effect prev">
+      <a href="/2018/06/18/nginx-uwsgi-flask-supervisord-redis-mysql-docker-e9-83-a8-e7-bd-b2-2/" id="post-prev" class="post-nav-link">
+        <div class="tips"><i class="icon icon-angle-left icon-lg icon-pr"></i> Prev</div>
+        <h4 class="title">Nginx-uWsgi-Flask-Supervisord-Redis-MySQL-Docker 部署</h4>
+      </a>
+    </div>
+  
+
+  
+    <div class="waves-block waves-effect next">
+      <a href="/2018/06/03/08k8s-ji-qun-da-jiancoredns-chuang-jiandashboard/" id="post-next" class="post-nav-link">
+        <div class="tips">Next <i class="icon icon-angle-right icon-lg icon-pl"></i></div>
+        <h4 class="title">08-K8s集群搭建---CoreDNS创建&amp;DashBoard</h4>
+      </a>
+    </div>
+  
+</nav>
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Valine Comments -->
+    <div class="comments vcomment" id="comments"></div>
+    <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+    <script src="//unpkg.com/valine@latest/dist/Valine.min.js"></script>
+    <!-- Valine Comments script -->
+    <script>
+        var GUEST_INFO = ['nick','mail','link'];
+        var guest_info = 'nick,mail,link'.split(',').filter(function(item){
+          return GUEST_INFO.indexOf(item) > -1
+        });
+        new Valine({
+            el: '#comments',
+            notify: 'true' == 'true',
+            verify: 'true' == 'true',
+            appId: "lHxnnDHJXDgMoFpCbdx8A4q7-gzGzoHsz",
+            appKey: "W8H2NuO8chyDlCEQzionLuuV",
+            avatar: "monsterid",
+            placeholder: "来都来了，说点啥子吧~🌹 (友情提醒，留下正确的邮箱地址可以第一时间获取评论反馈)",
+            guest_info: guest_info.length == 0 ? GUEST_INFO : guest_info,
+            pageSize: "10"
+        })
+    </script>
+    <!-- Valine Comments end -->
+
+
+
+
+
+
+
+</article>
+
+<div id="reward" class="page-modal reward-lay">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <h3 class="reward-title">
+        <i class="icon icon-quote-left"></i>
+        谢谢大爷~
+        <i class="icon icon-quote-right"></i>
+    </h3>
+    <div class="reward-content">
+        
+        <div class="reward-code">
+            <img id="rewardCode" src="/img/wechat.jpg" alt="打赏二维码">
+        </div>
+        
+        <label class="reward-toggle">
+            <input id="rewardToggle" type="checkbox" class="reward-toggle-check" data-wechat="/img/wechat.jpg" data-alipay="/img/alipay.jpg">
+            <div class="reward-toggle-ctrol">
+                <span class="reward-toggle-item wechat">微信</span>
+                <span class="reward-toggle-label"></span>
+                <span class="reward-toggle-item alipay">支付宝</span>
+            </div>
+        </label>
+        
+    </div>
+</div>
+
+
+
+</div>
+
+        <footer class="footer">
+    <div class="top">
+        
+
+        <p>
+            
+            <span>博客内容遵循 <a rel="license" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh">知识共享 署名 - 非商业性 - 相同方式共享 4.0 国际协议</a></span>
+        </p>
+    </div>
+    <div class="bottom">
+        <p><span>OutMan &copy; 2013 - 2019</span>
+            <span>
+                
+                <a href="http://www.miitbeian.gov.cn/" target="_blank">蜀ICP备007号-1</a><br>
+                
+                Power by <a href="http://hexo.io/" target="_blank">Hexo</a> Theme <a href="https://github.com/yscoder/hexo-theme-indigo" target="_blank">indigo</a>
+            </span>
+        </p>
+    </div>
+</footer>
+
+    </main>
+    <div class="mask" id="mask"></div>
+<a href="javascript:;" id="gotop" class="waves-effect waves-circle waves-light"><span class="icon icon-lg icon-chevron-up"></span></a>
+
+
+
+<div class="global-share" id="globalShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://blog.sctux.com/2018/06/08/09k8s-ji-qun-da-jianjian-kong-zhan-shi-jie-mian-an/&title=《09-K8s集群搭建---监控展示界面安装》 — 运维人&pic=https://blog.sctux.com/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://blog.sctux.com/2018/06/08/09k8s-ji-qun-da-jianjian-kong-zhan-shi-jie-mian-an/&title=《09-K8s集群搭建---监控展示界面安装》 — 运维人&source=😊" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.sctux.com/2018/06/08/09k8s-ji-qun-da-jianjian-kong-zhan-shi-jie-mian-an/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《09-K8s集群搭建---监控展示界面安装》 — 运维人&url=https://blog.sctux.com/2018/06/08/09k8s-ji-qun-da-jianjian-kong-zhan-shi-jie-mian-an/&via=https://blog.sctux.com" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=https://blog.sctux.com/2018/06/08/09k8s-ji-qun-da-jianjian-kong-zhan-shi-jie-mian-an/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+<div class="page-modal wx-share" id="wxShare">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <img src="//api.qrserver.com/v1/create-qr-code/?data=https://blog.sctux.com/2018/06/08/09k8s-ji-qun-da-jianjian-kong-zhan-shi-jie-mian-an/" alt="微信分享二维码">
+</div>
+
+
+
+
+    <script src="//cdn.bootcss.com/node-waves/0.7.4/waves.min.js"></script>
+<script>
+var BLOG = { ROOT: '/', SHARE: true, REWARD: true };
+
+
+</script>
+
+<script src="/js/main.min.js?v=1.7.2"></script>
+
+
+<div class="search-panel" id="search-panel">
+    <ul class="search-result" id="search-result"></ul>
+</div>
+<template id="search-tpl">
+<li class="item">
+    <a href="{path}" class="waves-block waves-effect">
+        <div class="title ellipsis" title="{title}">{title}</div>
+        <div class="flex-row flex-middle">
+            <div class="tags ellipsis">
+                {tags}
+            </div>
+            <time class="flex-col time">{date}</time>
+        </div>
+    </a>
+</li>
+</template>
+
+<script src="/js/search.min.js?v=1.7.2" async></script>
+
+
+
+
+
+
+
+
+<script>
+(function() {
+    var OriginTitile = document.title, titleTime;
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            document.title = '老弟，死哪儿去啦~！';
+            clearTimeout(titleTime);
+        } else {
+            document.title = '(つェ⊂)咦!老弟来啦!';
+            titleTime = setTimeout(function() {
+                document.title = OriginTitile;
+            },2000);
+        }
+    });
+})();
+</script>
+
+
+
+</body>
+</html>

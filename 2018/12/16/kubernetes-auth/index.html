@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.8.0">
+    
+
+    
+
+    
+
+
+
+    <meta charset="utf-8">
+    
+    
+    
+    
+    <title>理解Kubernetes中的认证&amp;授权&amp;准入机制 | 运维人 | Devops、Linux、Kubernetes、Docker、Flask、Python、Shell</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    
+    <meta name="theme-color" content="#3F51B5">
+    
+    
+    <meta name="keywords" content="kubernetes,ServiceAccount,Kubeconfig,RBAC,Admission,PodSecurityContext,NetworkPolicy">
+    <meta name="description" content="概述首先需要了解这三种机制的区别：  认证(Authenticating)是对客户端的认证，通俗点就是用户名密码验证， 授权(Authorization)是对资源的授权，k8s中的资源无非是容器，最终其实就是容器的计算，网络，存储资源，当一个请求经过认证后，需要访问某一个资源（比如创建一个pod），授权检查都会通过访问策略比较该请求上下文的属性，（比如用户，资源和Namespace），根据授权规则">
+<meta name="keywords" content="kubernetes,ServiceAccount,Kubeconfig,RBAC,Admission,PodSecurityContext,NetworkPolicy">
+<meta property="og:type" content="article">
+<meta property="og:title" content="理解Kubernetes中的认证&amp;授权&amp;准入机制">
+<meta property="og:url" content="https://blog.sctux.com/2018/12/16/kubernetes-auth/index.html">
+<meta property="og:site_name" content="运维人">
+<meta property="og:description" content="概述首先需要了解这三种机制的区别：  认证(Authenticating)是对客户端的认证，通俗点就是用户名密码验证， 授权(Authorization)是对资源的授权，k8s中的资源无非是容器，最终其实就是容器的计算，网络，存储资源，当一个请求经过认证后，需要访问某一个资源（比如创建一个pod），授权检查都会通过访问策略比较该请求上下文的属性，（比如用户，资源和Namespace），根据授权规则">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://blog.sctux.com/2018/12/16/kubernetes-auth/k8s-authorition.png">
+<meta property="og:image" content="https://blog.sctux.com/2018/12/16/kubernetes-auth/auththentication&authorization.png">
+<meta property="og:image" content="https://blog.sctux.com/2018/12/16/kubernetes-auth/x509.png">
+<meta property="og:image" content="https://blog.sctux.com/2018/12/16/kubernetes-auth/sa.png">
+<meta property="og:image" content="https://blog.sctux.com/2018/12/16/kubernetes-auth/RBAC.png">
+<meta property="og:updated_time" content="2018-12-19T14:39:54.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="理解Kubernetes中的认证&amp;授权&amp;准入机制">
+<meta name="twitter:description" content="概述首先需要了解这三种机制的区别：  认证(Authenticating)是对客户端的认证，通俗点就是用户名密码验证， 授权(Authorization)是对资源的授权，k8s中的资源无非是容器，最终其实就是容器的计算，网络，存储资源，当一个请求经过认证后，需要访问某一个资源（比如创建一个pod），授权检查都会通过访问策略比较该请求上下文的属性，（比如用户，资源和Namespace），根据授权规则">
+<meta name="twitter:image" content="https://blog.sctux.com/2018/12/16/kubernetes-auth/k8s-authorition.png">
+    
+    <link rel="shortcut icon" href="/favicon.ico">
+    <link rel="stylesheet" href="/css/style.css?v=1.7.2">
+    <script>window.lazyScripts=[]</script>
+
+    <!-- custom head -->
+    
+
+</head>
+
+<body>
+    <div id="loading" class="active"></div>
+
+    <aside id="menu">
+  <div class="inner flex-row-vertical">
+    <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menu-off">
+        <i class="icon icon-lg icon-close"></i>
+    </a>
+    <div class="brand-wrap" style="background-image:url(/img/brand.jpg)">
+      <div class="brand">
+        <a href="/" class="avatar waves-effect waves-circle waves-light">
+          <img src="/img/avatar.jpg">
+        </a>
+        <hgroup class="introduce">
+          <h5 class="nickname">OutMan</h5>
+          <a href="mailto:2399447849@qq.com" title="2399447849@qq.com" class="mail">2399447849@qq.com</a>
+        </hgroup>
+      </div>
+    </div>
+    <div class="scroll-wrap flex-col">
+      <ul class="nav">
+        
+            <li class="waves-block waves-effect">
+              <a href="/">
+                <i class="icon icon-lg icon-home"></i>
+                主页
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/archives">
+                <i class="icon icon-lg icon-archives"></i>
+                归档
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/tags">
+                <i class="icon icon-lg icon-tags"></i>
+                标签
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/categories">
+                <i class="icon icon-lg icon-th-list"></i>
+                分类
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://github.com/guomaoqiu" target="_blank">
+                <i class="icon icon-lg icon-github"></i>
+                Github
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/works">
+                <i class="icon icon-lg icon-hand-peace-o"></i>
+                作品
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="http://demo.sctux.com" target="_blank">
+                <i class="icon icon-lg icon-link"></i>
+                DevOpsPlatform
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="http://resume.sctux.com/" target="_blank">
+                <i class="icon icon-lg icon-heart"></i>
+                我的简历
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/about">
+                <i class="icon icon-lg icon-user"></i>
+                关于我
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://blog.sctux.com/2019/02/27/skilltree/Skilltree.jpg" target="_blank">
+                <i class="icon icon-lg icon-tree"></i>
+                我的技能树
+              </a>
+            </li>
+        
+      </ul>
+    </div>
+  </div>
+</aside>
+
+    <main id="main">
+        <header class="top-header" id="header">
+    <div class="flex-row">
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light on" id="menu-toggle">
+          <i class="icon icon-lg icon-navicon"></i>
+        </a>
+        <div class="flex-col header-title ellipsis">理解Kubernetes中的认证&amp;授权&amp;准入机制</div>
+        
+        <div class="search-wrap" id="search-wrap">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="back">
+                <i class="icon icon-lg icon-chevron-left"></i>
+            </a>
+            <input type="text" id="key" class="search-input" autocomplete="off" placeholder="输入感兴趣的关键字">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="search">
+                <i class="icon icon-lg icon-search"></i>
+            </a>
+        </div>
+        
+        
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menuShare">
+            <i class="icon icon-lg icon-share-alt"></i>
+        </a>
+        
+    </div>
+</header>
+<header class="content-header post-header">
+
+    <div class="container fade-scale">
+        <h1 class="title">理解Kubernetes中的认证&amp;授权&amp;准入机制</h1>
+        <h5 class="subtitle">
+            
+                <time datetime="2018-12-16T07:35:24.000Z" itemprop="datePublished" class="page-time">
+  2018-12-16
+</time>
+
+
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/kubernetes/">kubernetes</a></li></ul>
+
+            
+        </h5>
+    </div>
+
+    
+
+
+</header>
+
+
+<div class="container body-wrap">
+    
+    <aside class="post-widget">
+        <nav class="post-toc-wrap post-toc-shrink" id="post-toc">
+            <h4>TOC</h4>
+            <ol class="post-toc"><li class="post-toc-item post-toc-level-1"><a class="post-toc-link" href="#概述"><span class="post-toc-number">1.</span> <span class="post-toc-text">概述</span></a></li><li class="post-toc-item post-toc-level-1"><a class="post-toc-link" href="#kubernetes-中的认证机制"><span class="post-toc-number">2.</span> <span class="post-toc-text">kubernetes 中的认证机制</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#X509-Client-Certs"><span class="post-toc-number">2.1.</span> <span class="post-toc-text">X509 Client Certs</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#Service-Account-Tokens"><span class="post-toc-number">2.2.</span> <span class="post-toc-text">Service Account Tokens</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#API-Server的service-account-authentication-身份验证"><span class="post-toc-number">2.2.1.</span> <span class="post-toc-text">API Server的service account authentication(身份验证)</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#默认的service-account"><span class="post-toc-number">2.2.2.</span> <span class="post-toc-text">默认的service account</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#如何创建一个ServiceAccount"><span class="post-toc-number">2.2.3.</span> <span class="post-toc-text">如何创建一个ServiceAccount</span></a></li></ol></li></ol></li><li class="post-toc-item post-toc-level-1"><a class="post-toc-link" href="#kubernetes-中的鉴权机制"><span class="post-toc-number">3.</span> <span class="post-toc-text">kubernetes 中的鉴权机制</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#创建kubeconfig"><span class="post-toc-number">3.1.</span> <span class="post-toc-text">创建kubeconfig</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#获取上面已创建的ServiceAccount的Seter名称"><span class="post-toc-number">3.1.1.</span> <span class="post-toc-text">获取上面已创建的ServiceAccount的Seter名称</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#获取secret下的token，并base64解码获取token明文"><span class="post-toc-number">3.1.2.</span> <span class="post-toc-text">获取secret下的token，并base64解码获取token明文</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#新增用户guomaoqiu"><span class="post-toc-number">3.1.3.</span> <span class="post-toc-text">新增用户guomaoqiu</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#验证"><span class="post-toc-number">3.1.4.</span> <span class="post-toc-text">验证</span></a></li></ol></li></ol></li><li class="post-toc-item post-toc-level-1"><a class="post-toc-link" href="#kubernetes-中的准入机制"><span class="post-toc-number">4.</span> <span class="post-toc-text">kubernetes 中的准入机制</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#安全上下文-Pod-SecurityContext"><span class="post-toc-number">4.1.</span> <span class="post-toc-text">安全上下文(Pod SecurityContext)</span></a></li></ol></li><li class="post-toc-item post-toc-level-1"><a class="post-toc-link" href="#运行态的安全控制—网络策略-NetworkPolicy"><span class="post-toc-number">5.</span> <span class="post-toc-text">运行态的安全控制—网络策略(NetworkPolicy)</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#基本原理"><span class="post-toc-number">5.1.</span> <span class="post-toc-text">基本原理</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#kubernetes-默认NetworkPolicy"><span class="post-toc-number">5.1.1.</span> <span class="post-toc-text">kubernetes 默认NetworkPolicy:</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#示例"><span class="post-toc-number">5.1.2.</span> <span class="post-toc-text">示例</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-4"><a class="post-toc-link" href="#用Deployment创建nginx-pod实例并用service暴露"><span class="post-toc-number">5.1.2.1.</span> <span class="post-toc-text">用Deployment创建nginx pod实例并用service暴露</span></a></li><li class="post-toc-item post-toc-level-4"><a class="post-toc-link" href="#确认创建结果"><span class="post-toc-number">5.1.2.2.</span> <span class="post-toc-text">确认创建结果</span></a></li><li class="post-toc-item post-toc-level-4"><a class="post-toc-link" href="#测试nginx服务连通性"><span class="post-toc-number">5.1.2.3.</span> <span class="post-toc-text">测试nginx服务连通性</span></a></li><li class="post-toc-item post-toc-level-4"><a class="post-toc-link" href="#通过创建Network-Policy对象添加隔离性"><span class="post-toc-number">5.1.2.4.</span> <span class="post-toc-text">通过创建Network Policy对象添加隔离性</span></a></li><li class="post-toc-item post-toc-level-4"><a class="post-toc-link" href="#测试隔离性"><span class="post-toc-number">5.1.2.5.</span> <span class="post-toc-text">测试隔离性</span></a></li><li class="post-toc-item post-toc-level-4"><a class="post-toc-link" href="#为pod添加access-“true”标签后再次测试连通性"><span class="post-toc-number">5.1.2.6.</span> <span class="post-toc-text">为pod添加access: “true”标签后再次测试连通性</span></a></li></ol></li></ol></li></ol></li></ol>
+        </nav>
+    </aside>
+
+
+<article id="post-kubernetes-auth" class="post-article article-type-post fade" itemprop="blogPost">
+
+    <div class="post-card">
+        <h1 class="post-card-title">理解Kubernetes中的认证&授权&准入机制</h1>
+        <div class="post-meta">
+            <time class="post-time" title="2018-12-16 15:35:24" datetime="2018-12-16T07:35:24.000Z" itemprop="datePublished">2018-12-16</time>
+
+            
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/kubernetes/">kubernetes</a></li></ul>
+
+
+
+            
+
+        </div>
+        <div class="post-content" id="post-content" itemprop="postContent">
+            <h1 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h1><p>首先需要了解这三种机制的区别：</p>
+<ul>
+<li>认证(Authenticating)是对客户端的认证，通俗点就是用户名密码验证，</li>
+<li>授权(Authorization)是对资源的授权，k8s中的资源无非是容器，最终其实就是容器的计算，网络，存储资源，当一个请求经过认证后，需要访问某一个资源（比如创建一个pod），授权检查都会通过访问策略比较该请求上下文的属性，（比如用户，资源和Namespace），根据授权规则判定该资源（比如某namespace下的pod）是否是该客户可访问的。</li>
+<li>准入(Admission Control)机制是一种在改变资源的持久化之前（比如某些资源的创建或删除，修改等之前）的机制。<br>在k8s中，这三种机制如下图：<figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="/2018/12/16/kubernetes-auth/k8s-authorition.png" alt="k8s-authorition" title="">
+                </div>
+                <div class="image-caption">k8s-authorition</div>
+            </figure>
+k8s的整体架构也是一个微服务的架构，所有的请求都是通过一个GateWay，也就是kube-apiserver这个组件（对外提供REST服务），由图中可以看出，k8s中客户端有两类，一种是普通用户，一种是集群内的Pod，这两种客户端的认证机制略有不同，后文会详述。但无论是哪一种，都需要依次经过认证，授权，准入这三个机制。<figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="/2018/12/16/kubernetes-auth/auththentication&authorization.png" alt="截图来自华为CCE云课堂" title="">
+                </div>
+                <div class="image-caption">截图来自华为CCE云课堂</div>
+            </figure>
+</li>
+</ul>
+<h1 id="kubernetes-中的认证机制"><a href="#kubernetes-中的认证机制" class="headerlink" title="kubernetes 中的认证机制"></a>kubernetes 中的认证机制</h1><p>需要注意的是，kubernetes虽然提供了多种认证机制，但并没有提供user 实体信息的存储，也就是说，账户体系需要我们自己去做维护。当然，也可以接入第三方账户体系（如谷歌账户），也可以使用开源的keystone去做整合。kubernetes 支持多种认证机制，可以配置成多个认证体制共存，这样，只要有一个认证通过，这个request就认证通过了。下面列举的是官网几种常见认证机制：</p>
+<ul>
+<li>X509 Client Certs</li>
+<li>Static Token File</li>
+<li>Bootstrap Tokens</li>
+<li>Static Password File</li>
+<li>Service Account Tokens</li>
+<li>OpenID Connect Tokens</li>
+</ul>
+<p>这里我主要还是理解一下常用认证方式:</p>
+<h2 id="X509-Client-Certs"><a href="#X509-Client-Certs" class="headerlink" title="X509 Client Certs"></a>X509 Client Certs</h2><p>也叫作双向数字证书认证，HTTPS证书认证，是基于CA根证书签名的双向数字证书认证方式，是所有认证方式中最严格的认证。默认在kubeadm创建的集群中是enabled的，可以在master node上查看kube-apiserver的pod配置文件：</p>
+<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">$ cat /usr/lib/systemd/system/kube-apiserver.service</span><br><span class="line"><span class="built_in">..</span><span class="built_in">..</span><span class="built_in">..</span><span class="built_in">..</span><span class="built_in">..</span></span><br><span class="line"><span class="built_in">..</span><span class="built_in">..</span><span class="built_in">..</span><span class="built_in">..</span><span class="built_in">..</span></span><br><span class="line"></span><br><span class="line"><span class="attribute">ExecStart</span>=/usr/local/bin/kube-apiserver \</span><br><span class="line">      <span class="attribute">--v</span>=2  \</span><br><span class="line">      <span class="attribute">--logtostderr</span>=<span class="literal">true</span>  \</span><br><span class="line">      <span class="attribute">--allow-privileged</span>=<span class="literal">true</span>  \</span><br><span class="line">      <span class="attribute">--bind-address</span>=0.0.0.0  \</span><br><span class="line">      <span class="attribute">--secure-port</span>=6443  \</span><br><span class="line">      <span class="attribute">--insecure-port</span>=0  \</span><br><span class="line">      <span class="attribute">--advertise-address</span>=192.168.56.110 \</span><br><span class="line">      <span class="attribute">--service-cluster-ip-range</span>=10.96.0.0/12  \</span><br><span class="line">      <span class="attribute">--service-node-port-range</span>=30000-32767  \</span><br><span class="line">      <span class="attribute">--etcd-servers</span>=https://192.168.56.111:2379,https://192.168.56.112:2379,https://192.168.56.113:2379 \</span><br><span class="line">      <span class="attribute">--etcd-cafile</span>=/etc/etcd/ssl/etcd-ca.pem  \</span><br><span class="line">      <span class="attribute">--etcd-certfile</span>=/etc/etcd/ssl/etcd.pem  \</span><br><span class="line">      <span class="attribute">--etcd-keyfile</span>=/etc/etcd/ssl/etcd-key.pem  \</span><br><span class="line">      <span class="attribute">--client-ca-file</span>=/etc/kubernetes/pki/ca.pem  \</span><br><span class="line">      <span class="attribute">--tls-cert-file</span>=/etc/kubernetes/pki/apiserver.pem  \</span><br><span class="line">      <span class="attribute">--tls-private-key-file</span>=/etc/kubernetes/pki/apiserver-key.pem  \</span><br><span class="line">      <span class="attribute">--kubelet-client-certificate</span>=/etc/kubernetes/pki/apiserver.pem  \</span><br><span class="line">      <span class="attribute">--kubelet-client-key</span>=/etc/kubernetes/pki/apiserver-key.pem  \</span><br><span class="line"><span class="built_in">..</span><span class="built_in">..</span><span class="built_in">..</span><span class="built_in">..</span><span class="built_in">..</span></span><br><span class="line"><span class="built_in">..</span><span class="built_in">..</span><span class="built_in">..</span><span class="built_in">..</span><span class="built_in">..</span></span><br></pre></td></tr></table></figure>
+<p>相关的三个启动参数：</p>
+<ul>
+<li>client-ca-file: 指定CA根证书文件为/etc/kubernetes/pki/ca.pem</li>
+<li>tls-private-key-file: 指定ApiServer私钥文件为/etc/kubernetes/pki/apiserver-key.pem</li>
+<li>tls-cert-file：指定ApiServer证书文件为/etc/kubernetes/pki/apiserver.pem</li>
+</ul>
+<p>请求中需要带有由该证书签名的证书，才能认证通过，客户端签署的证书里包含user,group信息，具体为证书的subject.CommonName(username)以及subject.Organization(group)</p>
+<div style="width: 50%; margin: auto"><figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="/2018/12/16/kubernetes-auth/x509.png" alt="x509" title="">
+                </div>
+                <div class="image-caption">x509</div>
+            </figure></div>
+
+<h2 id="Service-Account-Tokens"><a href="#Service-Account-Tokens" class="headerlink" title="Service Account Tokens"></a>Service Account Tokens</h2><p>Service Account Token 是一种比较特殊的认证机制，适用于上文中提到的pod内部服务需要访问apiserver的认证情况，默认enabled。<br>还是看上文中apiserver 的启动配置参数有–service-account-key-file，如果没有指明文件，默认使用–tls-private-key-file的值，即API Server的私钥。</p>
+<div style="width: 50%; margin: auto"><figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="/2018/12/16/kubernetes-auth/sa.png" alt="ServiceAccount工作流程" title="">
+                </div>
+                <div class="image-caption">ServiceAccount工作流程</div>
+            </figure> </div>
+
+<p>通过控制器ServiceAccountController会去list,watch k8s apiserver对于命名空间的创建、删除；<br>就会在新创建的名称空间下创建一个名为”default”的service account;</p>
+<p>TokenController 根据创建的ServiceAccount下面关联生成一个带有Token的secret。<br>Admission 是在通过认证进行鉴权的一个阶段，那么他会默认给当前名称空间下的pod打上，当前名称空间的那个ServiceAccount。</p>
+<p>service accout本身是作为一种资源在k8s集群中，我们可以通过命令行获取</p>
+<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl <span class="builtin-name">get</span> sa --all-namespaces</span><br><span class="line"></span><br><span class="line">NAMESPACE     NAME                                 SECRETS   AGE</span><br><span class="line">default      <span class="built_in"> default </span>                             1         16d</span><br><span class="line">kube-system  <span class="built_in"> default </span>                             1         16d</span><br><span class="line">kube-public  <span class="built_in"> default </span>                             1         16d</span><br><span class="line">kube-system   attachdetach-controller              1         16d</span><br><span class="line">kube-system   bootstrap-signer                     1         16d</span><br><span class="line">kube-system   calico-node                          1         16</span><br><span class="line"><span class="built_in">..</span><span class="built_in">..</span><span class="built_in">..</span><span class="built_in">..</span><span class="built_in">..</span>.</span><br><span class="line"><span class="built_in">..</span><span class="built_in">..</span><span class="built_in">..</span><span class="built_in">..</span><span class="built_in">..</span>.</span><br><span class="line"></span><br><span class="line">$ kubectl describe serviceaccount<span class="built_in">/default </span>-n kube-system</span><br><span class="line">Name:                default</span><br><span class="line">Namespace:           kube-system</span><br><span class="line">Labels:              &lt;none&gt;</span><br><span class="line">Annotations:         &lt;none&gt;</span><br><span class="line">Image pull secrets:  &lt;none&gt;</span><br><span class="line">Mountable secrets:   default-token-q9s9l</span><br><span class="line">Tokens:              default-token-q9s9l</span><br><span class="line">Events:              &lt;none&gt;</span><br><span class="line">$ kubectl <span class="builtin-name">get</span><span class="built_in"> secret </span>default-token-q9s9l -o yaml -n kube-system</span><br><span class="line">apiVersion: v1</span><br><span class="line">data:</span><br><span class="line">  ca.crt: LS0tLS1CRUdJ <span class="built_in">..</span><span class="built_in">..</span><span class="built_in">..</span><span class="built_in">..</span><span class="built_in">..</span><span class="built_in">..</span><span class="built_in">..</span>.略</span><br><span class="line">  namespace: a3ViZS1zeXN0ZW0=</span><br><span class="line">  token: ZXlKaGJHY2lPaUpTVX- <span class="built_in">..</span><span class="built_in">..</span><span class="built_in">..</span><span class="built_in">..</span><span class="built_in">..</span><span class="built_in">..</span><span class="built_in">..</span>.略</span><br><span class="line">kind: Secret</span><br><span class="line">metadata:</span><br><span class="line">  annotations:</span><br><span class="line">    kubernetes.io/service-account.name: default</span><br><span class="line">    kubernetes.io/service-account.uid: a5568634-f445-11e8-b4c4-000c295134cf</span><br><span class="line">  creationTimestamp: 2018-11-30T02:14:19Z</span><br><span class="line">  name: default-token-q9s9l</span><br><span class="line">  namespace: kube-system</span><br><span class="line">  resourceVersion: <span class="string">"337"</span></span><br><span class="line">  selfLink: /api/v1/namespaces/kube-system/secrets/default-token-q9s9l</span><br><span class="line">  uid: a56521fd-f445-11e8-aa44-000c29fe5618</span><br><span class="line">type: kubernetes.io/service-account-token</span><br><span class="line">[root@k8s-m1 kubelet]#</span><br></pre></td></tr></table></figure>
+<p>可以看到service-account-token的secret资源包含的数据有三部分：</p>
+<ul>
+<li>ca.crt，这是API Server的CA公钥证书，用于Pod中的Process对API Server的服务端数字证书进行校验时使用的；</li>
+<li>namespace，这是Secret所在namespace的值的base64编码：# echo -n “kube-system”|base64 =&gt; “a3ViZS1zeXN0ZW0=”</li>
+<li>token：该token就是由service-account-key-file的值签署(sign)生成。</li>
+</ul>
+<h3 id="API-Server的service-account-authentication-身份验证"><a href="#API-Server的service-account-authentication-身份验证" class="headerlink" title="API Server的service account authentication(身份验证)"></a>API Server的service account authentication(身份验证)</h3><p>前面说过，service account为Pod中的Process提供了一种身份标识，在Kubernetes的身份校验(authenticating)环节，以某个service account提供身份的Pod的用户名为：</p>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="selector-tag">system</span><span class="selector-pseudo">:serviceaccount</span><span class="selector-pseudo">:(NAMESPACE)</span><span class="selector-pseudo">:(SERVICEACCOUNT)</span></span><br></pre></td></tr></table></figure>
+<p>以上面那个kube-system namespace下的<code>default</code> service account为例，使用它的Pod的username全称为：</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">system:</span><span class="string">serviceaccount:</span>kube-<span class="string">system:</span><span class="keyword">default</span></span><br></pre></td></tr></table></figure>
+<h3 id="默认的service-account"><a href="#默认的service-account" class="headerlink" title="默认的service account"></a>默认的service account</h3><p>Kubernetes会为每个cluster中的namespace自动创建一个默认的service account资源，并命名为”default”.</p>
+<p>如果Pod中没有显式指定spec.serviceAccount字段值(自定义Admission)，那么Kubernetes会默认将该namespace下的default service account自动mount到在这个namespace中创建的Pod里，那这个操作就是通过上面所说的ServiceAccountAdmission来实现的。<br>我们以namespace “default”为例，我们查看一下其中的一个Pod的信息：</p>
+<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl describe pod nginx-64f497f8fd-lkmdr</span><br><span class="line">Name:           nginx-64f497f8fd-lkmdr</span><br><span class="line">Namespace:      default</span><br><span class="line"><span class="built_in">..</span><span class="built_in">..</span><span class="built_in">..</span></span><br><span class="line"><span class="built_in">..</span><span class="built_in">..</span><span class="built_in">..</span></span><br><span class="line">Containers:</span><br><span class="line"><span class="built_in">..</span><span class="built_in">..</span><span class="built_in">..</span></span><br><span class="line"><span class="built_in">..</span><span class="built_in">..</span><span class="built_in">..</span></span><br><span class="line">      Mounts:</span><br><span class="line">      /var/run/secrets/kubernetes.io/serviceaccount <span class="keyword">from</span> default-token-d5d8g (ro)</span><br><span class="line">Conditions:</span><br><span class="line"> <span class="built_in"> Type </span>             Status</span><br><span class="line">  Initialized       <span class="literal">True</span></span><br><span class="line">  Ready             <span class="literal">False</span></span><br><span class="line">  ContainersReady   <span class="literal">False</span></span><br><span class="line">  PodScheduled      <span class="literal">True</span></span><br><span class="line">Volumes:</span><br><span class="line"> <span class="built_in">..</span><span class="built_in">..</span><span class="built_in">..</span></span><br><span class="line"> <span class="built_in">..</span><span class="built_in">..</span><span class="built_in">..</span></span><br><span class="line">Events:</span><br><span class="line"> <span class="built_in"> Type </span>   Reason     Age   <span class="keyword">From</span>               Message</span><br><span class="line">  ----    ------     ----  ----               -------</span><br><span class="line">  Normal  Scheduled  27s   default-scheduler  Successfully assigned default/nginx-64f497f8fd-lkmdr <span class="keyword">to</span> k8s-m3</span><br><span class="line">  Normal  Pulling    17s   kubelet, k8s-m3    pulling image <span class="string">"nginx"</span></span><br></pre></td></tr></table></figure>
+<p>可以看到，kubernetes将default namespace中的service account “default”的service account token挂载(mount)到了Pod中容器的/var/run/secrets/kubernetes.io/serviceaccount路径下。</p>
+<p>深入容器内部，查看mount的serviceaccount路径下的结构：</p>
+<figure class="highlight stata"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl exec nginx-64f497f8fd-lkmdr -- <span class="keyword">ls</span> /<span class="keyword">var</span>/<span class="keyword">run</span>/secrets/kubernetes.io/serviceaccount</span><br><span class="line"><span class="keyword">ca</span>.crt</span><br><span class="line">namespace</span><br><span class="line"><span class="keyword">token</span></span><br><span class="line"></span><br><span class="line"># 这三个文件与上面提到的service account的<span class="keyword">token</span>中的数据是一一对应的。</span><br></pre></td></tr></table></figure>
+<h3 id="如何创建一个ServiceAccount"><a href="#如何创建一个ServiceAccount" class="headerlink" title="如何创建一个ServiceAccount"></a>如何创建一个ServiceAccount</h3><figure class="highlight dts"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta"># 通过命令行直接创建</span></span><br><span class="line">$ kubectl create sa myk8ssa</span><br><span class="line">serviceaccount/myk8ssa created</span><br><span class="line">$ kubectl describe sa/myk8ssa</span><br><span class="line"><span class="symbol">Name:</span>                mysa</span><br><span class="line"><span class="symbol">Namespace:</span>           default</span><br><span class="line"><span class="symbol">Labels:</span>              <span class="params">&lt;none&gt;</span></span><br><span class="line"><span class="symbol">Annotations:</span>         <span class="params">&lt;none&gt;</span></span><br><span class="line">Image pull secrets:  <span class="params">&lt;none&gt;</span></span><br><span class="line">Mountable secrets:   mysa-token-kcwqm</span><br><span class="line"><span class="symbol">Tokens:</span>              mysa-token-kcwqm</span><br><span class="line"><span class="symbol">Events:</span>              <span class="params">&lt;none&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="meta"># 如何使用？下面我在讨论</span></span><br></pre></td></tr></table></figure>
+<h1 id="kubernetes-中的鉴权机制"><a href="#kubernetes-中的鉴权机制" class="headerlink" title="kubernetes 中的鉴权机制"></a>kubernetes 中的鉴权机制</h1><p>目前，k8s 中一共有 4 种鉴权权限模式：</p>
+<ul>
+<li>Node: 一种特殊目的的授权模式，主要用来让 kubernetes 遵从 node 的编排规则，实际上是 RBAC 的一部分，相当于只定义了 node 这个角色以及它的权限；</li>
+<li>ABAC: Attribute-based access control；</li>
+<li>RBAC: Role-based access control；</li>
+<li>Webhook: 以 HTTP Callback 的方式，利用外部授权接口来进行权限控制；</li>
+</ul>
+<p>这里我主要学习总结最常用的鉴权方式—<code>RBAC</code><br>RBAC的鉴权策略可以利用 kubectl 或者 Kubernetes API 直接进行配置。RBAC 可以授权给用户，让用户有权进行授权管理，这样就可以无需接触节点，直接进行授权管理。RBAC 在 Kubernetes 中被映射为 API 资源和操作。</p>
+<div style="width: 50%; margin: auto"><figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="/2018/12/16/kubernetes-auth/RBAC.png" alt="RBAC" title="">
+                </div>
+                <div class="image-caption">RBAC</div>
+            </figure></div>
+
+<p>需要理解 RBAC 一些基础的概念和思路，RBAC 是让用户能够访问 Kubernetes API 资源的授权方式。</p>
+<p><strong><em>role</em></strong><br>角色是一系列权限的集合，例如一个角色可以包含读取 Pod 的权限和列出 Pod 的权限， ClusterRole 跟 Role 类似，但是可以在集群中到处使用（ Role 是 namespace 一级的）。<br><strong><em>role binding</em></strong><br>RoleBinding 把角色映射到用户，从而让这些用户继承角色在 namespace 中的权限。ClusterRoleBinding 让用户继承 ClusterRole 在整个集群中的权限。</p>
+<p>另外还要考虑<code>cluster roles</code>和<code>cluster role binding</code>。cluster role和cluster role binding方法跟role和role binding一样，出了它们有更广的scope。</p>
+<p><strong><em>Kubernetes中的RBAC</em></strong><br>RBAC 现在被 Kubernetes 深度集成，并使用他给系统组件进行授权。System Roles 一般具有前缀system:，很容易识别：</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl get clusterroles --namespace=kube-system</span><br><span class="line">NAME                                                                   AGE</span><br><span class="line">admin                                                                  <span class="number">16</span>d</span><br><span class="line">anonymous-dashboard-proxy-role                                         <span class="number">16</span>d</span><br><span class="line">calico-node                                                            <span class="number">16</span>d</span><br><span class="line">calicoctl                                                              <span class="number">16</span>d</span><br><span class="line">cluster-admin                                                          <span class="number">16</span>d</span><br><span class="line">edit                                                                   <span class="number">16</span>d</span><br><span class="line"><span class="string">system:</span>aggregate-to-admin                                              <span class="number">16</span>d</span><br><span class="line"><span class="string">system:</span>aggregate-to-edit                                               <span class="number">16</span>d</span><br><span class="line"><span class="string">system:</span>aggregate-to-view                                               <span class="number">16</span>d</span><br><span class="line"><span class="string">system:</span>auth-delegator                                                  <span class="number">16</span>d</span><br><span class="line"><span class="string">system:</span>aws-cloud-provider                                              <span class="number">16</span>d</span><br><span class="line"><span class="string">system:</span>basic-user                                                      <span class="number">16</span>d</span><br><span class="line"><span class="string">system:</span>certificates.k8s.<span class="string">io:</span><span class="string">certificatesigningrequests:</span>nodeclient       <span class="number">16</span>d</span><br><span class="line"><span class="string">system:</span>certificates.k8s.<span class="string">io:</span><span class="string">certificatesigningrequests:</span>selfnodeclient   <span class="number">16</span>d</span><br><span class="line"><span class="string">system:</span><span class="string">controller:</span>attachdetach-controller                              <span class="number">16</span>d</span><br><span class="line"><span class="string">system:</span><span class="string">controller:</span>certificate-controller                               <span class="number">16</span>d</span><br><span class="line"><span class="string">system:</span><span class="string">controller:</span>clusterrole-aggregation-controller                   <span class="number">16</span>d</span><br><span class="line"><span class="string">system:</span><span class="string">controller:</span>cronjob-controller                                   <span class="number">16</span>d</span><br><span class="line"><span class="string">system:</span><span class="string">controller:</span>daemon-set-controller                                <span class="number">16</span>d</span><br><span class="line"><span class="string">system:</span><span class="string">controller:</span>deployment-controller                                <span class="number">16</span>d</span><br><span class="line"><span class="string">system:</span><span class="string">controller:</span>disruption-controller                                <span class="number">16</span>d</span><br><span class="line"><span class="string">system:</span><span class="string">controller:</span>endpoint-controller                                  <span class="number">16</span>d</span><br><span class="line"><span class="string">system:</span><span class="string">controller:</span>expand-controller                                    <span class="number">16</span>d</span><br><span class="line">......略</span><br></pre></td></tr></table></figure>
+<p>示例：</p>
+<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br></pre></td><td class="code"><pre><span class="line">$ cat &gt;&gt; role.yaml &lt;&lt; EOF</span><br><span class="line">kind: Role</span><br><span class="line">apiVersion: rbac.authorization.k8s.io/v1</span><br><span class="line">metadata:</span><br><span class="line">  namespace: default</span><br><span class="line">  name: pod-reader</span><br><span class="line">rules:</span><br><span class="line">  - apiGroups: [<span class="string">""</span>] # <span class="string">""</span> indicates the core API group</span><br><span class="line">    resources: [<span class="string">"pods"</span>] # 可用操作资源对象</span><br><span class="line">    verbs: [<span class="string">"get"</span>, <span class="string">"watch"</span>, <span class="string">"list"</span>] # 对上面定义资源有哪些操作权限</span><br><span class="line">EOF</span><br><span class="line"></span><br><span class="line">$ cat &gt;&gt; rolebinding.yaml &lt;&lt; EOF</span><br><span class="line">kind: RoleBinding</span><br><span class="line">apiVersion: rbac.authorization.k8s.io/v1beta1</span><br><span class="line">metadata:</span><br><span class="line">  name: pod-reader-binding</span><br><span class="line">  namespace: default</span><br><span class="line">subjects:  </span><br><span class="line">- kind: ServiceAccount </span><br><span class="line">  name: mysa  </span><br><span class="line">  namespace: default</span><br><span class="line">roleRef:</span><br><span class="line">    kind: Role</span><br><span class="line">    name: pod-reader</span><br><span class="line">    apiGroup: rbac.authorization.k8s.io</span><br><span class="line">EOF</span><br><span class="line"></span><br><span class="line"><span class="comment"># 执行创建</span></span><br><span class="line">$ kubectl create -f role.yaml</span><br><span class="line">role.rbac.authorization.k8s.io/pod-reader created</span><br><span class="line">$ kubectl create -f rolebinding.yaml</span><br><span class="line">rolebinding.rbac.authorization.k8s.io/pod-reader-binding created</span><br><span class="line"></span><br><span class="line">[root@k8s-m1 ~]# kubectl <span class="builtin-name">get</span> role</span><br><span class="line">NAME         AGE</span><br><span class="line">pod-reader   36s</span><br><span class="line">[root@k8s-m1 ~]# kubectl describe role pod-reader</span><br><span class="line">Name:         pod-reader</span><br><span class="line">Labels:       &lt;none&gt;</span><br><span class="line">Annotations:  &lt;none&gt;</span><br><span class="line">PolicyRule:</span><br><span class="line">  Resources  Non-Resource URLs <span class="built_in"> Resource </span>Names  Verbs</span><br><span class="line">  ---------  -----------------  --------------  -----</span><br><span class="line">  pods       []                 []              [<span class="builtin-name">get</span> watch list]</span><br><span class="line">$ kubectl describe rolebinding pod-reader-binding</span><br><span class="line">Name:         pod-reader-binding</span><br><span class="line">Labels:       &lt;none&gt;</span><br><span class="line">Annotations:  &lt;none&gt;</span><br><span class="line">Role:</span><br><span class="line">  Kind:  Role</span><br><span class="line">  Name:  pod-reader</span><br><span class="line">Subjects:</span><br><span class="line">  Kind            Name  Namespace</span><br><span class="line">  ----            ----  ---------</span><br><span class="line">  ServiceAccount  mysa  default</span><br></pre></td></tr></table></figure>
+<p>上面，</p>
+<ol>
+<li>我定义了一个pod-reader的role,其中它的权限定义如上方定义的<code>get</code>,<code>watch</code>,<code>list</code>;</li>
+<li>然后定义了一个pod-reader-binding的rolebinding<br>前面提到过；用户通过认证之后就是鉴权，通过SA的认证方式之后拿到userinfo,然后绑定到role里面；那么此时对应的用户权限就是role里面定义的权限，subjects应用的对象类型也可以是User,Group;总之此时这一步就是获取到userinfo信息，然后通过角色绑定。相对应的权限就会赋予该用户。那用户从何而来？下面就需要创建一个用户来访问我们的集群了。</li>
+</ol>
+<p>那如何使用我们自己创建的ServiceAccount来登录并且通过自定义的这个RBAC来鉴权呢？这就涉及到了kubeconfig文件生成的问题了</p>
+<h2 id="创建kubeconfig"><a href="#创建kubeconfig" class="headerlink" title="创建kubeconfig"></a>创建kubeconfig</h2><h3 id="获取上面已创建的ServiceAccount的Seter名称"><a href="#获取上面已创建的ServiceAccount的Seter名称" class="headerlink" title="获取上面已创建的ServiceAccount的Seter名称"></a>获取上面已创建的ServiceAccount的Seter名称</h3><p>这里我是在默认namespace下面创建的。</p>
+<figure class="highlight vim"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl describe <span class="keyword">sa</span>/myk8ssa</span><br><span class="line">Name:                myk8ssa</span><br><span class="line">Namespace:           default</span><br><span class="line">Label<span class="variable">s:</span>              <span class="symbol">&lt;none&gt;</span></span><br><span class="line">Annotation<span class="variable">s:</span>         <span class="symbol">&lt;none&gt;</span></span><br><span class="line">Image pull secret<span class="variable">s:</span>  <span class="symbol">&lt;none&gt;</span></span><br><span class="line">Mountable secret<span class="variable">s:</span>   myk8ssa-token-<span class="number">2</span>kntd</span><br><span class="line">Token<span class="variable">s:</span>              myk8ssa-token-<span class="number">2</span>kntd</span><br><span class="line">Event<span class="variable">s:</span>              <span class="symbol">&lt;none&gt;</span></span><br></pre></td></tr></table></figure>
+<h3 id="获取secret下的token，并base64解码获取token明文"><a href="#获取secret下的token，并base64解码获取token明文" class="headerlink" title="获取secret下的token，并base64解码获取token明文"></a>获取secret下的token，并base64解码获取token明文</h3><figure class="highlight clean"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ token=`kubectl get secret myk8ssa-token<span class="number">-2</span>kntd -oyaml |grep token: | awk <span class="string">'&#123;print $2&#125;'</span> | xargs echo -n | base64 -d`</span><br><span class="line">$ echo $token</span><br><span class="line">eyJhbGciOiJSUzI1......略</span><br></pre></td></tr></table></figure>
+<h3 id="新增用户guomaoqiu"><a href="#新增用户guomaoqiu" class="headerlink" title="新增用户guomaoqiu"></a>新增用户guomaoqiu</h3><figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl<span class="built_in"> config </span>set-cluster my-k8s <span class="attribute">--server</span>=https://192.168.56.110:8443 \</span><br><span class="line"><span class="attribute">--certificate-authority</span>=/etc/kubernetes/pki/ca.pem \</span><br><span class="line"><span class="attribute">--embed-certs</span>=<span class="literal">true</span></span><br><span class="line">Cluster <span class="string">"my-k8s"</span> set.</span><br><span class="line"></span><br><span class="line">$ kubectl<span class="built_in"> config </span>set-credentials guomaoqiu <span class="attribute">--token</span>=<span class="variable">$token</span></span><br><span class="line">User <span class="string">"guomaoqiu"</span> set.</span><br><span class="line"></span><br><span class="line"><span class="comment"># 设置上下文</span></span><br><span class="line">$ kubectl<span class="built_in"> config </span>set-context my-k8s <span class="attribute">--cluster</span>=kubernetes</span><br><span class="line">Context <span class="string">"my-k8s"</span> created.</span><br><span class="line"></span><br><span class="line"><span class="comment"># 确认用户信息</span></span><br><span class="line">$ kubectl<span class="built_in"> config </span>set-context my-k8s <span class="attribute">--user</span>=guomaoqiu</span><br><span class="line">Context <span class="string">"my-k8s"</span> modified.</span><br></pre></td></tr></table></figure>
+<h3 id="验证"><a href="#验证" class="headerlink" title="验证"></a>验证</h3><figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">$</span> <span class="string">kubectl</span> <span class="string">config</span> <span class="string">get-contexts</span></span><br><span class="line"><span class="string">CURRENT</span>   <span class="string">NAME</span>                          <span class="string">CLUSTER</span>      <span class="string">AUTHINFO</span>           <span class="string">NAMESPACE</span></span><br><span class="line">          <span class="string">kubernetes-admin@kubernetes</span>   <span class="string">kubernetes</span>   <span class="string">kubernetes-admin</span></span><br><span class="line"><span class="string">*</span>         <span class="string">my-k8s</span>                        <span class="string">kubernetes</span>   <span class="string">guomaoqiu</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 将其设置为当前默认上下文:</span></span><br><span class="line"><span class="string">$</span> <span class="string">kubectl</span> <span class="string">config</span> <span class="string">use-context</span> <span class="string">my-k8s</span></span><br><span class="line"><span class="string">Switched</span> <span class="string">to</span> <span class="string">context</span> <span class="string">"my-k8s"</span><span class="string">.</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 获取POD:</span></span><br><span class="line"><span class="string">$</span> <span class="string">kubectl</span> <span class="string">get</span> <span class="string">pod</span></span><br><span class="line"><span class="string">NAME</span>                     <span class="string">READY</span>     <span class="string">STATUS</span>    <span class="string">RESTARTS</span>   <span class="string">AGE</span></span><br><span class="line"><span class="string">nginx-64f497f8fd-4qdnt</span>   <span class="number">1</span><span class="string">/1</span>       <span class="string">Running</span>   <span class="number">0</span>          <span class="number">10</span><span class="string">m</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 尝试删除POD:</span></span><br><span class="line"><span class="string">$</span> <span class="string">kubectl</span> <span class="string">delete</span> <span class="string">pod</span> <span class="string">nginx-64f497f8fd-4qdnt</span></span><br><span class="line"><span class="string">Error</span> <span class="string">from</span> <span class="string">server</span> <span class="string">(Forbidden):</span> <span class="string">pods</span> <span class="string">"nginx-64f497f8fd-4qdnt"</span> <span class="string">is</span> <span class="attr">forbidden:</span> <span class="string">User</span> <span class="string">"system:serviceaccount:default:myk8ssa"</span> <span class="string">cannot</span> <span class="string">delete</span> <span class="string">pods</span> <span class="string">in</span> <span class="string">the</span> <span class="string">namespace</span> <span class="string">"default"</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 可见，该用户的的权限只有可读，而没有删除的权限；</span></span><br><span class="line"><span class="comment"># 说明配置是成功了的。</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 浏览一下当前我环境中有哪些kubeconfig?</span></span><br><span class="line"><span class="string">$</span> <span class="string">kubectl</span> <span class="string">config</span> <span class="string">view</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">clusters:</span></span><br><span class="line"><span class="attr">- cluster:</span></span><br><span class="line"><span class="attr">    certificate-authority-data:</span> <span class="string">REDACTED</span></span><br><span class="line"><span class="attr">    server:</span> <span class="attr">https://192.168.56.110:8443</span></span><br><span class="line"><span class="attr">  name:</span> <span class="string">kubernetes</span></span><br><span class="line"><span class="attr">- cluster:</span></span><br><span class="line"><span class="attr">    certificate-authority-data:</span> <span class="string">REDACTED</span></span><br><span class="line"><span class="attr">    server:</span> <span class="attr">https://192.168.56.110:8443</span></span><br><span class="line"><span class="attr">  name:</span> <span class="string">my-k8s</span></span><br><span class="line"><span class="attr">contexts:</span></span><br><span class="line"><span class="attr">- context:</span></span><br><span class="line"><span class="attr">    cluster:</span> <span class="string">kubernetes</span></span><br><span class="line"><span class="attr">    user:</span> <span class="string">kubernetes-admin</span></span><br><span class="line"><span class="attr">  name:</span> <span class="string">kubernetes-admin@kubernetes</span></span><br><span class="line"><span class="attr">- context:</span></span><br><span class="line"><span class="attr">    cluster:</span> <span class="string">kubernetes</span></span><br><span class="line"><span class="attr">    user:</span> <span class="string">guomaoqiu</span></span><br><span class="line"><span class="attr">  name:</span> <span class="string">my-k8s</span></span><br><span class="line"><span class="attr">current-context:</span> <span class="string">my-k8s</span>  <span class="comment"># 当前环境</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Config</span></span><br><span class="line"><span class="attr">preferences:</span> <span class="string">&#123;&#125;</span></span><br><span class="line"><span class="attr">users:</span></span><br><span class="line"><span class="attr">- name:</span> <span class="string">guomaoqiu</span></span><br><span class="line"><span class="attr">  user:</span></span><br><span class="line"><span class="attr">    token:</span><span class="string">......略</span></span><br><span class="line"><span class="attr">- name:</span> <span class="string">kubernetes-admin</span></span><br><span class="line"><span class="attr">  user:</span></span><br><span class="line"><span class="attr">    client-certificate-data:</span> <span class="string">REDACTED</span></span><br><span class="line"><span class="attr">    client-key-data:</span> <span class="string">REDACTED</span></span><br></pre></td></tr></table></figure>
+<p>通过namespace我们可以做到不同业务之间的隔离，如果再加上如上这种权限控制将会更加细化、以上实验主要是在默认的namespace下面操作，除此之外也可以新建namespace然后进行验证操作。<code>kubeconfig</code>切换上下文也是非常实用的一种功能。<br>常用命令：</p>
+<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">kubectl - 使用kubectl来管理Kubernetes集群。</span><br><span class="line">kubectl<span class="built_in"> config </span><span class="builtin-name">set</span> - 在kubeconfig配置文件中设置一个单独的值。</span><br><span class="line">kubectl<span class="built_in"> config </span>set-cluster - 在kubeconfig配置文件中设置一个集群项。</span><br><span class="line">kubectl<span class="built_in"> config </span>set-context - 在kubeconfig配置文件中设置一个环境项。</span><br><span class="line">kubectl<span class="built_in"> config </span>set-credentials - 在kubeconfig配置文件中设置一个用户项。</span><br><span class="line">kubectl<span class="built_in"> config </span>unset - 在kubeconfig配置文件中清除一个单独的值。</span><br><span class="line">kubectl<span class="built_in"> config </span>use-context - 使用kubeconfig中的一个环境项作为当前配置。</span><br><span class="line">kubectl<span class="built_in"> config </span>view - 显示合并后的kubeconfig设置，或者一个指定的kubeconfig配置文件。</span><br></pre></td></tr></table></figure>
+<h1 id="kubernetes-中的准入机制"><a href="#kubernetes-中的准入机制" class="headerlink" title="kubernetes 中的准入机制"></a>kubernetes 中的准入机制</h1><p>Kubernetes的Admission Control实际上是一个准入控制器(Admission Controller)插件列表，发送到APIServer的请求都需要经过这个列表中的每个准入控制器插件的检查，如果某一个控制器插件准入失败，就准入失败。<br>更多可查看: <a href="http://docs.kubernetes.org.cn/144.html" target="_blank" rel="noopener">http://docs.kubernetes.org.cn/144.html</a><br>这里我们主要学习<code>PodSecurityPolicy</code></p>
+<h2 id="安全上下文-Pod-SecurityContext"><a href="#安全上下文-Pod-SecurityContext" class="headerlink" title="安全上下文(Pod SecurityContext)"></a>安全上下文(Pod SecurityContext)</h2><p>分为Pod级别和容器级别，容器级别的会覆盖Pod级别的相同设置。<br>在有PodSecurityPolicy策略的情况下，两者需要配合使用;</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">cat</span> <span class="string">&gt;&gt;</span> <span class="string">pod-security-policy.yaml</span> <span class="string">&lt;&lt;</span> <span class="string">EOF</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Pod</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line"><span class="attr">  name:</span> <span class="string">test-pod</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line"><span class="attr">  volumes:</span></span><br><span class="line"><span class="attr">    - name:</span> <span class="string">test</span></span><br><span class="line"><span class="attr">      emptyDir:</span> <span class="string">&#123;&#125;</span></span><br><span class="line"><span class="attr">  containers:</span></span><br><span class="line"><span class="attr">    - name:</span> <span class="string">test-pod</span></span><br><span class="line"><span class="attr">      image:</span> <span class="string">alpine</span></span><br><span class="line"><span class="attr">      imagePullPolicy:</span> <span class="string">IfNotPresent</span></span><br><span class="line"><span class="attr">      command:</span> <span class="string">['sh',</span> <span class="string">'-c'</span><span class="string">,</span> <span class="string">'echo The app is running! &amp;&amp; sleep 36000'</span><span class="string">]</span></span><br><span class="line"><span class="attr">      volumeMounts:</span></span><br><span class="line"><span class="attr">        - name:</span> <span class="string">test</span></span><br><span class="line"><span class="attr">          mountPath:</span> <span class="string">/data/test</span></span><br><span class="line"><span class="attr">      securityContext:</span>    <span class="comment"># 设置容器安全上下文</span></span><br><span class="line"><span class="attr">        readOnlyRootFilesystem:</span> <span class="literal">false</span>  <span class="comment"># 容器文件系统是否是只读</span></span><br><span class="line"><span class="attr">        privileged:</span> <span class="literal">false</span> <span class="comment"># 是否为特权容器</span></span><br><span class="line"><span class="attr">        runAsUser:</span> <span class="number">1000</span>   <span class="comment"># 进程运行用户UID</span></span><br><span class="line"><span class="string">EOF</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 执行创建:</span></span><br><span class="line"><span class="string">$</span> <span class="string">kubectl</span> <span class="string">create</span> <span class="bullet">-f</span> <span class="string">pod-security-policy.yaml</span></span><br><span class="line"><span class="string">pod/test-pod</span> <span class="string">created</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 进入容器验证：</span></span><br><span class="line"><span class="string">$</span> <span class="string">kubectl</span> <span class="string">exec</span> <span class="bullet">-it</span> <span class="string">test-pod</span> <span class="string">sh</span></span><br><span class="line"><span class="string">/</span> <span class="string">$</span> <span class="string">id</span></span><br><span class="line"><span class="string">uid=1000</span> <span class="string">gid=0(root)</span></span><br><span class="line"><span class="string">/</span> <span class="string">$</span> <span class="string">ps</span> <span class="bullet">-ef</span></span><br><span class="line"><span class="string">PID</span>   <span class="string">USER</span>     <span class="string">TIME</span>  <span class="string">COMMAND</span></span><br><span class="line">    <span class="number">1</span> <span class="number">1000</span>      <span class="number">0</span><span class="string">:00</span> <span class="string">sleep</span> <span class="number">36000</span></span><br><span class="line">    <span class="number">6</span> <span class="number">1000</span>      <span class="number">0</span><span class="string">:00</span> <span class="string">sh</span></span><br><span class="line">   <span class="number">15</span> <span class="number">1000</span>      <span class="number">0</span><span class="string">:00</span> <span class="string">sh</span></span><br><span class="line">   <span class="number">21</span> <span class="number">1000</span>      <span class="number">0</span><span class="string">:00</span> <span class="string">ps</span> <span class="bullet">-ef</span></span><br><span class="line"><span class="string">/</span> <span class="string">$</span> <span class="string">sysctl</span> <span class="bullet">-w</span> <span class="string">net.ipv4.tcp_recovery=2</span></span><br><span class="line"><span class="attr">sysctl:</span> <span class="string">error</span> <span class="string">setting</span> <span class="string">key</span> <span class="string">'net.ipv4.tcp_recovery'</span><span class="string">:</span> <span class="string">Read-only</span> <span class="string">file</span> <span class="string">system</span></span><br><span class="line"><span class="string">/</span> <span class="string">$</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 以上我设置限制了pod是否开启特权模式，并且运行用户uid为1000</span></span><br><span class="line"><span class="comment"># 那么如果在pod级别设置上下文的话，容器级别的会覆盖Pod级别的相同设置(已验证)</span></span><br></pre></td></tr></table></figure>
+<p>其他更多参数参见: <a href="https://kubernetes.io/docs/concepts/policy/pod-security-policy/" target="_blank" rel="noopener">https://kubernetes.io/docs/concepts/policy/pod-security-policy/</a></p>
+<h1 id="运行态的安全控制—网络策略-NetworkPolicy"><a href="#运行态的安全控制—网络策略-NetworkPolicy" class="headerlink" title="运行态的安全控制—网络策略(NetworkPolicy)"></a>运行态的安全控制—网络策略(NetworkPolicy)</h1><p>Kubernetes要求集群中所有pod，无论是节点内还是跨节点，都可以直接通信，或者说所有pod工作在同一跨节点网络，此网络一般是二层虚拟网络，称为pod网络。在安装引导kubernetes时，由选择并安装的network plugin实现。默认情况下，集群中所有pod之间、pod与节点之间可以互通。</p>
+<p>网络主要解决两个问题，一个是连通性，实体之间能够通过网络互通。另一个是隔离性，出于安全、限制网络流量的目的，又要控制实体之间的连通性。Network Policy用来实现隔离性，只有匹配规则的流量才能进入pod，同理只有匹配规则的流量才可以离开pod。</p>
+<p>但请注意，kubernetes支持的用以实现pod网络的network plugin有很多种，并不是全部都支持Network Policy，为kubernetes选择network plugin时需要考虑到这点，是否需要隔离？可用network plugin及是否支持Network Policy请参考<a href="https://kubernetes.io/docs/concepts/cluster-administration/addons/#networking-and-network-policy" target="_blank" rel="noopener">这里</a>。</p>
+<h2 id="基本原理"><a href="#基本原理" class="headerlink" title="基本原理"></a>基本原理</h2><p>Network Policy是kubernetes中的一种资源类型，它从属于某个namespace。其内容从逻辑上看包含两个关键部分，一是pod选择器，基于标签选择相同namespace下的pod，将其中定义的规则作用于选中的pod。另一个就是规则了，就是网络流量进出pod的规则，其采用的是白名单模式，符合规则的通过，不符合规则的拒绝。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">networking.k8s.io/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">NetworkPolicy</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line"><span class="attr">  name:</span> <span class="string">test-network-policy</span></span><br><span class="line"><span class="attr">  namespace:</span> <span class="string">default</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line"><span class="attr">  podSelector:</span></span><br><span class="line"><span class="attr">    matchLabels:</span>   <span class="comment"># 规则选择器，选择匹配的POD</span></span><br><span class="line"><span class="attr">      role:</span> <span class="string">db</span></span><br><span class="line"><span class="attr">  policyTypes:</span></span><br><span class="line"><span class="bullet">  -</span> <span class="string">Ingress</span></span><br><span class="line"><span class="bullet">  -</span> <span class="string">Egress</span></span><br><span class="line"><span class="attr">  ingress:</span></span><br><span class="line"><span class="attr">  - from:</span></span><br><span class="line"><span class="attr">    - ipBlock:</span>     <span class="comment"># 远端(访问端)IP白名单开放</span></span><br><span class="line"><span class="attr">        cidr:</span> <span class="number">172.17</span><span class="number">.0</span><span class="number">.0</span><span class="string">/16</span></span><br><span class="line"><span class="attr">        except:</span></span><br><span class="line"><span class="bullet">        -</span> <span class="number">172.17</span><span class="number">.1</span><span class="number">.0</span><span class="string">/24</span></span><br><span class="line"><span class="attr">    - namespaceSelector:</span>  <span class="comment"># 远端(访问端)namespaces白名单开放</span></span><br><span class="line"><span class="attr">        matchLabels:</span></span><br><span class="line"><span class="attr">          project:</span> <span class="string">myproject</span></span><br><span class="line"><span class="attr">    - podSelector:</span>        <span class="comment"># 远端(访问端)Pod白名单开放</span></span><br><span class="line"><span class="attr">        matchLabels:</span></span><br><span class="line"><span class="attr">          role:</span> <span class="string">frontend</span></span><br><span class="line"><span class="attr">    ports:</span>  			   <span class="comment"># 本端(被访问端)允许被访问的端口和协议</span></span><br><span class="line"><span class="attr">    - protocol:</span> <span class="string">TCP</span></span><br><span class="line"><span class="attr">      port:</span> <span class="number">6379</span></span><br><span class="line"><span class="attr">  egress:</span></span><br><span class="line"><span class="attr">  - to:</span></span><br><span class="line"><span class="attr">    - ipBlock:</span></span><br><span class="line"><span class="attr">        cidr:</span> <span class="number">10.0</span><span class="number">.0</span><span class="number">.0</span><span class="string">/24</span></span><br><span class="line"><span class="attr">    ports:</span></span><br><span class="line"><span class="attr">    - protocol:</span> <span class="string">TCP</span></span><br></pre></td></tr></table></figure>
+<p>对象创建方法与其它如ReplicaSet相同。apiVersion、kind、metadata与其它类型对象含义相同，不详细描述。</p>
+<ul>
+<li><p>.spec.PodSelector<br>顾名思义，它是pod选择器，基于标签选择与Network Policy处于同一namespace下的pod，如果pod被选中，则对其应用Network Policy中定义的规则。此为可选字段，当没有此字段时，表示选中所有pod。</p>
+</li>
+<li><p>.spec.PolicyTypes<br>Network Policy定义的规则可以分成两种，一种是入pod的Ingress规则，一种是出pod的Egress规则。本字段可以看作是一个开关，如果其中包含Ingress，则Ingress部分定义的规则生效，如果是Egress则Egress部分定义的规则生效，如果都包含则全部生效。当然此字段也可选，如果没有指定的话，则默认Ingress生效，如果Egress部分有定义的话，Egress才生效。怎么理解这句话，下文会提到，没有明确定义Ingress、Egress部分，它也是一种规则，默认规则而非没有规则。</p>
+</li>
+<li><p>.spec.ingress与.spec.egress<br>前者定义入pod规则，后者定义出pod规则，详细参考这里，这里只讲一下重点。上例中ingress与egress都只包含一条规则，两者都是数组，可以包含多条规则。当包含多条时，条目之间的逻辑关系是“或”，只要匹配其中一条就可以。.spec.ingress[].from<br>也是数组，数组成员对访问pod的外部source进行描述，符合条件的source才可以访问pod，有多种方法，如示例中的ip地址块、名称空间、pod标签等，数组中的成员也是逻辑或的关系。spec.ingress[].from.prots表示允许通过的协议及端口号。</p>
+</li>
+<li><p>.spec.egress.to 定义的是pod想要访问的外部destination，其它与ingress相同。</p>
+</li>
+</ul>
+<h3 id="kubernetes-默认NetworkPolicy"><a href="#kubernetes-默认NetworkPolicy" class="headerlink" title="kubernetes 默认NetworkPolicy:"></a>kubernetes 默认NetworkPolicy:</h3><figure class="highlight dts"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#默认禁止所有出口请求</span></span><br><span class="line"><span class="symbol">apiVersion:</span> networking.k8s.io/v1</span><br><span class="line"><span class="symbol">kind:</span> NetworkPolicy</span><br><span class="line"><span class="symbol">metadata:</span></span><br><span class="line"><span class="symbol">  name:</span> default-deny</span><br><span class="line"><span class="symbol">spec:</span></span><br><span class="line"><span class="symbol">  podSelector:</span> &#123;&#125;</span><br><span class="line"><span class="symbol">  policyTypes:</span></span><br><span class="line">  - Egress</span><br><span class="line"></span><br><span class="line"><span class="meta"># 默认禁止所有入口请求</span></span><br><span class="line"><span class="symbol">apiVersion:</span> networking.k8s.io/v1</span><br><span class="line"><span class="symbol">kind:</span> NetworkPolicy</span><br><span class="line"><span class="symbol">metadata:</span></span><br><span class="line"><span class="symbol">  name:</span> default-deny</span><br><span class="line"><span class="symbol">spec:</span></span><br><span class="line"><span class="symbol">  podSelector:</span> &#123;&#125;</span><br><span class="line"><span class="symbol">  policyTypes:</span></span><br><span class="line">  - Ingress</span><br><span class="line"></span><br><span class="line"><span class="meta"># 默认允许所有出口请求</span></span><br><span class="line"><span class="symbol">apiVersion:</span> networking.k8s.io/v1</span><br><span class="line"><span class="symbol">kind:</span> NetworkPolicy</span><br><span class="line"><span class="symbol">metadata:</span></span><br><span class="line"><span class="symbol">  name:</span> allow-all</span><br><span class="line"><span class="symbol">spec:</span></span><br><span class="line"><span class="symbol">  podSelector:</span> &#123;&#125;</span><br><span class="line"><span class="symbol">  egress:</span></span><br><span class="line">  - &#123;&#125;</span><br><span class="line"><span class="symbol">  policyTypes:</span></span><br><span class="line">  - Egress</span><br><span class="line"></span><br><span class="line"><span class="meta"># 默认允许所有入口请求</span></span><br><span class="line"><span class="symbol">apiVersion:</span> networking.k8s.io/v1</span><br><span class="line"><span class="symbol">kind:</span> NetworkPolicy</span><br><span class="line"><span class="symbol">metadata:</span></span><br><span class="line"><span class="symbol">  name:</span> allow-all</span><br><span class="line"><span class="symbol">spec:</span></span><br><span class="line"><span class="symbol">  podSelector:</span> &#123;&#125;</span><br><span class="line"><span class="symbol">  egress:</span></span><br><span class="line">  - &#123;&#125;</span><br><span class="line"><span class="symbol">  policyTypes:</span></span><br><span class="line">  - Ingress</span><br></pre></td></tr></table></figure>
+<p>默认策略 无需详解，但请注意，pod与所运行节点之间流量不受Network Policy限制。</p>
+<h3 id="示例"><a href="#示例" class="headerlink" title="示例"></a>示例</h3><p>下面通过一个真实示例展示Network Policy普通用法。</p>
+<h4 id="用Deployment创建nginx-pod实例并用service暴露"><a href="#用Deployment创建nginx-pod实例并用service暴露" class="headerlink" title="用Deployment创建nginx pod实例并用service暴露"></a>用Deployment创建nginx pod实例并用service暴露</h4><figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl <span class="builtin-name">run</span> nginx <span class="attribute">--image</span>=nginx <span class="attribute">--replicas</span>=3</span><br><span class="line">deployment.apps/nginx created</span><br><span class="line">$ kubectl expose deployment nginx <span class="attribute">--port</span>=80</span><br><span class="line">service/nginx exposed</span><br></pre></td></tr></table></figure>
+<h4 id="确认创建结果"><a href="#确认创建结果" class="headerlink" title="确认创建结果"></a>确认创建结果</h4><figure class="highlight lsl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl get pod,svc</span><br><span class="line">NAME                         READY     STATUS    RESTARTS   AGE</span><br><span class="line">pod/nginx<span class="number">-64</span>f497f8fd<span class="number">-9</span>mfd7   <span class="number">1</span>/<span class="number">1</span>       Running   <span class="number">0</span>          <span class="number">2</span>m</span><br><span class="line">pod/nginx<span class="number">-64</span>f497f8fd-nss94   <span class="number">1</span>/<span class="number">1</span>       Running   <span class="number">0</span>          <span class="number">2</span>m</span><br><span class="line">pod/nginx<span class="number">-64</span>f497f8fd-zs926   <span class="number">1</span>/<span class="number">1</span>       Running   <span class="number">0</span>          <span class="number">2</span>m</span><br><span class="line"></span><br><span class="line">NAME                 TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)   AGE</span><br><span class="line">service/kubernetes   ClusterIP   <span class="number">10.96</span><span class="number">.0</span><span class="number">.1</span>        &lt;none&gt;        <span class="number">443</span>/TCP   <span class="number">3</span>d</span><br><span class="line">service/nginx        ClusterIP   <span class="number">10.111</span><span class="number">.254</span><span class="number">.191</span>   &lt;none&gt;        <span class="number">80</span>/TCP    <span class="number">14</span>s</span><br></pre></td></tr></table></figure>
+<h4 id="测试nginx服务连通性"><a href="#测试nginx服务连通性" class="headerlink" title="测试nginx服务连通性"></a>测试nginx服务连通性</h4><figure class="highlight jboss-cli"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">$  kubectl run busybox <span class="params">--rm</span> -it <span class="params">--image=busybox</span> <span class="string">/bin/sh</span></span><br><span class="line">If you don't see a <span class="keyword">command</span> prompt, <span class="keyword">try</span> pressing enter.</span><br><span class="line">/ <span class="comment"># wget --spider --timeout=3 nginx</span></span><br><span class="line">Connecting to nginx <span class="params">(10.111.254.191:80)</span>  <span class="comment"># 说明通的</span></span><br><span class="line">/ <span class="comment">#</span></span><br></pre></td></tr></table></figure>
+<h4 id="通过创建Network-Policy对象添加隔离性"><a href="#通过创建Network-Policy对象添加隔离性" class="headerlink" title="通过创建Network Policy对象添加隔离性"></a>通过创建Network Policy对象添加隔离性</h4><figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line">$ cat &gt;&gt; pod-network-policy.yaml &lt;&lt; EOF</span><br><span class="line">kind: NetworkPolicy</span><br><span class="line">apiVersion: networking.k8s.io/v1</span><br><span class="line">metadata:</span><br><span class="line">  name: access-nginx</span><br><span class="line">spec:</span><br><span class="line">  podSelector:</span><br><span class="line">    matchLabels: # 默认该pod就有<span class="attribute">run</span>=app这个标签了，我这里无需在从新定义</span><br><span class="line">      run: nginx  </span><br><span class="line">  ingress:</span><br><span class="line">  - <span class="keyword">from</span>:</span><br><span class="line">    - podSelector:</span><br><span class="line">        matchLabels:</span><br><span class="line">          access: <span class="string">"true"</span></span><br><span class="line">EOF</span><br><span class="line"></span><br><span class="line"><span class="comment"># 执行创建</span></span><br><span class="line">$ kubectl create -f pod-network-policy.yaml</span><br><span class="line">networkpolicy.networking.k8s.io/access-nginx created</span><br><span class="line"></span><br><span class="line"><span class="comment"># 查看具体隔离策略</span></span><br><span class="line">$ kubectl describe networkpolicy access-nginx</span><br><span class="line">Name:         access-nginx</span><br><span class="line">Namespace:    default</span><br><span class="line">Created on:   2018-12-17 01:16:57 -0500 EST</span><br><span class="line">Labels:       &lt;none&gt;</span><br><span class="line">Annotations:  &lt;none&gt;</span><br><span class="line">Spec:</span><br><span class="line">  PodSelector:     <span class="attribute">run</span>=nginx</span><br><span class="line">  Allowing ingress traffic:</span><br><span class="line">    <span class="keyword">To</span> Port: &lt;any&gt; (traffic allowed <span class="keyword">to</span> all ports)</span><br><span class="line">    <span class="keyword">From</span>:</span><br><span class="line">      PodSelector: <span class="attribute">access</span>=<span class="literal">true</span></span><br><span class="line">  Allowing egress traffic:</span><br><span class="line">    &lt;none&gt; (Selected pods are isolated <span class="keyword">for</span> egress connectivity)</span><br><span class="line"> <span class="built_in"> Policy </span>Types: Ingress</span><br></pre></td></tr></table></figure>
+<h4 id="测试隔离性"><a href="#测试隔离性" class="headerlink" title="测试隔离性"></a>测试隔离性</h4><figure class="highlight jboss-cli"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl run busybox <span class="params">--rm</span> -it <span class="params">--image=busybox</span> <span class="string">/bin/sh</span></span><br><span class="line">If you don't see a <span class="keyword">command</span> prompt, <span class="keyword">try</span> pressing enter.</span><br><span class="line">/ <span class="comment"># wget --spider --timeout=3 nginx</span></span><br><span class="line">Connecting to nginx <span class="params">(10.111.254.191:80)</span></span><br><span class="line">wget: download timed out <span class="comment"># 已经超时，说明已经不能访问了</span></span><br></pre></td></tr></table></figure>
+<h4 id="为pod添加access-“true”标签后再次测试连通性"><a href="#为pod添加access-“true”标签后再次测试连通性" class="headerlink" title="为pod添加access: “true”标签后再次测试连通性"></a>为pod添加access: “true”标签后再次测试连通性</h4><figure class="highlight jboss-cli"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl run busybox <span class="params">--rm</span> -it <span class="params">--labels=</span><span class="string">"access=true"</span> <span class="params">--image=busybox</span> <span class="string">/bin/sh</span></span><br><span class="line">If you don't see a <span class="keyword">command</span> prompt, <span class="keyword">try</span> pressing enter.</span><br><span class="line">/ <span class="comment"># wget --spider --timeout=3 nginx</span></span><br><span class="line">Connecting to nginx <span class="params">(10.111.254.191:80)</span></span><br></pre></td></tr></table></figure>
+<p>参考:<br><a href="https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/" target="_blank" rel="noopener">https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/</a><br><a href="https://kubernetes.io/docs/reference/access-authn-authz/rbac/" target="_blank" rel="noopener">https://kubernetes.io/docs/reference/access-authn-authz/rbac/</a><br><a href="https://kubernetes.io/docs/concepts/services-networking/network-policies/" target="_blank" rel="noopener">https://kubernetes.io/docs/concepts/services-networking/network-policies/</a><br><a href="https://kubernetes.io/docs/tasks/access-application-cluster/configure-access-multiple-clusters/" target="_blank" rel="noopener">https://kubernetes.io/docs/tasks/access-application-cluster/configure-access-multiple-clusters/</a><br><a href="https://kubernetes.io/docs/concepts/policy/pod-security-policy/" target="_blank" rel="noopener">https://kubernetes.io/docs/concepts/policy/pod-security-policy/</a></p>
+
+        </div>
+
+        <blockquote class="post-copyright">
+    
+    <div class="content">
+        
+<span class="post-time">
+    最后更新时间：<time datetime="2018-12-19T14:39:54.000Z" itemprop="dateUpdated">2018-12-19 22:39:54</time>
+</span><br>
+
+
+        
+        该文链接：<a href="/2018/12/16/kubernetes-auth/" target="_blank" rel="external">https://blog.sctux.com/2018/12/16/kubernetes-auth/</a>
+        
+    </div>
+    
+    <footer>
+        <a href="https://blog.sctux.com">
+            <img src="/img/avatar.jpg" alt="OutMan">
+            OutMan
+        </a>
+    </footer>
+</blockquote>
+
+        
+<div class="page-reward">
+    <a id="rewardBtn" href="javascript:;" class="page-reward-btn waves-effect waves-circle waves-light">赏</a>
+</div>
+
+
+
+        <div class="post-footer">
+            
+	<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Admission/">Admission</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Kubeconfig/">Kubeconfig</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/NetworkPolicy/">NetworkPolicy</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PodSecurityContext/">PodSecurityContext</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/RBAC/">RBAC</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/ServiceAccount/">ServiceAccount</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/kubernetes/">kubernetes</a></li></ul>
+
+
+            
+<div class="page-share-wrap">
+    
+
+<div class="page-share" id="pageShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://blog.sctux.com/2018/12/16/kubernetes-auth/&title=《理解Kubernetes中的认证&授权&准入机制》 — 运维人&pic=https://blog.sctux.com/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://blog.sctux.com/2018/12/16/kubernetes-auth/&title=《理解Kubernetes中的认证&授权&准入机制》 — 运维人&source=😊" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.sctux.com/2018/12/16/kubernetes-auth/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《理解Kubernetes中的认证&授权&准入机制》 — 运维人&url=https://blog.sctux.com/2018/12/16/kubernetes-auth/&via=https://blog.sctux.com" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=https://blog.sctux.com/2018/12/16/kubernetes-auth/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+
+    <a href="javascript:;" id="shareFab" class="page-share-fab waves-effect waves-circle">
+        <i class="icon icon-share-alt icon-lg"></i>
+    </a>
+</div>
+
+
+
+        </div>
+    </div>
+
+    
+<nav class="post-nav flex-row flex-justify-between">
+  
+    <div class="waves-block waves-effect prev">
+      <a href="/2018/12/18/kubernetes-liveness/" id="post-prev" class="post-nav-link">
+        <div class="tips"><i class="icon icon-angle-left icon-lg icon-pr"></i> Prev</div>
+        <h4 class="title">Kubernetes容器存活探测&amp;应用自恢复</h4>
+      </a>
+    </div>
+  
+
+  
+    <div class="waves-block waves-effect next">
+      <a href="/2018/12/15/kubernetes-storage/" id="post-next" class="post-nav-link">
+        <div class="tips">Next <i class="icon icon-angle-right icon-lg icon-pl"></i></div>
+        <h4 class="title">理解kubernetes中的Storage</h4>
+      </a>
+    </div>
+  
+</nav>
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Valine Comments -->
+    <div class="comments vcomment" id="comments"></div>
+    <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+    <script src="//unpkg.com/valine@latest/dist/Valine.min.js"></script>
+    <!-- Valine Comments script -->
+    <script>
+        var GUEST_INFO = ['nick','mail','link'];
+        var guest_info = 'nick,mail,link'.split(',').filter(function(item){
+          return GUEST_INFO.indexOf(item) > -1
+        });
+        new Valine({
+            el: '#comments',
+            notify: 'true' == 'true',
+            verify: 'true' == 'true',
+            appId: "lHxnnDHJXDgMoFpCbdx8A4q7-gzGzoHsz",
+            appKey: "W8H2NuO8chyDlCEQzionLuuV",
+            avatar: "monsterid",
+            placeholder: "来都来了，说点啥子吧~🌹 (友情提醒，留下正确的邮箱地址可以第一时间获取评论反馈)",
+            guest_info: guest_info.length == 0 ? GUEST_INFO : guest_info,
+            pageSize: "10"
+        })
+    </script>
+    <!-- Valine Comments end -->
+
+
+
+
+
+
+
+</article>
+
+<div id="reward" class="page-modal reward-lay">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <h3 class="reward-title">
+        <i class="icon icon-quote-left"></i>
+        谢谢大爷~
+        <i class="icon icon-quote-right"></i>
+    </h3>
+    <div class="reward-content">
+        
+        <div class="reward-code">
+            <img id="rewardCode" src="/img/wechat.jpg" alt="打赏二维码">
+        </div>
+        
+        <label class="reward-toggle">
+            <input id="rewardToggle" type="checkbox" class="reward-toggle-check" data-wechat="/img/wechat.jpg" data-alipay="/img/alipay.jpg">
+            <div class="reward-toggle-ctrol">
+                <span class="reward-toggle-item wechat">微信</span>
+                <span class="reward-toggle-label"></span>
+                <span class="reward-toggle-item alipay">支付宝</span>
+            </div>
+        </label>
+        
+    </div>
+</div>
+
+
+
+</div>
+
+        <footer class="footer">
+    <div class="top">
+        
+
+        <p>
+            
+            <span>博客内容遵循 <a rel="license" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh">知识共享 署名 - 非商业性 - 相同方式共享 4.0 国际协议</a></span>
+        </p>
+    </div>
+    <div class="bottom">
+        <p><span>OutMan &copy; 2013 - 2019</span>
+            <span>
+                
+                <a href="http://www.miitbeian.gov.cn/" target="_blank">蜀ICP备007号-1</a><br>
+                
+                Power by <a href="http://hexo.io/" target="_blank">Hexo</a> Theme <a href="https://github.com/yscoder/hexo-theme-indigo" target="_blank">indigo</a>
+            </span>
+        </p>
+    </div>
+</footer>
+
+    </main>
+    <div class="mask" id="mask"></div>
+<a href="javascript:;" id="gotop" class="waves-effect waves-circle waves-light"><span class="icon icon-lg icon-chevron-up"></span></a>
+
+
+
+<div class="global-share" id="globalShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://blog.sctux.com/2018/12/16/kubernetes-auth/&title=《理解Kubernetes中的认证&授权&准入机制》 — 运维人&pic=https://blog.sctux.com/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://blog.sctux.com/2018/12/16/kubernetes-auth/&title=《理解Kubernetes中的认证&授权&准入机制》 — 运维人&source=😊" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.sctux.com/2018/12/16/kubernetes-auth/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《理解Kubernetes中的认证&授权&准入机制》 — 运维人&url=https://blog.sctux.com/2018/12/16/kubernetes-auth/&via=https://blog.sctux.com" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=https://blog.sctux.com/2018/12/16/kubernetes-auth/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+<div class="page-modal wx-share" id="wxShare">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <img src="//api.qrserver.com/v1/create-qr-code/?data=https://blog.sctux.com/2018/12/16/kubernetes-auth/" alt="微信分享二维码">
+</div>
+
+
+
+
+    <script src="//cdn.bootcss.com/node-waves/0.7.4/waves.min.js"></script>
+<script>
+var BLOG = { ROOT: '/', SHARE: true, REWARD: true };
+
+
+</script>
+
+<script src="/js/main.min.js?v=1.7.2"></script>
+
+
+<div class="search-panel" id="search-panel">
+    <ul class="search-result" id="search-result"></ul>
+</div>
+<template id="search-tpl">
+<li class="item">
+    <a href="{path}" class="waves-block waves-effect">
+        <div class="title ellipsis" title="{title}">{title}</div>
+        <div class="flex-row flex-middle">
+            <div class="tags ellipsis">
+                {tags}
+            </div>
+            <time class="flex-col time">{date}</time>
+        </div>
+    </a>
+</li>
+</template>
+
+<script src="/js/search.min.js?v=1.7.2" async></script>
+
+
+
+
+
+
+
+
+<script>
+(function() {
+    var OriginTitile = document.title, titleTime;
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            document.title = '老弟，死哪儿去啦~！';
+            clearTimeout(titleTime);
+        } else {
+            document.title = '(つェ⊂)咦!老弟来啦!';
+            titleTime = setTimeout(function() {
+                document.title = OriginTitile;
+            },2000);
+        }
+    });
+})();
+</script>
+
+
+
+</body>
+</html>

@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.8.0">
+    
+
+    
+
+    
+
+
+
+    <meta charset="utf-8">
+    
+    
+    
+    
+    <title>理解Kubernetes的亲和性调度 | 运维人 | Devops、Linux、Kubernetes、Docker、Flask、Python、Shell</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    
+    <meta name="theme-color" content="#3F51B5">
+    
+    
+    <meta name="keywords" content="k8s">
+    <meta name="description" content="NodeName、nodeSelector、nodeAffinity、podAffinity、Taints以及Tolerations用法 1. NodeNamePod.spec.nodeName用于强制约束将Pod调度到指定的Node节点上，这里说是“调度”，但其实指定了nodeName的Pod会直接跳过Scheduler的调度逻辑，直接写入PodList列表，该匹配规则是强制匹配。例子：我的预期">
+<meta name="keywords" content="k8s">
+<meta property="og:type" content="article">
+<meta property="og:title" content="理解Kubernetes的亲和性调度">
+<meta property="og:url" content="https://blog.sctux.com/2018/12/04/li-jiekubernetes-de-qin-he-xing-diao-du/index.html">
+<meta property="og:site_name" content="运维人">
+<meta property="og:description" content="NodeName、nodeSelector、nodeAffinity、podAffinity、Taints以及Tolerations用法 1. NodeNamePod.spec.nodeName用于强制约束将Pod调度到指定的Node节点上，这里说是“调度”，但其实指定了nodeName的Pod会直接跳过Scheduler的调度逻辑，直接写入PodList列表，该匹配规则是强制匹配。例子：我的预期">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2018-12-19T14:39:54.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="理解Kubernetes的亲和性调度">
+<meta name="twitter:description" content="NodeName、nodeSelector、nodeAffinity、podAffinity、Taints以及Tolerations用法 1. NodeNamePod.spec.nodeName用于强制约束将Pod调度到指定的Node节点上，这里说是“调度”，但其实指定了nodeName的Pod会直接跳过Scheduler的调度逻辑，直接写入PodList列表，该匹配规则是强制匹配。例子：我的预期">
+    
+    <link rel="shortcut icon" href="/favicon.ico">
+    <link rel="stylesheet" href="/css/style.css?v=1.7.2">
+    <script>window.lazyScripts=[]</script>
+
+    <!-- custom head -->
+    
+
+</head>
+
+<body>
+    <div id="loading" class="active"></div>
+
+    <aside id="menu">
+  <div class="inner flex-row-vertical">
+    <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menu-off">
+        <i class="icon icon-lg icon-close"></i>
+    </a>
+    <div class="brand-wrap" style="background-image:url(/img/brand.jpg)">
+      <div class="brand">
+        <a href="/" class="avatar waves-effect waves-circle waves-light">
+          <img src="/img/avatar.jpg">
+        </a>
+        <hgroup class="introduce">
+          <h5 class="nickname">OutMan</h5>
+          <a href="mailto:2399447849@qq.com" title="2399447849@qq.com" class="mail">2399447849@qq.com</a>
+        </hgroup>
+      </div>
+    </div>
+    <div class="scroll-wrap flex-col">
+      <ul class="nav">
+        
+            <li class="waves-block waves-effect">
+              <a href="/">
+                <i class="icon icon-lg icon-home"></i>
+                主页
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/archives">
+                <i class="icon icon-lg icon-archives"></i>
+                归档
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/tags">
+                <i class="icon icon-lg icon-tags"></i>
+                标签
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/categories">
+                <i class="icon icon-lg icon-th-list"></i>
+                分类
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://github.com/guomaoqiu" target="_blank">
+                <i class="icon icon-lg icon-github"></i>
+                Github
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/works">
+                <i class="icon icon-lg icon-hand-peace-o"></i>
+                作品
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="http://demo.sctux.com" target="_blank">
+                <i class="icon icon-lg icon-link"></i>
+                DevOpsPlatform
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="http://resume.sctux.com/" target="_blank">
+                <i class="icon icon-lg icon-heart"></i>
+                我的简历
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/about">
+                <i class="icon icon-lg icon-user"></i>
+                关于我
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://blog.sctux.com/2019/02/27/skilltree/Skilltree.jpg" target="_blank">
+                <i class="icon icon-lg icon-tree"></i>
+                我的技能树
+              </a>
+            </li>
+        
+      </ul>
+    </div>
+  </div>
+</aside>
+
+    <main id="main">
+        <header class="top-header" id="header">
+    <div class="flex-row">
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light on" id="menu-toggle">
+          <i class="icon icon-lg icon-navicon"></i>
+        </a>
+        <div class="flex-col header-title ellipsis">理解Kubernetes的亲和性调度</div>
+        
+        <div class="search-wrap" id="search-wrap">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="back">
+                <i class="icon icon-lg icon-chevron-left"></i>
+            </a>
+            <input type="text" id="key" class="search-input" autocomplete="off" placeholder="输入感兴趣的关键字">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="search">
+                <i class="icon icon-lg icon-search"></i>
+            </a>
+        </div>
+        
+        
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menuShare">
+            <i class="icon icon-lg icon-share-alt"></i>
+        </a>
+        
+    </div>
+</header>
+<header class="content-header post-header">
+
+    <div class="container fade-scale">
+        <h1 class="title">理解Kubernetes的亲和性调度</h1>
+        <h5 class="subtitle">
+            
+                <time datetime="2018-12-04T15:53:16.000Z" itemprop="datePublished" class="page-time">
+  2018-12-04
+</time>
+
+
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/Docker/">Docker</a></li></ul>
+
+            
+        </h5>
+    </div>
+
+    
+
+
+</header>
+
+
+<div class="container body-wrap">
+    
+    <aside class="post-widget">
+        <nav class="post-toc-wrap post-toc-shrink" id="post-toc">
+            <h4>TOC</h4>
+            <ol class="post-toc"><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#1-NodeName"><span class="post-toc-number">1.</span> <span class="post-toc-text">1. NodeName</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-6"><a class="post-toc-link" href="#1-1-例如-test-nodename-yaml"><span class="post-toc-number">1.0.0.0.1.</span> <span class="post-toc-text">1.1 例如(test-nodename.yaml)</span></a></li><li class="post-toc-item post-toc-level-6"><a class="post-toc-link" href="#1-2-查看创建事件、与预期相符"><span class="post-toc-number">1.0.0.0.2.</span> <span class="post-toc-text">1.2 查看创建事件、与预期相符:</span></a></li></ol></li></ol><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#2-NodeSelector"><span class="post-toc-number">2.</span> <span class="post-toc-text">2. NodeSelector</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-6"><a class="post-toc-link" href="#2-1-Node添加label标记-标记规则："><span class="post-toc-number">2.0.0.0.1.</span> <span class="post-toc-text">2.1 Node添加label标记,标记规则：</span></a></li><li class="post-toc-item post-toc-level-6"><a class="post-toc-link" href="#2-2-确认标记"><span class="post-toc-number">2.0.0.0.2.</span> <span class="post-toc-text">2.2 确认标记</span></a></li><li class="post-toc-item post-toc-level-6"><a class="post-toc-link" href="#2-3-例如-test-nodeselector-yaml"><span class="post-toc-number">2.0.0.0.3.</span> <span class="post-toc-text">2.3 例如(test-nodeselector.yaml)</span></a></li></ol></li><li class="post-toc-item post-toc-level-5"><a class="post-toc-link" href="#2-4-查看创建事件"><span class="post-toc-number">2.0.0.1.</span> <span class="post-toc-text">2.4 查看创建事件:</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#3-NodeAffinity"><span class="post-toc-number">3.</span> <span class="post-toc-text">3. NodeAffinity</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-6"><a class="post-toc-link" href="#3-1-例如-test-node-affinity-yaml"><span class="post-toc-number">3.0.0.0.1.</span> <span class="post-toc-text">3.1 例如(test-node-affinity.yaml)</span></a></li></ol></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#4-PodAffinity"><span class="post-toc-number">4.</span> <span class="post-toc-text">4. PodAffinity</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-6"><a class="post-toc-link" href="#4-1-例如-test-pod-affinity-yaml"><span class="post-toc-number">4.0.0.0.1.</span> <span class="post-toc-text">4.1 例如(test-pod-affinity.yaml)</span></a></li></ol></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#5-污点（Taints）与容忍（tolerations）"><span class="post-toc-number">5.</span> <span class="post-toc-text">5. 污点（Taints）与容忍（tolerations）</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-6"><a class="post-toc-link" href="#5-1-设置污点"><span class="post-toc-number">5.0.0.0.1.</span> <span class="post-toc-text">5.1 设置污点</span></a></li><li class="post-toc-item post-toc-level-6"><a class="post-toc-link" href="#5-2-去除污点"><span class="post-toc-number">5.0.0.0.2.</span> <span class="post-toc-text">5.2 去除污点</span></a></li><li class="post-toc-item post-toc-level-6"><a class="post-toc-link" href="#5-3-实践"><span class="post-toc-number">5.0.0.0.3.</span> <span class="post-toc-text">5.3 实践</span></a></li><li class="post-toc-item post-toc-level-6"><a class="post-toc-link" href="#5-3-1-给节点设置污点"><span class="post-toc-number">5.0.0.0.4.</span> <span class="post-toc-text"># 5.3.1 给节点设置污点</span></a></li><li class="post-toc-item post-toc-level-6"><a class="post-toc-link" href="#5-3-2-给部署配置设置容忍性"><span class="post-toc-number">5.0.0.0.5.</span> <span class="post-toc-text"># 5.3.2 给部署配置设置容忍性</span></a></li><li class="post-toc-item post-toc-level-6"><a class="post-toc-link" href="#5-3-3-其他"><span class="post-toc-number">5.0.0.0.6.</span> <span class="post-toc-text"># 5.3.3 其他</span></a></li></ol></li><li class="post-toc-item post-toc-level-1"><a class="post-toc-link" href="#如果运行此Pod的Node，被设置了具有NoExecute效果的Taint-污点-，这个Pod将在存活180s后才被驱逐。"><span class="post-toc-number"></span> <span class="post-toc-text">如果运行此Pod的Node，被设置了具有NoExecute效果的Taint(污点)，这个Pod将在存活180s后才被驱逐。</span></a></li><li class="post-toc-item post-toc-level-1"><a class="post-toc-link" href="#如果没有设置tolerationSeconds字段，将永久运行。"><span class="post-toc-number"></span> <span class="post-toc-text">如果没有设置tolerationSeconds字段，将永久运行。</span></a>
+        </li></nav>
+    </aside>
+
+
+<article id="post-li-jiekubernetes-de-qin-he-xing-diao-du" class="post-article article-type-post fade" itemprop="blogPost">
+
+    <div class="post-card">
+        <h1 class="post-card-title">理解Kubernetes的亲和性调度</h1>
+        <div class="post-meta">
+            <time class="post-time" title="2018-12-04 23:53:16" datetime="2018-12-04T15:53:16.000Z" itemprop="datePublished">2018-12-04</time>
+
+            
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/Docker/">Docker</a></li></ul>
+
+
+
+            
+
+        </div>
+        <div class="post-content" id="post-content" itemprop="postContent">
+            <p><code>NodeName、nodeSelector、nodeAffinity、podAffinity、Taints以及Tolerations用法</code></p>
+<h2 id="1-NodeName"><a href="#1-NodeName" class="headerlink" title="1. NodeName"></a>1. NodeName</h2><p>Pod.spec.nodeName用于强制约束将Pod调度到指定的Node节点上，这里说是“调度”，但其实指定了nodeName的Pod会直接跳过Scheduler的调度逻辑，直接写入PodList列表，该匹配规则是<code>强制匹配</code>。<br>例子：<br>我的预期是将该pod运行于节点名称为 192.168.56.11 这个节点：</p>
+<h6 id="1-1-例如-test-nodename-yaml"><a href="#1-1-例如-test-nodename-yaml" class="headerlink" title="1.1 例如(test-nodename.yaml)"></a>1.1 例如(test-nodename.yaml)</h6><pre><code>apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    app: with-nodename-busybox-pod
+  name: with-nodename
+spec:
+  nodeName: 192.168.56.11 #通过这里指定
+  containers:
+  - command:
+    - sleep
+    - &quot;3600&quot;
+    image: busybox
+    imagePullPolicy: IfNotPresent
+    name: test-busybox
+</code></pre><h6 id="1-2-查看创建事件、与预期相符"><a href="#1-2-查看创建事件、与预期相符" class="headerlink" title="1.2 查看创建事件、与预期相符:"></a>1.2 查看创建事件、与预期相符:</h6><pre><code>Events:
+  Type    Reason                 Age   From                    Message
+  ----    ------                 ----  ----                    -------
+  Normal  Scheduled              3m    default-scheduler       Successfully assigned with-pod-affinity to 192.168.56.11
+  Normal  SuccessfulMountVolume  3m    kubelet, 192.168.56.11  MountVolume.SetUp succeeded for volume &quot;default-token-5htws&quot;
+  Normal  Pulling                3m    kubelet, 192.168.56.11  pulling image &quot;nginx&quot;
+  Normal  Pulled                 1m    kubelet, 192.168.56.11  Successfully pulled image &quot;nginx&quot;
+  Normal  Created                1m    kubelet, 192.168.56.11  Created container
+  Normal  Started                1m    kubelet, 192.168.56.11  Started container
+</code></pre><h2 id="2-NodeSelector"><a href="#2-NodeSelector" class="headerlink" title="2. NodeSelector"></a>2. NodeSelector</h2><p>Pod.spec.nodeSelector是通过kubernetes的label-selector机制进行节点选择，由scheduler调度策略MatchNodeSelector进行label匹配，调度pod到目标节点，该匹配规则是<code>强制约束</code>。使用节点选择器的步骤为：</p>
+<h6 id="2-1-Node添加label标记-标记规则："><a href="#2-1-Node添加label标记-标记规则：" class="headerlink" title="2.1 Node添加label标记,标记规则："></a>2.1 Node添加label标记,标记规则：</h6><pre><code>kubectl label nodes &lt;node-name&gt; &lt;label-key&gt;=&lt;label-value&gt;
+kubectl label nodes 192.168.56.14 server_type=game_server
+</code></pre><h6 id="2-2-确认标记"><a href="#2-2-确认标记" class="headerlink" title="2.2 确认标记"></a>2.2 确认标记</h6><pre><code>[root@linux-node1 ~]# kubectl get nodes 192.168.56.14 --show-labels
+NAME            STATUS    ROLES     AGE       VERSION   LABELS
+192.168.56.14   Ready     node      82d       v1.10.1   beta.kubernetes.io/arch=amd64,beta.kubernetes.io/os=linux,kubernetes.io/hostname=192.168.56.14,node-role.kubernetes.io/node=true,server_type=game_server
+</code></pre><h6 id="2-3-例如-test-nodeselector-yaml"><a href="#2-3-例如-test-nodeselector-yaml" class="headerlink" title="2.3 例如(test-nodeselector.yaml)"></a>2.3 例如(test-nodeselector.yaml)</h6><pre><code>apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    app: with-nodeselector-busybox-pod
+  name: with-node-selector
+spec:
+  containers:
+  - command:
+    - sleep
+    - &quot;3600&quot;
+    image: busybox
+    imagePullPolicy: IfNotPresent
+    name: test-busybox
+  # 通过节点标签进行预设该pod将会运行于有此标签的节点上面，
+  # 如果多个节点拥有此标签，调度器将会择优进行调度
+  nodeSelector:
+    server_type: game_server
+</code></pre><h5 id="2-4-查看创建事件"><a href="#2-4-查看创建事件" class="headerlink" title="2.4 查看创建事件:"></a>2.4 查看创建事件:</h5><pre><code>Events:
+  Type    Reason                 Age   From                    Message
+  ----    ------                 ----  ----                    -------
+  Normal  Scheduled              16s   default-scheduler       Successfully assigned with-node-selector to 192.168.56.14
+  Normal  SuccessfulMountVolume  16s   kubelet, 192.168.56.14  MountVolume.SetUp succeeded for volume &quot;default-token-5htws&quot;
+  Normal  Pulling                11s   kubelet, 192.168.56.14  pulling image &quot;busybox&quot;
+</code></pre><p>通过上面的例子我们可以感受到nodeSelector的方式比较直观，但是还够灵活，控制粒度偏大，下面我们再看另外一种更加灵活的方式：<code>nodeAffinity</code>。</p>
+<h2 id="3-NodeAffinity"><a href="#3-NodeAffinity" class="headerlink" title="3. NodeAffinity"></a>3. NodeAffinity</h2><p><code>nodeAffinity</code>就是节点亲和性，相对应的是<code>Anti-Affinity</code>，就是反亲和性，这种方法比上面的nodeSelector更加灵活，它可以进行一些简单的逻辑组合了，不只是简单的相等匹配。<br>调度可以分成软策略和硬策略两种方式，软策略就是如果你没有满足调度要求的节点的话，POD 就会忽略这条规则，继续完成调度过程。 <code>nodeAffinity</code>就有两上面两种策略：</p>
+<pre><code># 软策略:(满足条件最好了，没有的话也无所谓了的策略)
+preferredDuringSchedulingIgnoredDuringExecution
+# 硬策略:(你必须满足我的要求，不然我就不干)
+requiredDuringSchedulingIgnoredDuringExecution
+</code></pre><h6 id="3-1-例如-test-node-affinity-yaml"><a href="#3-1-例如-test-node-affinity-yaml" class="headerlink" title="3.1 例如(test-node-affinity.yaml)"></a>3.1 例如(test-node-affinity.yaml)</h6><pre><code>apiVersion: v1
+kind: Pod
+metadata:
+  name: with-node-affinity
+  labels:
+    app: node-affinity-pod
+spec:
+  containers:
+  - name: with-node-affinity
+    image: nginx
+    imagePullPolicy: IfNotPresent
+  affinity:
+    nodeAffinity:
+      # 硬性策略
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: kubernetes.io/hostname
+            operator: NotIn
+            values:
+            - 192.168.56.11
+            - 192.168.56.12
+      # 软性策略
+      preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 1
+        preference:
+          matchExpressions:
+          - key: server_type
+            operator: In
+            values:
+              - game_server
+</code></pre><p>上面的Pod我们进行一下解读:<br>1、该pod 通过硬性策略约束后将禁止调度到节点11，12上面去<br>2、排除节点11，12后，选择其他节点含有label为<code>server_type:game_server</code>的节点运行<br>3、如果其他节点也没有含有label <code>server_type:game_server</code>, 那么将会调度到任意节点运行<br>同样的我们可以使用descirbe命令查看具体的调度情况是否满足我们的要求。这里的匹配逻辑是 label 的值在某个列表中，现在Kubernetes提供的操作符有下面的几种：</p>
+<ul>
+<li>In：label 的值在某个列表中</li>
+<li>NotIn：label 的值不在某个列表中</li>
+<li>Gt：label 的值大于某个值</li>
+<li>Lt：label 的值小于某个值</li>
+<li>Exists：某个 label 存在</li>
+<li>DoesNotExist：某个 label 不存在</li>
+</ul>
+<p>如果<code>nodeSelectorTerms</code>下面有多个选项的话，满足任何一个条件就可以了；如果<code>matchExpressions</code>有多个选项的话，则必须同时满足这些条件才能正常调度 POD。</p>
+<h2 id="4-PodAffinity"><a href="#4-PodAffinity" class="headerlink" title="4. PodAffinity"></a>4. PodAffinity</h2><p>上面三种方式都是让POD去选择节点的，有的时候我们也希望能够根据 POD 之间的关系进行调度，Kubernetes在1.4版本引入的podAffinity概念就可以实现我们这个需求。</p>
+<p>和<code>nodeAffinity</code>类似，<code>podAffinity</code>也有<code>requiredDuringSchedulingIgnoredDuringExecution(硬性策略)</code>和 <code>preferredDuringSchedulingIgnoredDuringExecution(软性策略)</code>两种调度策略，唯一不同的是如果要使用互斥性，我们需要使用<code>podAntiAffinity</code>字段。 如下例子，我们希望【with-pod-affinity】和【with-nodename-busybox-pod】能够就近部署，而不希望和【node-affinity-pod】部署在同一个拓扑域下面：</p>
+<h6 id="4-1-例如-test-pod-affinity-yaml"><a href="#4-1-例如-test-pod-affinity-yaml" class="headerlink" title="4.1 例如(test-pod-affinity.yaml)"></a>4.1 例如(test-pod-affinity.yaml)</h6><pre><code>apiVersion: v1
+kind: Pod
+metadata:
+  name: with-pod-affinity
+  labels:
+    app: pod-affinity-pod
+spec:
+  containers:
+  - name: with-pod-affinity
+    image: nginx
+  affinity:
+    podAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+      - labelSelector:
+          matchExpressions:
+          - key: app
+            operator: In
+            values:
+            - with-nodename-busybox-pod
+        topologyKey: kubernetes.io/hostname
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 1
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+            - key: app
+              operator: In
+              values:
+              - node-affinity-pod
+          topologyKey: kubernetes.io/hostname
+</code></pre><p>上面的pod我们解读一下:<br>1、POD 需要调度到某个指定的主机上，至少有一个节点上运行了这样的 POD：这个 POD 有一个<code>app=busybox-pod</code>的 label。<br>2、<code>podAntiAffinity</code>则是希望最好不要调度到这样的节点：这个节点上运行了某个 POD，而这个 POD 有app=node-affinity-pod的 label。<br>3、根据前面两个 POD 的定义，我们可以预见上面这个 POD 应该会被调度到192.168.56.11的节点上，因为前面实践的时候【with-nodename-busybox-pod】被调度到了192.168.56.11节点，而【node-affinity-pod】被调度到了192.168.56.11以为的节点，正好满足上面的需求。<br>通过describe查看：</p>
+<pre><code>Events:
+  Type    Reason                 Age   From                    Message
+  ----    ------                 ----  ----                    -------
+  Normal  Scheduled              53m   default-scheduler       Successfully assigned with-pod-affinity to 192.168.56.11
+  Normal  SuccessfulMountVolume  52m   kubelet, 192.168.56.11  MountVolume.SetUp succeeded for volume &quot;default-token-5htws&quot;
+  Normal  Pulling                52m   kubelet, 192.168.56.11  pulling image &quot;nginx&quot;
+  Normal  Pulled                 51m   kubelet, 192.168.56.11  Successfully pulled image &quot;nginx&quot;
+  Normal  Created                51m   kubelet, 192.168.56.11  Created container
+  Normal  Started                51m   kubelet, 192.168.56.11  Started container
+</code></pre><p>在labelSelector和 topologyKey的同级，还可以定义 namespaces 列表，表示匹配哪些 namespace 里面的 pod，默认情况下，会匹配定义的 pod 所在的 namespace；如果定义了这个字段，但是它的值为空，则匹配所有的 namespaces。</p>
+<p>so，以上我们创建的四个例子结果为下:</p>
+<pre><code>[root@linux-node1 affinity_study]# kubectl get pods -o wide
+NAME                          READY     STATUS    RESTARTS   AGE       IP           NODE
+with-node-affinity            1/1       Running   2          10h       10.2.70.16   192.168.56.14
+with-node-selector            1/1       Running   0          8m        10.2.70.15   192.168.56.14
+with-nodename                 1/1       Running   1          11h       10.2.88.9    192.168.56.11
+with-pod-affinity             1/1       Running   0          10h       10.2.88.10   192.168.56.11
+</code></pre><h2 id="5-污点（Taints）与容忍（tolerations）"><a href="#5-污点（Taints）与容忍（tolerations）" class="headerlink" title="5. 污点（Taints）与容忍（tolerations）"></a>5. 污点（Taints）与容忍（tolerations）</h2><p>对于nodeAffinity无论是硬策略还是软策略方式，都是调度 POD 到预期节点上，而Taints恰好与之相反，如果一个节点标记为 Taints ，除非 POD 也被标识为可以容忍污点节点，否则该 Taints 节点不会被调度pod。</p>
+<p>比如用户希望把 Master 节点保留给 Kubernetes 系统组件使用，或者把一组具有特殊资源预留给某些 POD，则污点就很有用了，POD 不会再被调度到 taint 标记过的节点。taint 标记节点举例如下：</p>
+<h6 id="5-1-设置污点"><a href="#5-1-设置污点" class="headerlink" title="5.1 设置污点"></a>5.1 设置污点</h6><pre><code>kubectl taint node [node] key=value[effect]   
+     其中[effect] 可取值： [ NoSchedule | PreferNoSchedule | NoExecute ]
+      NoSchedule ：一定不能被调度。POD 不会被调度到标记为 taints 节点。
+      PreferNoSchedule：尽量不要调度。NoSchedule 的软策略版本。
+      NoExecute：不仅不会调度，还会驱逐Node上已有的Pod。
+ 示例：kubectl taint node 192.168.56.11 key1=value1:NoSchedule
+</code></pre><h6 id="5-2-去除污点"><a href="#5-2-去除污点" class="headerlink" title="5.2 去除污点"></a>5.2 去除污点</h6><pre><code>#比如设置污点：
+    kubectl taint nodes 192.168.56.11 key1=value1:NoSchedule
+    kubectl taint nodes 192.168.56.11 key2=value2:NoExecute
+    kubectl taint nodes 192.168.56.11 key3=value3:PreferNoSchedule
+ #去除指定key及其effect：
+    kubectl taint nodes 192.168.56.11 key:[effect]-    #(这里的key不用指定value)
+
+ #去除指定key所有的effect: 
+     kubectl taint nodes 192.168.56.11 key-
+
+ #示例：
+     kubectl taint node 192.168.56.11 key1:NoSchedule-
+     kubectl taint node 192.168.56.11 key2:NoExecute-
+     kubectl taint node 192.168.56.11 key3:PreferNoSchedule-
+     kubectl taint node 192.168.56.11 key3- (去除指定key的所有effct)
+</code></pre><h6 id="5-3-实践"><a href="#5-3-实践" class="headerlink" title="5.3 实践"></a>5.3 实践</h6><h6 id="5-3-1-给节点设置污点"><a href="#5-3-1-给节点设置污点" class="headerlink" title="# 5.3.1 给节点设置污点"></a># 5.3.1 给节点设置污点</h6><p>首先我的环境中还没有设置污点，我们执行以下例子(nginx-deployment.yaml):</p>
+<pre><code>apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-pod
+  labels:
+    app: nginx-pod
+spec:
+  replicas: 10 # 这里为了实践效果特意设定了10个副本
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 80
+
+# 部署结果:
+[root@linux-node1 ~]# kubectl get pods -o wide | grep nginx
+nginx-pod-7d9f9876cc-95fj2   1/1       Running   0          1m        10.2.70.26   192.168.56.14
+nginx-pod-7d9f9876cc-jclvf   1/1       Running   0          1m        10.2.44.28   192.168.56.13
+nginx-pod-7d9f9876cc-k2m6x   1/1       Running   0          1m        10.2.44.31   192.168.56.13
+nginx-pod-7d9f9876cc-l74hf   1/1       Running   0          1m        10.2.88.15   192.168.56.11
+nginx-pod-7d9f9876cc-n8g6c   1/1       Running   0          1m        10.2.44.29   192.168.56.13
+nginx-pod-7d9f9876cc-p2cft   1/1       Running   0          1m        10.2.88.14   192.168.56.11
+nginx-pod-7d9f9876cc-p7hvt   1/1       Running   0          1m        10.2.69.25   192.168.56.12
+nginx-pod-7d9f9876cc-rjj97   1/1       Running   0          1m        10.2.70.27   192.168.56.14
+nginx-pod-7d9f9876cc-t2wlw   1/1       Running   0          1m        10.2.69.26   192.168.56.12
+nginx-pod-7d9f9876cc-whkx9   1/1       Running   0          1m        10.2.44.30   192.168.56.13
+</code></pre><p>以上例子可以看出在我的环境中已经分配到了每个节点包括我们接下来准备设置污点的节点192.168.56.11。</p>
+<p>下面我把master节点192.168.56.11 设置污点(这里我用的effect是NoSchedule)</p>
+<pre><code>[root@linux-node1 affinity_study]# kubectl taint nodes 192.168.56.11 server_type=k8s_system:NoSchedule
+node &quot;192.168.56.11&quot; tainted
+
+# 然后部署下面这个设置例子:
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-pod-taints
+  labels:
+    app: nginx-pod-taints
+spec:
+  replicas: 10 # 这里为了实践效果特意设定了10个副本
+  selector:
+    matchLabels:
+      app: nginx-taints
+  template:
+    metadata:
+      labels:
+        app: nginx-taints
+    spec:
+      containers:
+      - name: nginx-taints
+        image: nginx:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 80
+# 部署结果:
+[root@linux-node1 ~]# kubectl get pods -o wide | grep nginx-pod-taints
+nginx-pod-taints-57757d7677-5h6nj   1/1       Running   0          2m        10.2.69.31   192.168.56.12
+nginx-pod-taints-57757d7677-dkd8h   1/1       Running   0          2m        10.2.70.34   192.168.56.14
+nginx-pod-taints-57757d7677-f2vdn   1/1       Running   0          2m        10.2.44.38   192.168.56.13
+nginx-pod-taints-57757d7677-fnx2n   1/1       Running   0          2m        10.2.44.36   192.168.56.13
+nginx-pod-taints-57757d7677-gsc5g   1/1       Running   0          2m        10.2.70.32   192.168.56.14
+nginx-pod-taints-57757d7677-kjl89   1/1       Running   0          2m        10.2.44.35   192.168.56.13
+nginx-pod-taints-57757d7677-mqx27   1/1       Running   0          2m        10.2.70.33   192.168.56.14
+nginx-pod-taints-57757d7677-skdd4   1/1       Running   0          2m        10.2.69.32   192.168.56.12
+nginx-pod-taints-57757d7677-spwfh   1/1       Running   0          2m        10.2.69.30   192.168.56.12
+nginx-pod-taints-57757d7677-tpcm8   1/1       Running   0          2m        10.2.44.37   192.168.56.13
+</code></pre><p>以上例子可以看出我们将master节点设置污点之后调度器并没有把pod调度到master节点上。<br>这里我选择的effect是NoSchedule，也就是一定不要调度到该节点。</p>
+<h6 id="5-3-2-给部署配置设置容忍性"><a href="#5-3-2-给部署配置设置容忍性" class="headerlink" title="# 5.3.2 给部署配置设置容忍性"></a># 5.3.2 给部署配置设置容忍性</h6><p>首先 我们上面设置了污点<br>即:</p>
+<pre><code>taints:
+- effect: NoSchedule
+  key: server_type
+  value: k8s_system
+</code></pre><p>然后我们部署以下例子(test-tolertations.yaml)</p>
+<pre><code>apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-pod-taints-tolerations
+  labels:
+    app: nginx-pod-taints-tolerations
+spec:
+  replicas: 10 # 这里为了实践效果特意设定了10个副本
+  selector:
+    matchLabels:
+      app: nginx-taints-tolerations
+  template:
+    metadata:
+      labels:
+        app: nginx-taints-tolerations
+    spec:
+      # 设置容忍性
+      tolerations:
+      - key: &quot;server_type&quot;
+        operator: &quot;Equal&quot;
+        value: &quot;k8s_system&quot;
+        effect: &quot;NoSchedule&quot;
+      containers:
+      - name: nginx-taints-tolerations
+        image: nginx:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 80
+
+# 部署结果:
+[root@linux-node1 affinity_study]# kubectl get pods -o wide  | grep nginx-pod-taints-tolerations
+nginx-pod-taints-tolerations-5b4988bd4-2pk46   1/1       Running   0          29m       10.2.69.33   192.168.56.12
+nginx-pod-taints-tolerations-5b4988bd4-854xx   1/1       Running   0          29m       10.2.70.35   192.168.56.14
+nginx-pod-taints-tolerations-5b4988bd4-88xrt   1/1       Running   0          29m       10.2.69.34   192.168.56.12
+nginx-pod-taints-tolerations-5b4988bd4-8czpg   1/1       Running   0          29m       10.2.88.17   192.168.56.11
+nginx-pod-taints-tolerations-5b4988bd4-czdss   1/1       Running   0          21m       10.2.44.41   192.168.56.13
+nginx-pod-taints-tolerations-5b4988bd4-dj6mw   1/1       Running   0          29m       10.2.88.16   192.168.56.11
+nginx-pod-taints-tolerations-5b4988bd4-g4ltd   1/1       Running   0          29m       10.2.44.39   192.168.56.13
+nginx-pod-taints-tolerations-5b4988bd4-npthj   1/1       Running   0          29m       10.2.44.40   192.168.56.13
+nginx-pod-taints-tolerations-5b4988bd4-ptlqg   1/1       Running   0          29m       10.2.88.18   192.168.56.11
+nginx-pod-taints-tolerations-5b4988bd4-t9gs6   1/1       Running   0          29m       10.2.69.35   192.168.56.12
+</code></pre><p>以上实践我们解读一下:<br>1. 在节点master 192.168.56.11上面设置了污点；但期望该节点能容忍调度;<br>2. 于是通过设置tolerations来实现，其中Pod要容忍的有污点的Node的key是server_type Equal k8s_system,效果是NoSchedule.<br>3. 通过设置容忍机制结果与预期相符。</p>
+<p>对于tolerations属性的写法：</p>
+<pre><code>其中的key、value、effect 与Node的Taint设置需保持一致， 还有以下几点说明：
+     1、如果operator的值是Exists，则value属性可省略。
+     2、如果operator的值是Equal，则表示其key与value之间的关系是equal(等于)。
+     3、如果不指定operator属性，则默认值为Equal。
+另外，还有两个特殊值：
+     1、空的key 如果再配合Exists 就能匹配所有的key与value ，也是是能容忍所有node的所有Taints。
+     2、空的effect 匹配所有的effect。
+</code></pre><h6 id="5-3-3-其他"><a href="#5-3-3-其他" class="headerlink" title="# 5.3.3 其他"></a># 5.3.3 其他</h6><p>一个node上可以有多个污点：</p>
+<pre><code>[root@linux-node1 affinity_study]# kubectl describe node/192.168.56.11
+........
+........
+Taints:             server_type=k8s_system:NoSchedule
+                    test=wahaha:PreferNoSchedule
+........
+........
+</code></pre><p>如果按照我上面的例子来的话结果将不会有任何pod调度到该节点，因为上述我只容忍了一个污点；所以可以新加一个污点容忍:</p>
+<pre><code>[root@linux-node1 affinity_study]# more test-tolertations.yaml
+........
+........      
+    tolerations:
+      - key: &quot;server_type&quot;
+        operator: &quot;Equal&quot;
+        value: &quot;k8s_system&quot;
+        effect: &quot;NoSchedule&quot;
+      - key: &quot;test&quot;
+        operator: &quot;Equal&quot;
+        value: &quot;wahaha&quot;
+        effect: &quot;PreferNoSchedule&quot;
+........
+........
+</code></pre><p>重新部署后结果也可以预见 只要两个容忍满足就可以调度过去啦~</p>
+<p>设置容忍的效果：</p>
+<ul>
+<li>如果在设置node的Taints(污点)之前，就已经运行了一些Pod，那么这些Pod是否还能继续在此Node上运行？ 这就要看设置Taints污点时的effect(效果)了。</li>
+<li>如果effect的值是NoSchedule或PreferNoSchedule，那么已运行的Pod仍然可以运行，只是新Pod(如果没有容忍)不会再往上调度。</li>
+<li>如果 pod 不能忍受effect 值为 NoExecute 的 taint，那么 pod 将马上被驱逐</li>
+<li>如果 pod 能够忍受effect 值为 NoExecute 的 taint，但是在 toleration 定义中没有指定 tolerationSeconds，则 pod 还会一直在这个节点上运行。</li>
+<li>如果 pod 能够忍受effect 值为 NoExecute 的 taint，而且指定了 tolerationSeconds，则 pod 还能在这个节点上继续运行这个指定的时间长度。 虽然是立刻被驱逐，但是K8S为了彰显人性化，又给具有NoExecute效果的污点， 在容忍属性中有一个可选的tolerationSeconds字段，用来设置这些Pod还可以在这个Node之上运行多久，给它们一点宽限的时间，到时间才驱逐。</li>
+</ul>
+<p>不同的部署启动方式：</p>
+<ul>
+<li>如果是以Pod来启动的，那么Pod被驱逐后， 将不会再被运行，就等于把它删除了。</li>
+<li>如果是deployment/rc，那么删除的pod会再其它节点运行。</li>
+<li><p>如果是DaemonSet在此Node上启动的Pod，那么也不会再被运行，直到Node上的NoExecute污被去除或者Pod容忍。</p>
+<p>#设置Pod的宽限时间<br>spec:<br>  tolerations: #设置容忍性</p>
+<ul>
+<li>key: “test”<br>operator: “Equal” #如果操作符为Exists，那么value属性可省略<br>value: “16”<br>effect: “wahaha”<br>tolerationSeconds: 180 <h1 id="如果运行此Pod的Node，被设置了具有NoExecute效果的Taint-污点-，这个Pod将在存活180s后才被驱逐。"><a href="#如果运行此Pod的Node，被设置了具有NoExecute效果的Taint-污点-，这个Pod将在存活180s后才被驱逐。" class="headerlink" title="如果运行此Pod的Node，被设置了具有NoExecute效果的Taint(污点)，这个Pod将在存活180s后才被驱逐。"></a>如果运行此Pod的Node，被设置了具有NoExecute效果的Taint(污点)，这个Pod将在存活180s后才被驱逐。</h1><h1 id="如果没有设置tolerationSeconds字段，将永久运行。"><a href="#如果没有设置tolerationSeconds字段，将永久运行。" class="headerlink" title="如果没有设置tolerationSeconds字段，将永久运行。"></a>如果没有设置tolerationSeconds字段，将永久运行。</h1></li>
+</ul>
+</li>
+</ul>
+<p>通过对Taints和Tolerations的了解，可以知道，通过它们可以让某些特定应用，独占一个Node，给特定的Node设置一个Taint，只让某些特定的应用来容忍这些污点，容忍后就有可能会被调度到此特定Node，但是也不一定会调度给此特定Node，设置容忍并不阻止调度器调度给其它Node，那么如何让特定应用的Node，只能被调度到此特定的Node呢，这就要结合NodeAffinity节点亲和性，给Node打个标签，然后在Pod属性里设置NodeAffinity到Node。如此就能达到要求了。</p>
+
+        </div>
+
+        <blockquote class="post-copyright">
+    
+    <div class="content">
+        
+<span class="post-time">
+    最后更新时间：<time datetime="2018-12-19T14:39:54.000Z" itemprop="dateUpdated">2018-12-19 22:39:54</time>
+</span><br>
+
+
+        
+        该文链接：<a href="/2018/12/04/li-jiekubernetes-de-qin-he-xing-diao-du/" target="_blank" rel="external">https://blog.sctux.com/2018/12/04/li-jiekubernetes-de-qin-he-xing-diao-du/</a>
+        
+    </div>
+    
+    <footer>
+        <a href="https://blog.sctux.com">
+            <img src="/img/avatar.jpg" alt="OutMan">
+            OutMan
+        </a>
+    </footer>
+</blockquote>
+
+        
+<div class="page-reward">
+    <a id="rewardBtn" href="javascript:;" class="page-reward-btn waves-effect waves-circle waves-light">赏</a>
+</div>
+
+
+
+        <div class="post-footer">
+            
+	<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/k8s/">k8s</a></li></ul>
+
+
+            
+<div class="page-share-wrap">
+    
+
+<div class="page-share" id="pageShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://blog.sctux.com/2018/12/04/li-jiekubernetes-de-qin-he-xing-diao-du/&title=《理解Kubernetes的亲和性调度》 — 运维人&pic=https://blog.sctux.com/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://blog.sctux.com/2018/12/04/li-jiekubernetes-de-qin-he-xing-diao-du/&title=《理解Kubernetes的亲和性调度》 — 运维人&source=😊" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.sctux.com/2018/12/04/li-jiekubernetes-de-qin-he-xing-diao-du/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《理解Kubernetes的亲和性调度》 — 运维人&url=https://blog.sctux.com/2018/12/04/li-jiekubernetes-de-qin-he-xing-diao-du/&via=https://blog.sctux.com" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=https://blog.sctux.com/2018/12/04/li-jiekubernetes-de-qin-he-xing-diao-du/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+
+    <a href="javascript:;" id="shareFab" class="page-share-fab waves-effect waves-circle">
+        <i class="icon icon-share-alt icon-lg"></i>
+    </a>
+</div>
+
+
+
+        </div>
+    </div>
+
+    
+<nav class="post-nav flex-row flex-justify-between">
+  
+    <div class="waves-block waves-effect prev">
+      <a href="/2018/12/07/k8s-ji-qun-zhongpause-rong-qi-shi-gan-ma-de/" id="post-prev" class="post-nav-link">
+        <div class="tips"><i class="icon icon-angle-left icon-lg icon-pr"></i> Prev</div>
+        <h4 class="title">K8s集群中pause容器是干嘛的~</h4>
+      </a>
+    </div>
+  
+
+  
+    <div class="waves-block waves-effect next">
+      <a href="/2018/12/03/kubernetes-diao-du-zhinodeselector-trashed/" id="post-next" class="post-nav-link">
+        <div class="tips">Next <i class="icon icon-angle-right icon-lg icon-pl"></i></div>
+        <h4 class="title">kubernetes调度之NodeSelector</h4>
+      </a>
+    </div>
+  
+</nav>
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Valine Comments -->
+    <div class="comments vcomment" id="comments"></div>
+    <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+    <script src="//unpkg.com/valine@latest/dist/Valine.min.js"></script>
+    <!-- Valine Comments script -->
+    <script>
+        var GUEST_INFO = ['nick','mail','link'];
+        var guest_info = 'nick,mail,link'.split(',').filter(function(item){
+          return GUEST_INFO.indexOf(item) > -1
+        });
+        new Valine({
+            el: '#comments',
+            notify: 'true' == 'true',
+            verify: 'true' == 'true',
+            appId: "lHxnnDHJXDgMoFpCbdx8A4q7-gzGzoHsz",
+            appKey: "W8H2NuO8chyDlCEQzionLuuV",
+            avatar: "monsterid",
+            placeholder: "来都来了，说点啥子吧~🌹 (友情提醒，留下正确的邮箱地址可以第一时间获取评论反馈)",
+            guest_info: guest_info.length == 0 ? GUEST_INFO : guest_info,
+            pageSize: "10"
+        })
+    </script>
+    <!-- Valine Comments end -->
+
+
+
+
+
+
+
+</article>
+
+<div id="reward" class="page-modal reward-lay">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <h3 class="reward-title">
+        <i class="icon icon-quote-left"></i>
+        谢谢大爷~
+        <i class="icon icon-quote-right"></i>
+    </h3>
+    <div class="reward-content">
+        
+        <div class="reward-code">
+            <img id="rewardCode" src="/img/wechat.jpg" alt="打赏二维码">
+        </div>
+        
+        <label class="reward-toggle">
+            <input id="rewardToggle" type="checkbox" class="reward-toggle-check" data-wechat="/img/wechat.jpg" data-alipay="/img/alipay.jpg">
+            <div class="reward-toggle-ctrol">
+                <span class="reward-toggle-item wechat">微信</span>
+                <span class="reward-toggle-label"></span>
+                <span class="reward-toggle-item alipay">支付宝</span>
+            </div>
+        </label>
+        
+    </div>
+</div>
+
+
+
+</div>
+
+        <footer class="footer">
+    <div class="top">
+        
+
+        <p>
+            
+            <span>博客内容遵循 <a rel="license" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh">知识共享 署名 - 非商业性 - 相同方式共享 4.0 国际协议</a></span>
+        </p>
+    </div>
+    <div class="bottom">
+        <p><span>OutMan &copy; 2013 - 2019</span>
+            <span>
+                
+                <a href="http://www.miitbeian.gov.cn/" target="_blank">蜀ICP备007号-1</a><br>
+                
+                Power by <a href="http://hexo.io/" target="_blank">Hexo</a> Theme <a href="https://github.com/yscoder/hexo-theme-indigo" target="_blank">indigo</a>
+            </span>
+        </p>
+    </div>
+</footer>
+
+    </main>
+    <div class="mask" id="mask"></div>
+<a href="javascript:;" id="gotop" class="waves-effect waves-circle waves-light"><span class="icon icon-lg icon-chevron-up"></span></a>
+
+
+
+<div class="global-share" id="globalShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://blog.sctux.com/2018/12/04/li-jiekubernetes-de-qin-he-xing-diao-du/&title=《理解Kubernetes的亲和性调度》 — 运维人&pic=https://blog.sctux.com/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://blog.sctux.com/2018/12/04/li-jiekubernetes-de-qin-he-xing-diao-du/&title=《理解Kubernetes的亲和性调度》 — 运维人&source=😊" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.sctux.com/2018/12/04/li-jiekubernetes-de-qin-he-xing-diao-du/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《理解Kubernetes的亲和性调度》 — 运维人&url=https://blog.sctux.com/2018/12/04/li-jiekubernetes-de-qin-he-xing-diao-du/&via=https://blog.sctux.com" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=https://blog.sctux.com/2018/12/04/li-jiekubernetes-de-qin-he-xing-diao-du/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+<div class="page-modal wx-share" id="wxShare">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <img src="//api.qrserver.com/v1/create-qr-code/?data=https://blog.sctux.com/2018/12/04/li-jiekubernetes-de-qin-he-xing-diao-du/" alt="微信分享二维码">
+</div>
+
+
+
+
+    <script src="//cdn.bootcss.com/node-waves/0.7.4/waves.min.js"></script>
+<script>
+var BLOG = { ROOT: '/', SHARE: true, REWARD: true };
+
+
+</script>
+
+<script src="/js/main.min.js?v=1.7.2"></script>
+
+
+<div class="search-panel" id="search-panel">
+    <ul class="search-result" id="search-result"></ul>
+</div>
+<template id="search-tpl">
+<li class="item">
+    <a href="{path}" class="waves-block waves-effect">
+        <div class="title ellipsis" title="{title}">{title}</div>
+        <div class="flex-row flex-middle">
+            <div class="tags ellipsis">
+                {tags}
+            </div>
+            <time class="flex-col time">{date}</time>
+        </div>
+    </a>
+</li>
+</template>
+
+<script src="/js/search.min.js?v=1.7.2" async></script>
+
+
+
+
+
+
+
+
+<script>
+(function() {
+    var OriginTitile = document.title, titleTime;
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            document.title = '老弟，死哪儿去啦~！';
+            clearTimeout(titleTime);
+        } else {
+            document.title = '(つェ⊂)咦!老弟来啦!';
+            titleTime = setTimeout(function() {
+                document.title = OriginTitile;
+            },2000);
+        }
+    });
+})();
+</script>
+
+
+
+</body>
+</html>

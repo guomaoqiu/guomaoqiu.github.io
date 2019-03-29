@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.8.0">
+    
+
+    
+
+    
+
+
+
+    <meta charset="utf-8">
+    
+    
+    
+    
+    <title>Tags: 证书轮换(自动续期) | 运维人 | Devops、Linux、Kubernetes、Docker、Flask、Python、Shell</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    
+    <meta name="theme-color" content="#3F51B5">
+    
+    
+    <meta name="keywords" content="devops,Linux,Kubernetes,Flask,Python,Shell">
+    <meta name="description" content="😊">
+<meta name="keywords" content="devops,Linux,Kubernetes,Flask,Python,Shell">
+<meta property="og:type" content="website">
+<meta property="og:title" content="运维人">
+<meta property="og:url" content="https://blog.sctux.com/tags/证书轮换-自动续期/index.html">
+<meta property="og:site_name" content="运维人">
+<meta property="og:description" content="😊">
+<meta property="og:locale" content="zh-CN">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="运维人">
+<meta name="twitter:description" content="😊">
+    
+    <link rel="shortcut icon" href="/favicon.ico">
+    <link rel="stylesheet" href="/css/style.css?v=1.7.2">
+    <script>window.lazyScripts=[]</script>
+
+    <!-- custom head -->
+    
+
+</head>
+
+<body>
+    <div id="loading" class="active"></div>
+
+    <aside id="menu">
+  <div class="inner flex-row-vertical">
+    <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menu-off">
+        <i class="icon icon-lg icon-close"></i>
+    </a>
+    <div class="brand-wrap" style="background-image:url(/img/brand.jpg)">
+      <div class="brand">
+        <a href="/" class="avatar waves-effect waves-circle waves-light">
+          <img src="/img/avatar.jpg">
+        </a>
+        <hgroup class="introduce">
+          <h5 class="nickname">OutMan</h5>
+          <a href="mailto:2399447849@qq.com" title="2399447849@qq.com" class="mail">2399447849@qq.com</a>
+        </hgroup>
+      </div>
+    </div>
+    <div class="scroll-wrap flex-col">
+      <ul class="nav">
+        
+            <li class="waves-block waves-effect">
+              <a href="/">
+                <i class="icon icon-lg icon-home"></i>
+                主页
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/archives">
+                <i class="icon icon-lg icon-archives"></i>
+                归档
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect active">
+              <a href="/tags">
+                <i class="icon icon-lg icon-tags"></i>
+                标签
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/categories">
+                <i class="icon icon-lg icon-th-list"></i>
+                分类
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://github.com/guomaoqiu" target="_blank">
+                <i class="icon icon-lg icon-github"></i>
+                Github
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/works">
+                <i class="icon icon-lg icon-hand-peace-o"></i>
+                作品
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="http://demo.sctux.com" target="_blank">
+                <i class="icon icon-lg icon-link"></i>
+                DevOpsPlatform
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="http://resume.sctux.com/" target="_blank">
+                <i class="icon icon-lg icon-heart"></i>
+                我的简历
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/about">
+                <i class="icon icon-lg icon-user"></i>
+                关于我
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://blog.sctux.com/2019/02/27/skilltree/Skilltree.jpg" target="_blank">
+                <i class="icon icon-lg icon-tree"></i>
+                我的技能树
+              </a>
+            </li>
+        
+      </ul>
+    </div>
+  </div>
+</aside>
+
+    <main id="main">
+        <header class="top-header" id="header">
+    <div class="flex-row">
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light on" id="menu-toggle">
+          <i class="icon icon-lg icon-navicon"></i>
+        </a>
+        <div class="flex-col header-title ellipsis">Tags: 证书轮换(自动续期)</div>
+        
+        <div class="search-wrap" id="search-wrap">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="back">
+                <i class="icon icon-lg icon-chevron-left"></i>
+            </a>
+            <input type="text" id="key" class="search-input" autocomplete="off" placeholder="输入感兴趣的关键字">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="search">
+                <i class="icon icon-lg icon-search"></i>
+            </a>
+        </div>
+        
+        
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menuShare">
+            <i class="icon icon-lg icon-share-alt"></i>
+        </a>
+        
+    </div>
+</header>
+<header class="content-header tags-header">
+
+    <div class="container fade-scale">
+        <h1 class="title">Tags: 证书轮换(自动续期)</h1>
+        <h5 class="subtitle">
+            
+        </h5>
+    </div>
+
+    
+<div class="tabs-bar container">
+    <nav class="tags-list">
+        <a href="/tags" style="-webkit-order:-1;order:-1" class="tags-list-item waves-effect waves-button waves-light
+            ">全部</a>
+        
+
+            <a href="/tags/k8s集群搭建/" style="-webkit-order:20;order:20" class="tags-list-item waves-effect waves-button waves-light">k8s集群搭建</a>
+
+        
+
+            <a href="/tags/Flask-APScheduler/" style="-webkit-order:21;order:21" class="tags-list-item waves-effect waves-button waves-light">Flask APScheduler</a>
+
+        
+
+            <a href="/tags/系统运维/" style="-webkit-order:22;order:22" class="tags-list-item waves-effect waves-button waves-light">系统运维</a>
+
+        
+
+            <a href="/tags/自动化运维/" style="-webkit-order:23;order:23" class="tags-list-item waves-effect waves-button waves-light">自动化运维</a>
+
+        
+
+            <a href="/tags/crond/" style="-webkit-order:24;order:24" class="tags-list-item waves-effect waves-button waves-light">crond</a>
+
+        
+
+            <a href="/tags/cpu/" style="-webkit-order:25;order:25" class="tags-list-item waves-effect waves-button waves-light">cpu</a>
+
+        
+
+            <a href="/tags/mysql/" style="-webkit-order:26;order:26" class="tags-list-item waves-effect waves-button waves-light">mysql</a>
+
+        
+
+            <a href="/tags/nospace/" style="-webkit-order:27;order:27" class="tags-list-item waves-effect waves-button waves-light">nospace</a>
+
+        
+
+            <a href="/tags/saltstack/" style="-webkit-order:28;order:28" class="tags-list-item waves-effect waves-button waves-light">saltstack</a>
+
+        
+
+            <a href="/tags/logstash/" style="-webkit-order:29;order:29" class="tags-list-item waves-effect waves-button waves-light">logstash</a>
+
+        
+
+            <a href="/tags/expr/" style="-webkit-order:30;order:30" class="tags-list-item waves-effect waves-button waves-light">expr</a>
+
+        
+
+            <a href="/tags/inode/" style="-webkit-order:31;order:31" class="tags-list-item waves-effect waves-button waves-light">inode</a>
+
+        
+
+            <a href="/tags/All/" style="-webkit-order:32;order:32" class="tags-list-item waves-effect waves-button waves-light">All</a>
+
+        
+
+            <a href="/tags/expect/" style="-webkit-order:33;order:33" class="tags-list-item waves-effect waves-button waves-light">expect</a>
+
+        
+
+            <a href="/tags/bootstrap/" style="-webkit-order:34;order:34" class="tags-list-item waves-effect waves-button waves-light">bootstrap</a>
+
+        
+
+            <a href="/tags/flask/" style="-webkit-order:35;order:35" class="tags-list-item waves-effect waves-button waves-light">flask</a>
+
+        
+
+            <a href="/tags/Jenkins/" style="-webkit-order:36;order:36" class="tags-list-item waves-effect waves-button waves-light">Jenkins</a>
+
+        
+
+            <a href="/tags/k8s/" style="-webkit-order:37;order:37" class="tags-list-item waves-effect waves-button waves-light">k8s</a>
+
+        
+
+            <a href="/tags/jq/" style="-webkit-order:38;order:38" class="tags-list-item waves-effect waves-button waves-light">jq</a>
+
+        
+
+            <a href="/tags/deployment/" style="-webkit-order:39;order:39" class="tags-list-item waves-effect waves-button waves-light">deployment</a>
+
+        
+
+            <a href="/tags/rolling/" style="-webkit-order:40;order:40" class="tags-list-item waves-effect waves-button waves-light">rolling</a>
+
+        
+
+            <a href="/tags/update/" style="-webkit-order:41;order:41" class="tags-list-item waves-effect waves-button waves-light">update</a>
+
+        
+
+            <a href="/tags/pausing/" style="-webkit-order:42;order:42" class="tags-list-item waves-effect waves-button waves-light">pausing</a>
+
+        
+
+            <a href="/tags/resuming/" style="-webkit-order:43;order:43" class="tags-list-item waves-effect waves-button waves-light">resuming</a>
+
+        
+
+            <a href="/tags/kubernetes/" style="-webkit-order:44;order:44" class="tags-list-item waves-effect waves-button waves-light">kubernetes</a>
+
+        
+
+            <a href="/tags/etcd-cluster/" style="-webkit-order:45;order:45" class="tags-list-item waves-effect waves-button waves-light">etcd cluster</a>
+
+        
+
+            <a href="/tags/etcd-secret/" style="-webkit-order:46;order:46" class="tags-list-item waves-effect waves-button waves-light">etcd secret</a>
+
+        
+
+            <a href="/tags/log/" style="-webkit-order:47;order:47" class="tags-list-item waves-effect waves-button waves-light">log</a>
+
+        
+
+            <a href="/tags/kuberntes/" style="-webkit-order:48;order:48" class="tags-list-item waves-effect waves-button waves-light">kuberntes</a>
+
+        
+
+            <a href="/tags/secret/" style="-webkit-order:49;order:49" class="tags-list-item waves-effect waves-button waves-light">secret</a>
+
+        
+
+            <a href="/tags/Static-Pod/" style="-webkit-order:50;order:50" class="tags-list-item waves-effect waves-button waves-light">Static Pod</a>
+
+        
+
+            <a href="/tags/lvm/" style="-webkit-order:51;order:51" class="tags-list-item waves-effect waves-button waves-light">lvm</a>
+
+        
+
+            <a href="/tags/mysql-error/" style="-webkit-order:52;order:52" class="tags-list-item waves-effect waves-button waves-light">mysql error</a>
+
+        
+
+            <a href="/tags/nrpe/" style="-webkit-order:53;order:53" class="tags-list-item waves-effect waves-button waves-light">nrpe</a>
+
+        
+
+            <a href="/tags/perl/" style="-webkit-order:54;order:54" class="tags-list-item waves-effect waves-button waves-light">perl</a>
+
+        
+
+            <a href="/tags/phpize/" style="-webkit-order:55;order:55" class="tags-list-item waves-effect waves-button waves-light">phpize</a>
+
+        
+
+            <a href="/tags/Docker/" style="-webkit-order:56;order:56" class="tags-list-item waves-effect waves-button waves-light">Docker</a>
+
+        
+
+            <a href="/tags/ulimit/" style="-webkit-order:57;order:57" class="tags-list-item waves-effect waves-button waves-light">ulimit</a>
+
+        
+
+            <a href="/tags/mysqldb/" style="-webkit-order:58;order:58" class="tags-list-item waves-effect waves-button waves-light">mysqldb</a>
+
+        
+
+            <a href="/tags/python-mysql/" style="-webkit-order:59;order:59" class="tags-list-item waves-effect waves-button waves-light">python-mysql</a>
+
+        
+
+            <a href="/tags/CKA/" style="-webkit-order:60;order:60" class="tags-list-item waves-effect waves-button waves-light">CKA</a>
+
+        
+
+            <a href="/tags/monitor/" style="-webkit-order:61;order:61" class="tags-list-item waves-effect waves-button waves-light">monitor</a>
+
+        
+
+            <a href="/tags/skill/" style="-webkit-order:62;order:62" class="tags-list-item waves-effect waves-button waves-light">skill</a>
+
+        
+
+            <a href="/tags/consul/" style="-webkit-order:63;order:63" class="tags-list-item waves-effect waves-button waves-light">consul</a>
+
+        
+
+            <a href="/tags/vmware-workstation/" style="-webkit-order:64;order:64" class="tags-list-item waves-effect waves-button waves-light">vmware workstation</a>
+
+        
+
+            <a href="/tags/ftp/" style="-webkit-order:65;order:65" class="tags-list-item waves-effect waves-button waves-light">ftp</a>
+
+        
+
+            <a href="/tags/zabbix/" style="-webkit-order:66;order:66" class="tags-list-item waves-effect waves-button waves-light">zabbix</a>
+
+        
+
+            <a href="/tags/docker-registry/" style="-webkit-order:67;order:67" class="tags-list-item waves-effect waves-button waves-light">docker-registry</a>
+
+        
+
+            <a href="/tags/git/" style="-webkit-order:68;order:68" class="tags-list-item waves-effect waves-button waves-light">git</a>
+
+        
+
+            <a href="/tags/gitlab/" style="-webkit-order:69;order:69" class="tags-list-item waves-effect waves-button waves-light">gitlab</a>
+
+        
+
+            <a href="/tags/ELK/" style="-webkit-order:70;order:70" class="tags-list-item waves-effect waves-button waves-light">ELK</a>
+
+        
+
+            <a href="/tags/kafka/" style="-webkit-order:71;order:71" class="tags-list-item waves-effect waves-button waves-light">kafka</a>
+
+        
+
+            <a href="/tags/zookeeper/" style="-webkit-order:72;order:72" class="tags-list-item waves-effect waves-button waves-light">zookeeper</a>
+
+        
+
+            <a href="/tags/liveness-probe/" style="-webkit-order:73;order:73" class="tags-list-item waves-effect waves-button waves-light">liveness probe</a>
+
+        
+
+            <a href="/tags/readiness-probe/" style="-webkit-order:74;order:74" class="tags-list-item waves-effect waves-button waves-light">readiness probe</a>
+
+        
+
+            <a href="/tags/restartPolicy/" style="-webkit-order:75;order:75" class="tags-list-item waves-effect waves-button waves-light">restartPolicy</a>
+
+        
+
+            <a href="/tags/StatefulSet/" style="-webkit-order:76;order:76" class="tags-list-item waves-effect waves-button waves-light">StatefulSet</a>
+
+        
+
+            <a href="/tags/有状态/" style="-webkit-order:77;order:77" class="tags-list-item waves-effect waves-button waves-light">有状态</a>
+
+        
+
+            <a href="/tags/持久化存储/" style="-webkit-order:78;order:78" class="tags-list-item waves-effect waves-button waves-light">持久化存储</a>
+
+        
+
+            <a href="/tags/Celery/" style="-webkit-order:79;order:79" class="tags-list-item waves-effect waves-button waves-light">Celery</a>
+
+        
+
+            <a href="/tags/Python/" style="-webkit-order:80;order:80" class="tags-list-item waves-effect waves-button waves-light">Python</a>
+
+        
+
+            <a href="/tags/Java/" style="-webkit-order:81;order:81" class="tags-list-item waves-effect waves-button waves-light">Java</a>
+
+        
+
+            <a href="/tags/jdk/" style="-webkit-order:82;order:82" class="tags-list-item waves-effect waves-button waves-light">jdk</a>
+
+        
+
+            <a href="/tags/tomcat/" style="-webkit-order:83;order:83" class="tags-list-item waves-effect waves-button waves-light">tomcat</a>
+
+        
+
+            <a href="/tags/grafana/" style="-webkit-order:84;order:84" class="tags-list-item waves-effect waves-button waves-light">grafana</a>
+
+        
+
+            <a href="/tags/TLS-bootstrapping/" style="-webkit-order:85;order:85" class="tags-list-item waves-effect waves-button waves-light">TLS bootstrapping</a>
+
+        
+
+            <a href="/tags/证书手动签发/" style="-webkit-order:86;order:86" class="tags-list-item waves-effect waves-button waves-light">证书手动签发</a>
+
+        
+
+            <a href="/tags/证书自动签发/" style="-webkit-order:0;order:0" class="tags-list-item waves-effect waves-button waves-light">证书自动签发</a>
+
+        
+
+            <a href="/tags/证书轮换-自动续期/" style="-webkit-order:1;order:1" class="tags-list-item waves-effect waves-button waves-light active">证书轮换(自动续期)</a>
+
+        
+
+            <a href="/tags/ClusterIP/" style="-webkit-order:2;order:2" class="tags-list-item waves-effect waves-button waves-light">ClusterIP</a>
+
+        
+
+            <a href="/tags/NodePort/" style="-webkit-order:3;order:3" class="tags-list-item waves-effect waves-button waves-light">NodePort</a>
+
+        
+
+            <a href="/tags/TargetPort/" style="-webkit-order:4;order:4" class="tags-list-item waves-effect waves-button waves-light">TargetPort</a>
+
+        
+
+            <a href="/tags/Port/" style="-webkit-order:5;order:5" class="tags-list-item waves-effect waves-button waves-light">Port</a>
+
+        
+
+            <a href="/tags/kubernets/" style="-webkit-order:6;order:6" class="tags-list-item waves-effect waves-button waves-light">kubernets</a>
+
+        
+
+            <a href="/tags/Storage/" style="-webkit-order:7;order:7" class="tags-list-item waves-effect waves-button waves-light">Storage</a>
+
+        
+
+            <a href="/tags/NFS-PV静态供给/" style="-webkit-order:8;order:8" class="tags-list-item waves-effect waves-button waves-light">NFS PV静态供给</a>
+
+        
+
+            <a href="/tags/NFS-PV动态供给/" style="-webkit-order:9;order:9" class="tags-list-item waves-effect waves-button waves-light">NFS PV动态供给</a>
+
+        
+
+            <a href="/tags/ServiceAccount/" style="-webkit-order:10;order:10" class="tags-list-item waves-effect waves-button waves-light">ServiceAccount</a>
+
+        
+
+            <a href="/tags/Kubeconfig/" style="-webkit-order:11;order:11" class="tags-list-item waves-effect waves-button waves-light">Kubeconfig</a>
+
+        
+
+            <a href="/tags/RBAC/" style="-webkit-order:12;order:12" class="tags-list-item waves-effect waves-button waves-light">RBAC</a>
+
+        
+
+            <a href="/tags/Admission/" style="-webkit-order:13;order:13" class="tags-list-item waves-effect waves-button waves-light">Admission</a>
+
+        
+
+            <a href="/tags/PodSecurityContext/" style="-webkit-order:14;order:14" class="tags-list-item waves-effect waves-button waves-light">PodSecurityContext</a>
+
+        
+
+            <a href="/tags/NetworkPolicy/" style="-webkit-order:15;order:15" class="tags-list-item waves-effect waves-button waves-light">NetworkPolicy</a>
+
+        
+
+            <a href="/tags/redis-cluster/" style="-webkit-order:16;order:16" class="tags-list-item waves-effect waves-button waves-light">redis-cluster</a>
+
+        
+
+            <a href="/tags/Floating/" style="-webkit-order:17;order:17" class="tags-list-item waves-effect waves-button waves-light">Floating</a>
+
+        
+
+            <a href="/tags/keepalived/" style="-webkit-order:18;order:18" class="tags-list-item waves-effect waves-button waves-light">keepalived</a>
+
+        
+
+            <a href="/tags/lvs/" style="-webkit-order:19;order:19" class="tags-list-item waves-effect waves-button waves-light">lvs</a>
+
+        
+    </nav>
+    <!-- PC show more-->
+    <div class="tags-list-more">
+        <a href="javascript:;" onclick="BLOG.tabBar(this)" class="action tags-list-item waves-effect waves-circle waves-light"><i class="icon icon-ellipsis-h"></i></a>
+    </div>
+</div>
+
+
+
+</header>
+
+<div class="container body-wrap fade">
+    
+            <div class="waterfall">
+          
+
+            <div class="waterfall-item">
+  <article class="article-card archive-article">
+    <div class="post-meta">
+      <time class="post-time" title="2018-12-30 18:24:10" datetime="2018-12-30T10:24:10.000Z" itemprop="datePublished">2018-12-30</time>
+
+      
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/kubernetes/">kubernetes</a></li></ul>
+
+
+
+    </div>
+    
+
+
+  
+    <h3 class="post-title" itemprop="name">
+      <a class="post-title-link" href="/2018/12/30/kubernetes-bootstrapping/">使用Bootstrap Token完成TLS Bootstrapping</a>
+    </h3>
+  
+
+
+
+    
+    <div class="post-footer">
+        
+	<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/TLS-bootstrapping/">TLS bootstrapping</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/kubernetes/">kubernetes</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/证书手动签发/">证书手动签发</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/证书自动签发/">证书自动签发</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/证书轮换-自动续期/">证书轮换(自动续期)</a></li></ul>
+
+    </div>
+    
+  </article>
+</div>
+
+        
+            </div>
+        
+    
+</div>
+
+
+        <footer class="footer">
+    <div class="top">
+        
+
+        <p>
+            
+            <span>博客内容遵循 <a rel="license" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh">知识共享 署名 - 非商业性 - 相同方式共享 4.0 国际协议</a></span>
+        </p>
+    </div>
+    <div class="bottom">
+        <p><span>OutMan &copy; 2013 - 2019</span>
+            <span>
+                
+                <a href="http://www.miitbeian.gov.cn/" target="_blank">蜀ICP备007号-1</a><br>
+                
+                Power by <a href="http://hexo.io/" target="_blank">Hexo</a> Theme <a href="https://github.com/yscoder/hexo-theme-indigo" target="_blank">indigo</a>
+            </span>
+        </p>
+    </div>
+</footer>
+
+    </main>
+    <div class="mask" id="mask"></div>
+<a href="javascript:;" id="gotop" class="waves-effect waves-circle waves-light"><span class="icon icon-lg icon-chevron-up"></span></a>
+
+
+
+<div class="global-share" id="globalShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://blog.sctux.com/tags/证书轮换-自动续期/&title=运维人&pic=https://blog.sctux.com/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://blog.sctux.com/tags/证书轮换-自动续期/&title=运维人&source=😊" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.sctux.com/tags/证书轮换-自动续期/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=运维人&url=https://blog.sctux.com/tags/证书轮换-自动续期/&via=https://blog.sctux.com" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=https://blog.sctux.com/tags/证书轮换-自动续期/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+<div class="page-modal wx-share" id="wxShare">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <img src="//api.qrserver.com/v1/create-qr-code/?data=https://blog.sctux.com/tags/证书轮换-自动续期/" alt="微信分享二维码">
+</div>
+
+
+
+
+    <script src="//cdn.bootcss.com/node-waves/0.7.4/waves.min.js"></script>
+<script>
+var BLOG = { ROOT: '/', SHARE: true, REWARD: false };
+
+
+</script>
+
+<script src="/js/main.min.js?v=1.7.2"></script>
+
+
+<div class="search-panel" id="search-panel">
+    <ul class="search-result" id="search-result"></ul>
+</div>
+<template id="search-tpl">
+<li class="item">
+    <a href="{path}" class="waves-block waves-effect">
+        <div class="title ellipsis" title="{title}">{title}</div>
+        <div class="flex-row flex-middle">
+            <div class="tags ellipsis">
+                {tags}
+            </div>
+            <time class="flex-col time">{date}</time>
+        </div>
+    </a>
+</li>
+</template>
+
+<script src="/js/search.min.js?v=1.7.2" async></script>
+
+
+
+
+
+
+
+
+<script>
+(function() {
+    var OriginTitile = document.title, titleTime;
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            document.title = '老弟，死哪儿去啦~！';
+            clearTimeout(titleTime);
+        } else {
+            document.title = '(つェ⊂)咦!老弟来啦!';
+            titleTime = setTimeout(function() {
+                document.title = OriginTitile;
+            },2000);
+        }
+    });
+})();
+</script>
+
+
+
+</body>
+</html>

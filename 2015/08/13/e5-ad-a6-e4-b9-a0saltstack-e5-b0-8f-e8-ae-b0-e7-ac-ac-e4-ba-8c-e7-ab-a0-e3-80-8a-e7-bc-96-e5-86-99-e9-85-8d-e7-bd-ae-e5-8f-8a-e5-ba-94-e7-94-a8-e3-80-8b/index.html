@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.8.0">
+    
+
+    
+
+    
+
+
+
+    <meta charset="utf-8">
+    
+    
+    
+    
+    <title>学习SaltStack小记—第二章《编写配置及应用》 | 运维人 | Devops、Linux、Kubernetes、Docker、Flask、Python、Shell</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    
+    <meta name="theme-color" content="#3F51B5">
+    
+    
+    <meta name="keywords" content="">
+    <meta name="description" content="上次记录了一下salt的安装和配置，下面记录一下如何去编写一个配置并且应用到minion. SaltStack默认的配置文件路径在/srv/slat下，如果没有这个目录就新建个。如果不确定可以打开Master的主配置文件看下。 在master主配置文件中，打开一下三行的注释，这就是salt的默认配置路径。 [">
+<meta name="keywords" content="devops,Linux,Kubernetes,Flask,Python,Shell">
+<meta property="og:type" content="article">
+<meta property="og:title" content="学习SaltStack小记—第二章《编写配置及应用》">
+<meta property="og:url" content="https://blog.sctux.com/2015/08/13/e5-ad-a6-e4-b9-a0saltstack-e5-b0-8f-e8-ae-b0-e7-ac-ac-e4-ba-8c-e7-ab-a0-e3-80-8a-e7-bc-96-e5-86-99-e9-85-8d-e7-bd-ae-e5-8f-8a-e5-ba-94-e7-94-a8-e3-80-8b/index.html">
+<meta property="og:site_name" content="运维人">
+<meta property="og:description" content="上次记录了一下salt的安装和配置，下面记录一下如何去编写一个配置并且应用到minion. SaltStack默认的配置文件路径在/srv/slat下，如果没有这个目录就新建个。如果不确定可以打开Master的主配置文件看下。 在master主配置文件中，打开一下三行的注释，这就是salt的默认配置路径。 [">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/08/1.png">
+<meta property="og:image" content="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/08/2.png">
+<meta property="og:image" content="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/08/6.png">
+<meta property="og:updated_time" content="2018-12-19T14:39:54.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="学习SaltStack小记—第二章《编写配置及应用》">
+<meta name="twitter:description" content="上次记录了一下salt的安装和配置，下面记录一下如何去编写一个配置并且应用到minion. SaltStack默认的配置文件路径在/srv/slat下，如果没有这个目录就新建个。如果不确定可以打开Master的主配置文件看下。 在master主配置文件中，打开一下三行的注释，这就是salt的默认配置路径。 [">
+<meta name="twitter:image" content="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/08/1.png">
+    
+    <link rel="shortcut icon" href="/favicon.ico">
+    <link rel="stylesheet" href="/css/style.css?v=1.7.2">
+    <script>window.lazyScripts=[]</script>
+
+    <!-- custom head -->
+    
+
+</head>
+
+<body>
+    <div id="loading" class="active"></div>
+
+    <aside id="menu">
+  <div class="inner flex-row-vertical">
+    <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menu-off">
+        <i class="icon icon-lg icon-close"></i>
+    </a>
+    <div class="brand-wrap" style="background-image:url(/img/brand.jpg)">
+      <div class="brand">
+        <a href="/" class="avatar waves-effect waves-circle waves-light">
+          <img src="/img/avatar.jpg">
+        </a>
+        <hgroup class="introduce">
+          <h5 class="nickname">OutMan</h5>
+          <a href="mailto:2399447849@qq.com" title="2399447849@qq.com" class="mail">2399447849@qq.com</a>
+        </hgroup>
+      </div>
+    </div>
+    <div class="scroll-wrap flex-col">
+      <ul class="nav">
+        
+            <li class="waves-block waves-effect">
+              <a href="/">
+                <i class="icon icon-lg icon-home"></i>
+                主页
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/archives">
+                <i class="icon icon-lg icon-archives"></i>
+                归档
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/tags">
+                <i class="icon icon-lg icon-tags"></i>
+                标签
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/categories">
+                <i class="icon icon-lg icon-th-list"></i>
+                分类
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://github.com/guomaoqiu" target="_blank">
+                <i class="icon icon-lg icon-github"></i>
+                Github
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/works">
+                <i class="icon icon-lg icon-hand-peace-o"></i>
+                作品
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="http://demo.sctux.com" target="_blank">
+                <i class="icon icon-lg icon-link"></i>
+                DevOpsPlatform
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="http://resume.sctux.com/" target="_blank">
+                <i class="icon icon-lg icon-heart"></i>
+                我的简历
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/about">
+                <i class="icon icon-lg icon-user"></i>
+                关于我
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://blog.sctux.com/2019/02/27/skilltree/Skilltree.jpg" target="_blank">
+                <i class="icon icon-lg icon-tree"></i>
+                我的技能树
+              </a>
+            </li>
+        
+      </ul>
+    </div>
+  </div>
+</aside>
+
+    <main id="main">
+        <header class="top-header" id="header">
+    <div class="flex-row">
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light on" id="menu-toggle">
+          <i class="icon icon-lg icon-navicon"></i>
+        </a>
+        <div class="flex-col header-title ellipsis">学习SaltStack小记—第二章《编写配置及应用》</div>
+        
+        <div class="search-wrap" id="search-wrap">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="back">
+                <i class="icon icon-lg icon-chevron-left"></i>
+            </a>
+            <input type="text" id="key" class="search-input" autocomplete="off" placeholder="输入感兴趣的关键字">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="search">
+                <i class="icon icon-lg icon-search"></i>
+            </a>
+        </div>
+        
+        
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menuShare">
+            <i class="icon icon-lg icon-share-alt"></i>
+        </a>
+        
+    </div>
+</header>
+<header class="content-header post-header">
+
+    <div class="container fade-scale">
+        <h1 class="title">学习SaltStack小记—第二章《编写配置及应用》</h1>
+        <h5 class="subtitle">
+            
+                <time datetime="2015-08-13T12:17:38.000Z" itemprop="datePublished" class="page-time">
+  2015-08-13
+</time>
+
+
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/自动化运维/">自动化运维</a></li></ul>
+
+            
+        </h5>
+    </div>
+
+    
+
+
+</header>
+
+
+<div class="container body-wrap">
+    
+    <aside class="post-widget">
+        <nav class="post-toc-wrap post-toc-shrink" id="post-toc">
+            <h4>TOC</h4>
+            <ol class="post-toc"><li class="post-toc-item post-toc-level-1"><a class="post-toc-link" href="#undefined"><span class="post-toc-number">1.</span> <span class="post-toc-text">SaltStack</span></a></li></ol>
+        </nav>
+    </aside>
+
+
+<article id="post-e5-ad-a6-e4-b9-a0saltstack-e5-b0-8f-e8-ae-b0-e7-ac-ac-e4-ba-8c-e7-ab-a0-e3-80-8a-e7-bc-96-e5-86-99-e9-85-8d-e7-bd-ae-e5-8f-8a-e5-ba-94-e7-94-a8-e3-80-8b" class="post-article article-type-post fade" itemprop="blogPost">
+
+    <div class="post-card">
+        <h1 class="post-card-title">学习SaltStack小记—第二章《编写配置及应用》</h1>
+        <div class="post-meta">
+            <time class="post-time" title="2015-08-13 20:17:38" datetime="2015-08-13T12:17:38.000Z" itemprop="datePublished">2015-08-13</time>
+
+            
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/自动化运维/">自动化运维</a></li></ul>
+
+
+
+            
+
+        </div>
+        <div class="post-content" id="post-content" itemprop="postContent">
+            <p>上次记录了一下salt的安装和配置，下面记录一下如何去编写一个配置并且应用到minion. SaltStack默认的配置文件路径在/srv/slat下，如果没有这个目录就新建个。如果不确定可以打开Master的主配置文件看下。 在master主配置文件中，打开一下三行的注释，这就是salt的默认配置路径。 [<figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/08/1.png" alt="1](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/08/1.png)" title="">
+                </div>
+                <div class="image-caption">1](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/08/1.png)</div>
+            </figure> 这里默认配置文件是注释了的，如果需要直接取消注释就行了。 切记，每次修改了配置文件都要重启服务 下面以两个需求为例子进行学习: a.在minion上面安装httpd服务，并且启动之 b.自建index.html文件，在master端应用配置完成后直接访问minion的http服务，在浏览器中显示我自定的index.html文件内容 额，刚开始学习这个的时候配置文件编写很是一件头疼的事情； <strong>一、配置文件说明</strong> 1.引导配置文件 top.sls saltstack的第一个配置文件默认为top.sls，是位于/srv/salt/目录下的，当然这不是绝对的，可以修改配置文件的哦。这个文件是必须要有的。 例如：</p>
+<p>[root@saltstack-node1 salt]# more top.sls<br>base:                       ###可以理解为仓库<br>  ‘node0.example.com’:      ###对象名，就是针对那些minion，这里可以支持组什么的，就是各种匹配吧<br>    - apache                ###资源名(自定义)</p>
+<p>说明：资源名需要在/srv/salt目录新建文件为apache.sls，注意：所有生效的配置文件都是以sls结尾的。 2.资源配置文件 /srv/salt/apache.sls 这个就是上面top中指定的资源名</p>
+<p>[root@saltstack-node1 salt]# cat apache.sls<br>apache-service:            ###ID,自定义<br>  pkg.installed:           ###使用包管理的insalled方法<br>   - names:                ###名称<br>     - httpd               ###软件包名<br>     - httpd-devel<br>  service.running:         ###模块名称，安装好之后要启动它<br>   - name: httpd           ###启动什么<br>   - enable: True          ###开机自启动<br>   - reload: True          ###监视这个文件，如果有变动，我们要重载服务<br>   - watch:<br>      - file: /var/www/html/index.html  ###文件路径<br>   - require:              ###应用前提，httpd这个软件包安装好之后，才执行service这个模块<br>      - pkg: httpd<br>  file.managed:            ###模块名称，使用file模块的managed这个方法，目的，文件管理<br>    - name: /var/www/html/index.html  ###minion端的文件具体路径<br>    - source: salt://index.html       ###源文件<br>    - user: apache                    ###这个文件的一些属性<br>    - group: root<br>    - mode: 644<br>    - backup: minion                  ###改变之前备份<br>    - require:                        ###同上，执行完上面的，在执行这个<br>       - pkg: httpd</p>
+<p>说明：源文件的位置就是在/srv/salt目录下新建一个文件index.html。 我这里内容自定义： echo “</p><h1>SaltStack</h1>“ &gt; index.html 配置编写完毕最后的目录结构如下： [<figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/08/2.png" alt="2](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/08/2.png)" title="">
+                </div>
+                <div class="image-caption">2](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/08/2.png)</div>
+            </figure> <strong>二、应用于客户端</strong> 经过上面Master端编写配置文件后，此时已经生效。Minions只要同步资源即可实现上面的两个需求。那么就是如何来同步？ 这里有两种方式： 第一种手动在Master上执行推送命令，第二种是在Minion设置时间间隔自动想Master端同步最新的资源。 1、Master手动同步 在Master上执行# salt ‘*’ state.highstate ###意思是向所有Minions推送最新资源 2、Minion自动同步 在/etc/salt/minion配置文件中增加<p></p>
+<p>schedule:<br>highstate:<br>function: state.highstate<br>seconds: 30    ###意思是每30秒向Master同步一次最新资源，也可设置分-mintus、小时-hours</p>
+<p>下面是在master端执行的结果： 当然在推送资源时我们可以先测试一下，命令： salt ‘node0.example.com’ state.highstate test=True [<figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/08/6.png" alt="3](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/08/3.png)](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/08/3.png) [![4](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/08/4.png)](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/08/4.png) 上面的推送已经完成，下面验证结果： [![6](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/08/6.png)" title="">
+                </div>
+                <div class="image-caption">3](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/08/3.png)](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/08/3.png) [![4](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/08/4.png)](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/08/4.png) 上面的推送已经完成，下面验证结果： [![6](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/08/6.png)</div>
+            </figure> 至此上面两个需求已经实现了。这也是salt最基本的用法及功能啦。后面继续学习。 看来搞个lamp或者lnmp平台也可以轻而易举的实现了。</p>
+
+        </div>
+
+        <blockquote class="post-copyright">
+    
+    <div class="content">
+        
+<span class="post-time">
+    最后更新时间：<time datetime="2018-12-19T14:39:54.000Z" itemprop="dateUpdated">2018-12-19 22:39:54</time>
+</span><br>
+
+
+        
+        该文链接：<a href="/2015/08/13/e5-ad-a6-e4-b9-a0saltstack-e5-b0-8f-e8-ae-b0-e7-ac-ac-e4-ba-8c-e7-ab-a0-e3-80-8a-e7-bc-96-e5-86-99-e9-85-8d-e7-bd-ae-e5-8f-8a-e5-ba-94-e7-94-a8-e3-80-8b/" target="_blank" rel="external">https://blog.sctux.com/2015/08/13/e5-ad-a6-e4-b9-a0saltstack-e5-b0-8f-e8-ae-b0-e7-ac-ac-e4-ba-8c-e7-ab-a0-e3-80-8a-e7-bc-96-e5-86-99-e9-85-8d-e7-bd-ae-e5-8f-8a-e5-ba-94-e7-94-a8-e3-80-8b/</a>
+        
+    </div>
+    
+    <footer>
+        <a href="https://blog.sctux.com">
+            <img src="/img/avatar.jpg" alt="OutMan">
+            OutMan
+        </a>
+    </footer>
+</blockquote>
+
+        
+<div class="page-reward">
+    <a id="rewardBtn" href="javascript:;" class="page-reward-btn waves-effect waves-circle waves-light">赏</a>
+</div>
+
+
+
+        <div class="post-footer">
+            
+
+            
+<div class="page-share-wrap">
+    
+
+<div class="page-share" id="pageShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://blog.sctux.com/2015/08/13/e5-ad-a6-e4-b9-a0saltstack-e5-b0-8f-e8-ae-b0-e7-ac-ac-e4-ba-8c-e7-ab-a0-e3-80-8a-e7-bc-96-e5-86-99-e9-85-8d-e7-bd-ae-e5-8f-8a-e5-ba-94-e7-94-a8-e3-80-8b/&title=《学习SaltStack小记—第二章《编写配置及应用》》 — 运维人&pic=https://blog.sctux.com/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://blog.sctux.com/2015/08/13/e5-ad-a6-e4-b9-a0saltstack-e5-b0-8f-e8-ae-b0-e7-ac-ac-e4-ba-8c-e7-ab-a0-e3-80-8a-e7-bc-96-e5-86-99-e9-85-8d-e7-bd-ae-e5-8f-8a-e5-ba-94-e7-94-a8-e3-80-8b/&title=《学习SaltStack小记—第二章《编写配置及应用》》 — 运维人&source=😊" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.sctux.com/2015/08/13/e5-ad-a6-e4-b9-a0saltstack-e5-b0-8f-e8-ae-b0-e7-ac-ac-e4-ba-8c-e7-ab-a0-e3-80-8a-e7-bc-96-e5-86-99-e9-85-8d-e7-bd-ae-e5-8f-8a-e5-ba-94-e7-94-a8-e3-80-8b/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《学习SaltStack小记—第二章《编写配置及应用》》 — 运维人&url=https://blog.sctux.com/2015/08/13/e5-ad-a6-e4-b9-a0saltstack-e5-b0-8f-e8-ae-b0-e7-ac-ac-e4-ba-8c-e7-ab-a0-e3-80-8a-e7-bc-96-e5-86-99-e9-85-8d-e7-bd-ae-e5-8f-8a-e5-ba-94-e7-94-a8-e3-80-8b/&via=https://blog.sctux.com" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=https://blog.sctux.com/2015/08/13/e5-ad-a6-e4-b9-a0saltstack-e5-b0-8f-e8-ae-b0-e7-ac-ac-e4-ba-8c-e7-ab-a0-e3-80-8a-e7-bc-96-e5-86-99-e9-85-8d-e7-bd-ae-e5-8f-8a-e5-ba-94-e7-94-a8-e3-80-8b/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+
+    <a href="javascript:;" id="shareFab" class="page-share-fab waves-effect waves-circle">
+        <i class="icon icon-share-alt icon-lg"></i>
+    </a>
+</div>
+
+
+
+        </div>
+    </div>
+
+    
+<nav class="post-nav flex-row flex-justify-between">
+  
+    <div class="waves-block waves-effect prev">
+      <a href="/2015/08/18/saltstack-pillar-de-shi-xian-fang-shi/" id="post-prev" class="post-nav-link">
+        <div class="tips"><i class="icon icon-angle-left icon-lg icon-pr"></i> Prev</div>
+        <h4 class="title">学习SaltStack小记—第三章《Pillar使用方法》</h4>
+      </a>
+    </div>
+  
+
+  
+    <div class="waves-block waves-effect next">
+      <a href="/2015/08/12/e5-ad-a6-e4-b9-a0saltstack-e5-b0-8f-e8-ae-b0-e7-ac-ac-e4-b8-80-e7-ab-a0-e3-80-8a-e5-ae-89-e8-a3-85-e5-8f-8a-e7-ae-80-e5-8d-95-e6-b5-8b-e8-af-95-e3-80-8b/" id="post-next" class="post-nav-link">
+        <div class="tips">Next <i class="icon icon-angle-right icon-lg icon-pl"></i></div>
+        <h4 class="title">学习SaltStack小记---第一章《安装及简单测试》</h4>
+      </a>
+    </div>
+  
+</nav>
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Valine Comments -->
+    <div class="comments vcomment" id="comments"></div>
+    <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+    <script src="//unpkg.com/valine@latest/dist/Valine.min.js"></script>
+    <!-- Valine Comments script -->
+    <script>
+        var GUEST_INFO = ['nick','mail','link'];
+        var guest_info = 'nick,mail,link'.split(',').filter(function(item){
+          return GUEST_INFO.indexOf(item) > -1
+        });
+        new Valine({
+            el: '#comments',
+            notify: 'true' == 'true',
+            verify: 'true' == 'true',
+            appId: "lHxnnDHJXDgMoFpCbdx8A4q7-gzGzoHsz",
+            appKey: "W8H2NuO8chyDlCEQzionLuuV",
+            avatar: "monsterid",
+            placeholder: "来都来了，说点啥子吧~🌹 (友情提醒，留下正确的邮箱地址可以第一时间获取评论反馈)",
+            guest_info: guest_info.length == 0 ? GUEST_INFO : guest_info,
+            pageSize: "10"
+        })
+    </script>
+    <!-- Valine Comments end -->
+
+
+
+
+
+
+
+</article>
+
+<div id="reward" class="page-modal reward-lay">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <h3 class="reward-title">
+        <i class="icon icon-quote-left"></i>
+        谢谢大爷~
+        <i class="icon icon-quote-right"></i>
+    </h3>
+    <div class="reward-content">
+        
+        <div class="reward-code">
+            <img id="rewardCode" src="/img/wechat.jpg" alt="打赏二维码">
+        </div>
+        
+        <label class="reward-toggle">
+            <input id="rewardToggle" type="checkbox" class="reward-toggle-check" data-wechat="/img/wechat.jpg" data-alipay="/img/alipay.jpg">
+            <div class="reward-toggle-ctrol">
+                <span class="reward-toggle-item wechat">微信</span>
+                <span class="reward-toggle-label"></span>
+                <span class="reward-toggle-item alipay">支付宝</span>
+            </div>
+        </label>
+        
+    </div>
+</div>
+
+
+
+</div>
+
+        <footer class="footer">
+    <div class="top">
+        
+
+        <p>
+            
+            <span>博客内容遵循 <a rel="license" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh">知识共享 署名 - 非商业性 - 相同方式共享 4.0 国际协议</a></span>
+        </p>
+    </div>
+    <div class="bottom">
+        <p><span>OutMan &copy; 2013 - 2019</span>
+            <span>
+                
+                <a href="http://www.miitbeian.gov.cn/" target="_blank">蜀ICP备007号-1</a><br>
+                
+                Power by <a href="http://hexo.io/" target="_blank">Hexo</a> Theme <a href="https://github.com/yscoder/hexo-theme-indigo" target="_blank">indigo</a>
+            </span>
+        </p>
+    </div>
+</footer>
+
+    </main>
+    <div class="mask" id="mask"></div>
+<a href="javascript:;" id="gotop" class="waves-effect waves-circle waves-light"><span class="icon icon-lg icon-chevron-up"></span></a>
+
+
+
+<div class="global-share" id="globalShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://blog.sctux.com/2015/08/13/e5-ad-a6-e4-b9-a0saltstack-e5-b0-8f-e8-ae-b0-e7-ac-ac-e4-ba-8c-e7-ab-a0-e3-80-8a-e7-bc-96-e5-86-99-e9-85-8d-e7-bd-ae-e5-8f-8a-e5-ba-94-e7-94-a8-e3-80-8b/&title=《学习SaltStack小记—第二章《编写配置及应用》》 — 运维人&pic=https://blog.sctux.com/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://blog.sctux.com/2015/08/13/e5-ad-a6-e4-b9-a0saltstack-e5-b0-8f-e8-ae-b0-e7-ac-ac-e4-ba-8c-e7-ab-a0-e3-80-8a-e7-bc-96-e5-86-99-e9-85-8d-e7-bd-ae-e5-8f-8a-e5-ba-94-e7-94-a8-e3-80-8b/&title=《学习SaltStack小记—第二章《编写配置及应用》》 — 运维人&source=😊" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.sctux.com/2015/08/13/e5-ad-a6-e4-b9-a0saltstack-e5-b0-8f-e8-ae-b0-e7-ac-ac-e4-ba-8c-e7-ab-a0-e3-80-8a-e7-bc-96-e5-86-99-e9-85-8d-e7-bd-ae-e5-8f-8a-e5-ba-94-e7-94-a8-e3-80-8b/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《学习SaltStack小记—第二章《编写配置及应用》》 — 运维人&url=https://blog.sctux.com/2015/08/13/e5-ad-a6-e4-b9-a0saltstack-e5-b0-8f-e8-ae-b0-e7-ac-ac-e4-ba-8c-e7-ab-a0-e3-80-8a-e7-bc-96-e5-86-99-e9-85-8d-e7-bd-ae-e5-8f-8a-e5-ba-94-e7-94-a8-e3-80-8b/&via=https://blog.sctux.com" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=https://blog.sctux.com/2015/08/13/e5-ad-a6-e4-b9-a0saltstack-e5-b0-8f-e8-ae-b0-e7-ac-ac-e4-ba-8c-e7-ab-a0-e3-80-8a-e7-bc-96-e5-86-99-e9-85-8d-e7-bd-ae-e5-8f-8a-e5-ba-94-e7-94-a8-e3-80-8b/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+<div class="page-modal wx-share" id="wxShare">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <img src="//api.qrserver.com/v1/create-qr-code/?data=https://blog.sctux.com/2015/08/13/e5-ad-a6-e4-b9-a0saltstack-e5-b0-8f-e8-ae-b0-e7-ac-ac-e4-ba-8c-e7-ab-a0-e3-80-8a-e7-bc-96-e5-86-99-e9-85-8d-e7-bd-ae-e5-8f-8a-e5-ba-94-e7-94-a8-e3-80-8b/" alt="微信分享二维码">
+</div>
+
+
+
+
+    <script src="//cdn.bootcss.com/node-waves/0.7.4/waves.min.js"></script>
+<script>
+var BLOG = { ROOT: '/', SHARE: true, REWARD: true };
+
+
+</script>
+
+<script src="/js/main.min.js?v=1.7.2"></script>
+
+
+<div class="search-panel" id="search-panel">
+    <ul class="search-result" id="search-result"></ul>
+</div>
+<template id="search-tpl">
+<li class="item">
+    <a href="{path}" class="waves-block waves-effect">
+        <div class="title ellipsis" title="{title}">{title}</div>
+        <div class="flex-row flex-middle">
+            <div class="tags ellipsis">
+                {tags}
+            </div>
+            <time class="flex-col time">{date}</time>
+        </div>
+    </a>
+</li>
+</template>
+
+<script src="/js/search.min.js?v=1.7.2" async></script>
+
+
+
+
+
+
+
+
+<script>
+(function() {
+    var OriginTitile = document.title, titleTime;
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            document.title = '老弟，死哪儿去啦~！';
+            clearTimeout(titleTime);
+        } else {
+            document.title = '(つェ⊂)咦!老弟来啦!';
+            titleTime = setTimeout(function() {
+                document.title = OriginTitile;
+            },2000);
+        }
+    });
+})();
+</script>
+
+
+
+</body>
+</html>

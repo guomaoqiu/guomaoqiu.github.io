@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.8.0">
+    
+
+    
+
+    
+
+
+
+    <meta charset="utf-8">
+    
+    
+    
+    
+    <title>K8s集群中pause容器是干嘛的~ | 运维人 | Devops、Linux、Kubernetes、Docker、Flask、Python、Shell</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    
+    <meta name="theme-color" content="#3F51B5">
+    
+    
+    <meta name="keywords" content="k8s">
+    <meta name="description" content="当我们在检查k8s集群状态的时候会发现有很多 pause 容器运行于服务器上面，然后每次启动一个容器，都会伴随一个pause容器的启动。那它究竟是干啥子的？ Pause容器，又叫Infra容器，下面通过实验来理解它。 我们知道在搭建k8s集群的时候，kubelet的配置中有这样一个参数： [root@linux-node1 cfg]# more /usr/lib/systemd/system/ku">
+<meta name="keywords" content="k8s">
+<meta property="og:type" content="article">
+<meta property="og:title" content="K8s集群中pause容器是干嘛的~">
+<meta property="og:url" content="https://blog.sctux.com/2018/12/07/k8s-ji-qun-zhongpause-rong-qi-shi-gan-ma-de/index.html">
+<meta property="og:site_name" content="运维人">
+<meta property="og:description" content="当我们在检查k8s集群状态的时候会发现有很多 pause 容器运行于服务器上面，然后每次启动一个容器，都会伴随一个pause容器的启动。那它究竟是干啥子的？ Pause容器，又叫Infra容器，下面通过实验来理解它。 我们知道在搭建k8s集群的时候，kubelet的配置中有这样一个参数： [root@linux-node1 cfg]# more /usr/lib/systemd/system/ku">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2018/12/15441701986547.png">
+<meta property="og:updated_time" content="2018-12-19T14:39:54.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="K8s集群中pause容器是干嘛的~">
+<meta name="twitter:description" content="当我们在检查k8s集群状态的时候会发现有很多 pause 容器运行于服务器上面，然后每次启动一个容器，都会伴随一个pause容器的启动。那它究竟是干啥子的？ Pause容器，又叫Infra容器，下面通过实验来理解它。 我们知道在搭建k8s集群的时候，kubelet的配置中有这样一个参数： [root@linux-node1 cfg]# more /usr/lib/systemd/system/ku">
+<meta name="twitter:image" content="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2018/12/15441701986547.png">
+    
+    <link rel="shortcut icon" href="/favicon.ico">
+    <link rel="stylesheet" href="/css/style.css?v=1.7.2">
+    <script>window.lazyScripts=[]</script>
+
+    <!-- custom head -->
+    
+
+</head>
+
+<body>
+    <div id="loading" class="active"></div>
+
+    <aside id="menu">
+  <div class="inner flex-row-vertical">
+    <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menu-off">
+        <i class="icon icon-lg icon-close"></i>
+    </a>
+    <div class="brand-wrap" style="background-image:url(/img/brand.jpg)">
+      <div class="brand">
+        <a href="/" class="avatar waves-effect waves-circle waves-light">
+          <img src="/img/avatar.jpg">
+        </a>
+        <hgroup class="introduce">
+          <h5 class="nickname">OutMan</h5>
+          <a href="mailto:2399447849@qq.com" title="2399447849@qq.com" class="mail">2399447849@qq.com</a>
+        </hgroup>
+      </div>
+    </div>
+    <div class="scroll-wrap flex-col">
+      <ul class="nav">
+        
+            <li class="waves-block waves-effect">
+              <a href="/">
+                <i class="icon icon-lg icon-home"></i>
+                主页
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/archives">
+                <i class="icon icon-lg icon-archives"></i>
+                归档
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/tags">
+                <i class="icon icon-lg icon-tags"></i>
+                标签
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/categories">
+                <i class="icon icon-lg icon-th-list"></i>
+                分类
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://github.com/guomaoqiu" target="_blank">
+                <i class="icon icon-lg icon-github"></i>
+                Github
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/works">
+                <i class="icon icon-lg icon-hand-peace-o"></i>
+                作品
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="http://demo.sctux.com" target="_blank">
+                <i class="icon icon-lg icon-link"></i>
+                DevOpsPlatform
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="http://resume.sctux.com/" target="_blank">
+                <i class="icon icon-lg icon-heart"></i>
+                我的简历
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/about">
+                <i class="icon icon-lg icon-user"></i>
+                关于我
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://blog.sctux.com/2019/02/27/skilltree/Skilltree.jpg" target="_blank">
+                <i class="icon icon-lg icon-tree"></i>
+                我的技能树
+              </a>
+            </li>
+        
+      </ul>
+    </div>
+  </div>
+</aside>
+
+    <main id="main">
+        <header class="top-header" id="header">
+    <div class="flex-row">
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light on" id="menu-toggle">
+          <i class="icon icon-lg icon-navicon"></i>
+        </a>
+        <div class="flex-col header-title ellipsis">K8s集群中pause容器是干嘛的~</div>
+        
+        <div class="search-wrap" id="search-wrap">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="back">
+                <i class="icon icon-lg icon-chevron-left"></i>
+            </a>
+            <input type="text" id="key" class="search-input" autocomplete="off" placeholder="输入感兴趣的关键字">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="search">
+                <i class="icon icon-lg icon-search"></i>
+            </a>
+        </div>
+        
+        
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menuShare">
+            <i class="icon icon-lg icon-share-alt"></i>
+        </a>
+        
+    </div>
+</header>
+<header class="content-header post-header">
+
+    <div class="container fade-scale">
+        <h1 class="title">K8s集群中pause容器是干嘛的~</h1>
+        <h5 class="subtitle">
+            
+                <time datetime="2018-12-07T08:01:08.000Z" itemprop="datePublished" class="page-time">
+  2018-12-07
+</time>
+
+
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/k8s/">k8s</a></li></ul>
+
+            
+        </h5>
+    </div>
+
+    
+
+
+</header>
+
+
+<div class="container body-wrap">
+    
+    <aside class="post-widget">
+        <nav class="post-toc-wrap post-toc-shrink" id="post-toc">
+            <h4>TOC</h4>
+            <ol class="post-toc"><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#Pause容器的作用"><span class="post-toc-number">1.</span> <span class="post-toc-text">Pause容器的作用</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-5"><a class="post-toc-link" href="#1-我们首先在节点上运行一个pause容器。"><span class="post-toc-number">1.0.0.1.</span> <span class="post-toc-text">1.我们首先在节点上运行一个pause容器。</span></a></li><li class="post-toc-item post-toc-level-5"><a class="post-toc-link" href="#2-然后再运行一个nginx容器，nginx将为localhost-2368创建一个代理。"><span class="post-toc-number">1.0.0.2.</span> <span class="post-toc-text">2.然后再运行一个nginx容器，nginx将为localhost:2368创建一个代理。</span></a></li><li class="post-toc-item post-toc-level-5"><a class="post-toc-link" href="#3-然后再为ghost创建一个应用容器，这是一款博客软件。"><span class="post-toc-number">1.0.0.3.</span> <span class="post-toc-text">3.然后再为ghost创建一个应用容器，这是一款博客软件。</span></a></li></ol></li></ol><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#解析"><span class="post-toc-number">2.</span> <span class="post-toc-text">解析:</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#其他概念："><span class="post-toc-number">3.</span> <span class="post-toc-text">其他概念：</span></a></li>
+        </nav>
+    </aside>
+
+
+<article id="post-k8s-ji-qun-zhongpause-rong-qi-shi-gan-ma-de" class="post-article article-type-post fade" itemprop="blogPost">
+
+    <div class="post-card">
+        <h1 class="post-card-title">K8s集群中pause容器是干嘛的~</h1>
+        <div class="post-meta">
+            <time class="post-time" title="2018-12-07 16:01:08" datetime="2018-12-07T08:01:08.000Z" itemprop="datePublished">2018-12-07</time>
+
+            
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/k8s/">k8s</a></li></ul>
+
+
+
+            
+
+        </div>
+        <div class="post-content" id="post-content" itemprop="postContent">
+            <p>当我们在检查k8s集群状态的时候会发现有很多 <code>pause</code> 容器运行于服务器上面，然后每次启动一个容器，都会伴随一个pause容器的启动。那它究竟是干啥子的？</p>
+<p>Pause容器，又叫Infra容器，下面通过实验来理解它。</p>
+<p>我们知道在搭建k8s集群的时候，kubelet的配置中有这样一个参数：</p>
+<pre><code>[root@linux-node1 cfg]# more /usr/lib/systemd/system/kubelet.service
+······
+······
+  --pod-infra-container-image=registry.cn-hangzhou.aliyuncs.com/google_containers/pause-amd64:3.1 \
+······
+······
+</code></pre><p>我这里是直接将这些配置参数通过启动脚本来补充进去的。<br>Pause容器，是可以自己来定义，官方使用的<code>gcr.io/google_containers/pause-amd64:3.0</code>容器的代码见Github，使用C语言编写。</p>
+<h2 id="Pause容器的作用"><a href="#Pause容器的作用" class="headerlink" title="Pause容器的作用"></a>Pause容器的作用</h2><p>我们检查nod节点的时候会发现每个node上都运行了很多的pause容器，例如如下。</p>
+<pre><code>[root@linux-node1 cfg]# docker ps
+······
+······
+CONTAINER ID        IMAGE                                    COMMAND                  CREATED             STATUS              PORTS               NAMES
+a007c18b8dc0        568c4670fa80                             &quot;nginx -g &apos;daemon of…&quot;   42 hours ago        Up 42 hours                             k8s_nginx_nginx-pod-7d9f9876cc-75sf7_default_a688bb46-f872-11e8-ae6b-000c29c6d12b_1
+9866c08d1f4b        568c4670fa80                             &quot;nginx -g &apos;daemon of…&quot;   42 hours ago        Up 42 hours                             k8s_nginx_nginx-pod-7d9f9876cc-wpv4h_default_a6a899c0-f872-11e8-ae6b-000c29c6d12b_1
+aafef6727026        mirrorgooglecontainers/pause-amd64:3.0   &quot;/pause&quot;                 42 hours ago        Up 42 hours                             k8s_POD_flask-app-6f5b6cc447-kbxks_flask-app-extions-stage_374b8aa0-f873-11e8-ae6b-000c29c6d12b_1
+c4f48f90b27f        mirrorgooglecontainers/pause-amd64:3.0   &quot;/pause&quot;                 42 hours ago        Up 42 hours                             k8s_POD_flask-app-6f5b6cc447-f9wjn_flask-app-extions-stage_373be9db-f873-11e8-ae6b-000c29c6d12b_1
+9f452e6961f6        mirrorgooglecontainers/pause-amd64:3.0   &quot;/pause&quot;                 42 hours ago        Up 42 hours                             k8s_POD_nginx-pod-7d9f9876cc-ccx94_default_a6a8c440-f872-11e8-ae6b-000c29c6d12b_1
+7e68043469d1        mirrorgooglecontainers/pause-amd64:3.0   &quot;/pause&quot;                 42 hours ago        Up 42 hours                             k8s_POD_nginx-pod-7d9f9876cc-sskpk_default_a6ac43bd-f872-11e8-ae6b-000c29c6d12b_1
+······
+······
+</code></pre><p>kubernetes中的pause容器主要为每个业务容器提供以下功能：</p>
+<ul>
+<li>在pod中担任Linux命名空间共享的基础；</li>
+<li>启用pid命名空间，开启init进程。</li>
+</ul>
+<p>在<a href="https://www.ianlewis.org/en/almighty-pause-container" target="_blank" rel="noopener">The Almighty Pause Container</a>这篇文章中做出了详细的说明，pause容器的作用可以从这个例子中看出，首先见下图：<br><img src="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2018/12/15441701986547.png" alt="">￼</p>
+<h5 id="1-我们首先在节点上运行一个pause容器。"><a href="#1-我们首先在节点上运行一个pause容器。" class="headerlink" title="1.我们首先在节点上运行一个pause容器。"></a>1.我们首先在节点上运行一个pause容器。</h5><pre><code>[root@k8s-node1 ~]# docker run -d --name pause -p 8880:80 registry.cn-hangzhou.aliyuncs.com/google_containers/pause-amd64:3.1
+38d2aa8366d5aa6fe4c57aa0d879de4b5259c67c83d17428dd4d9f8937205c02
+
+[root@k8s-node1 ~]# docker ps | grep pause
+38d2aa8366d5        registry.cn-hangzhou.aliyuncs.com/google_containers/pause-amd64:3.1   &quot;/pause&quot;                 14 seconds ago      Up 13 seconds       0.0.0.0:8880-&gt;80/tcp   pause
+</code></pre><h5 id="2-然后再运行一个nginx容器，nginx将为localhost-2368创建一个代理。"><a href="#2-然后再运行一个nginx容器，nginx将为localhost-2368创建一个代理。" class="headerlink" title="2.然后再运行一个nginx容器，nginx将为localhost:2368创建一个代理。"></a>2.然后再运行一个nginx容器，nginx将为localhost:2368创建一个代理。</h5><pre><code>[root@k8s-node1 ~]# cat &lt;&lt;EOF &gt;&gt; nginx.conf
+error_log stderr;
+events { worker_connections  1024; }
+http {
+    access_log /dev/stdout combined;
+    server {
+        listen 80 default_server;
+        server_name example.com www.example.com;
+        location / {
+            proxy_pass http://127.0.0.1:2368;
+        }
+    }
+}
+EOF
+
+[root@k8s-node1 ~]# docker run -d --name nginx -v `pwd`/nginx.conf:/etc/nginx/nginx.conf --net=container:pause --ipc=container:pause --pid=container:pause nginx
+fa078473c01e040db795004ad16db525dea8a113893d3052cc6ab1c5e117ba10
+</code></pre><h5 id="3-然后再为ghost创建一个应用容器，这是一款博客软件。"><a href="#3-然后再为ghost创建一个应用容器，这是一款博客软件。" class="headerlink" title="3.然后再为ghost创建一个应用容器，这是一款博客软件。"></a>3.然后再为ghost创建一个应用容器，这是一款博客软件。</h5><pre><code>[root@linux-node2 ~]# docker run -d --name ghost --net=container:pause --ipc=container:pause --pid=container:pause ghost
+
+
+# 查看结果：
+[root@k8s-node1 ~]# docker ps | grep -E &quot;pause|nginx|ghost&quot;
+9b796efd95a5        ghost                                                                 &quot;docker-entrypoint...&quot;   47 seconds ago       Up 46 seconds                              ghost
+fa078473c01e        nginx                                                                 &quot;nginx -g &apos;daemon ...&quot;   About a minute ago   Up About a minute                          nginx
+38d2aa8366d5        registry.cn-hangzhou.aliyuncs.com/google_containers/pause-amd64:3.1   &quot;/pause&quot;                 3 minutes ago        Up 3 minutes        0.0.0.0:8880-&gt;80/tcp   pause
+[root@k8s-node1 ~]#
+
+
+
+# 现在访问http://119.3.198.128:8880/就可以看到ghost博客的界面了吗
+# 这里我直接curl 然后浏览器访问也是正常的
+[root@k8s-node1 ~]# curl -I http://119.3.198.128:8880/
+HTTP/1.1 200 OK
+Server: nginx/1.15.5
+Date: Fri, 07 Dec 2018 08:35:49 GMT
+Content-Type: text/html; charset=utf-8
+Content-Length: 17381
+Connection: keep-alive
+X-Powered-By: Express
+Cache-Control: public, max-age=0
+ETag: W/&quot;43e5-ELHSnbaoapp3YOyz+PU502oJo5E&quot;
+Vary: Accept-Encoding
+
+[root@k8s-node1 ~]#
+</code></pre><h2 id="解析"><a href="#解析" class="headerlink" title="解析:"></a>解析:</h2><ol>
+<li>pause 容器将内部的80端口映射到了宿主机的8880端口;</li>
+<li>pause容器在宿主机上设置好了网络namespace后，nginx容器加入到该网络namespace中;</li>
+<li>nginx容器启动的时候指定了–net=container:pause;</li>
+<li>ghost容器启动的时候同样加入到了该网络namespace中;</li>
+<li>这样三个容器就共享了网络，互相之间就可以使用localhost直接通信，</li>
+<li>–ipc=contianer:pause –pid=container:pause就是三个容器处于同一个namespace中，init进程为pause;</li>
+</ol>
+<p>我们到ghost容器中查看一下:</p>
+<pre><code>[root@k8s-node1 ~]# docker exec -it ghost /bin/bash
+root@38d2aa8366d5:/var/lib/ghost# ps aux
+USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+root         1  0.0  0.0   1012     4 ?        Ss   08:27   0:00 /pause
+root         5  0.0  0.0  32472  3168 ?        Ss   08:29   0:00 nginx: master process nginx -g daemon off;
+systemd+     9  0.0  0.0  32932  1812 ?        S    08:29   0:00 nginx: worker process
+node        10  0.5  2.1 1262748 84688 ?       Ssl  08:30   0:03 node current/index.js
+root        83  0.2  0.0  20240  1912 pts/0    Ss   08:41   0:00 /bin/bash
+root        87  0.0  0.0  17496  1148 pts/0    R+   08:41   0:00 ps aux
+root@38d2aa8366d5:/var/lib/ghost#
+</code></pre><p>在ghost容器中同时可以看到pause和nginx容器的进程，并且pause容器的PID是1。而在kubernetes中容器的PID=1的进程即为容器本身的业务进程。</p>
+<h2 id="其他概念："><a href="#其他概念：" class="headerlink" title="其他概念："></a>其他概念：</h2><ul>
+<li>PID命名空间：Pod中的不同应用程序可以看到其他应用程序的进程ID；</li>
+<li>网络命名空间：Pod中的多个容器能够访问同一个IP和端口范围；</li>
+<li>IPC命名空间：Pod中的多个容器能够使用SystemV IPC或POSIX消息队列进行通信；</li>
+<li>UTS命名空间：Pod中的多个容器共享一个主机名；Volumes（共享存储卷）：</li>
+<li>Pod中的各个容器可以访问在Pod级别定义的Volumes；</li>
+</ul>
+
+        </div>
+
+        <blockquote class="post-copyright">
+    
+    <div class="content">
+        
+<span class="post-time">
+    最后更新时间：<time datetime="2018-12-19T14:39:54.000Z" itemprop="dateUpdated">2018-12-19 22:39:54</time>
+</span><br>
+
+
+        
+        该文链接：<a href="/2018/12/07/k8s-ji-qun-zhongpause-rong-qi-shi-gan-ma-de/" target="_blank" rel="external">https://blog.sctux.com/2018/12/07/k8s-ji-qun-zhongpause-rong-qi-shi-gan-ma-de/</a>
+        
+    </div>
+    
+    <footer>
+        <a href="https://blog.sctux.com">
+            <img src="/img/avatar.jpg" alt="OutMan">
+            OutMan
+        </a>
+    </footer>
+</blockquote>
+
+        
+<div class="page-reward">
+    <a id="rewardBtn" href="javascript:;" class="page-reward-btn waves-effect waves-circle waves-light">赏</a>
+</div>
+
+
+
+        <div class="post-footer">
+            
+	<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/k8s/">k8s</a></li></ul>
+
+
+            
+<div class="page-share-wrap">
+    
+
+<div class="page-share" id="pageShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://blog.sctux.com/2018/12/07/k8s-ji-qun-zhongpause-rong-qi-shi-gan-ma-de/&title=《K8s集群中pause容器是干嘛的~》 — 运维人&pic=https://blog.sctux.com/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://blog.sctux.com/2018/12/07/k8s-ji-qun-zhongpause-rong-qi-shi-gan-ma-de/&title=《K8s集群中pause容器是干嘛的~》 — 运维人&source=😊" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.sctux.com/2018/12/07/k8s-ji-qun-zhongpause-rong-qi-shi-gan-ma-de/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《K8s集群中pause容器是干嘛的~》 — 运维人&url=https://blog.sctux.com/2018/12/07/k8s-ji-qun-zhongpause-rong-qi-shi-gan-ma-de/&via=https://blog.sctux.com" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=https://blog.sctux.com/2018/12/07/k8s-ji-qun-zhongpause-rong-qi-shi-gan-ma-de/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+
+    <a href="javascript:;" id="shareFab" class="page-share-fab waves-effect waves-circle">
+        <i class="icon icon-share-alt icon-lg"></i>
+    </a>
+</div>
+
+
+
+        </div>
+    </div>
+
+    
+<nav class="post-nav flex-row flex-justify-between">
+  
+    <div class="waves-block waves-effect prev">
+      <a href="/2018/12/09/k8s-yaml-bian-xie-xiao-ji-qiao/" id="post-prev" class="post-nav-link">
+        <div class="tips"><i class="icon icon-angle-left icon-lg icon-pr"></i> Prev</div>
+        <h4 class="title">K8s Yaml编写小技巧</h4>
+      </a>
+    </div>
+  
+
+  
+    <div class="waves-block waves-effect next">
+      <a href="/2018/12/04/li-jiekubernetes-de-qin-he-xing-diao-du/" id="post-next" class="post-nav-link">
+        <div class="tips">Next <i class="icon icon-angle-right icon-lg icon-pl"></i></div>
+        <h4 class="title">理解Kubernetes的亲和性调度</h4>
+      </a>
+    </div>
+  
+</nav>
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Valine Comments -->
+    <div class="comments vcomment" id="comments"></div>
+    <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+    <script src="//unpkg.com/valine@latest/dist/Valine.min.js"></script>
+    <!-- Valine Comments script -->
+    <script>
+        var GUEST_INFO = ['nick','mail','link'];
+        var guest_info = 'nick,mail,link'.split(',').filter(function(item){
+          return GUEST_INFO.indexOf(item) > -1
+        });
+        new Valine({
+            el: '#comments',
+            notify: 'true' == 'true',
+            verify: 'true' == 'true',
+            appId: "lHxnnDHJXDgMoFpCbdx8A4q7-gzGzoHsz",
+            appKey: "W8H2NuO8chyDlCEQzionLuuV",
+            avatar: "monsterid",
+            placeholder: "来都来了，说点啥子吧~🌹 (友情提醒，留下正确的邮箱地址可以第一时间获取评论反馈)",
+            guest_info: guest_info.length == 0 ? GUEST_INFO : guest_info,
+            pageSize: "10"
+        })
+    </script>
+    <!-- Valine Comments end -->
+
+
+
+
+
+
+
+</article>
+
+<div id="reward" class="page-modal reward-lay">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <h3 class="reward-title">
+        <i class="icon icon-quote-left"></i>
+        谢谢大爷~
+        <i class="icon icon-quote-right"></i>
+    </h3>
+    <div class="reward-content">
+        
+        <div class="reward-code">
+            <img id="rewardCode" src="/img/wechat.jpg" alt="打赏二维码">
+        </div>
+        
+        <label class="reward-toggle">
+            <input id="rewardToggle" type="checkbox" class="reward-toggle-check" data-wechat="/img/wechat.jpg" data-alipay="/img/alipay.jpg">
+            <div class="reward-toggle-ctrol">
+                <span class="reward-toggle-item wechat">微信</span>
+                <span class="reward-toggle-label"></span>
+                <span class="reward-toggle-item alipay">支付宝</span>
+            </div>
+        </label>
+        
+    </div>
+</div>
+
+
+
+</div>
+
+        <footer class="footer">
+    <div class="top">
+        
+
+        <p>
+            
+            <span>博客内容遵循 <a rel="license" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh">知识共享 署名 - 非商业性 - 相同方式共享 4.0 国际协议</a></span>
+        </p>
+    </div>
+    <div class="bottom">
+        <p><span>OutMan &copy; 2013 - 2019</span>
+            <span>
+                
+                <a href="http://www.miitbeian.gov.cn/" target="_blank">蜀ICP备007号-1</a><br>
+                
+                Power by <a href="http://hexo.io/" target="_blank">Hexo</a> Theme <a href="https://github.com/yscoder/hexo-theme-indigo" target="_blank">indigo</a>
+            </span>
+        </p>
+    </div>
+</footer>
+
+    </main>
+    <div class="mask" id="mask"></div>
+<a href="javascript:;" id="gotop" class="waves-effect waves-circle waves-light"><span class="icon icon-lg icon-chevron-up"></span></a>
+
+
+
+<div class="global-share" id="globalShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://blog.sctux.com/2018/12/07/k8s-ji-qun-zhongpause-rong-qi-shi-gan-ma-de/&title=《K8s集群中pause容器是干嘛的~》 — 运维人&pic=https://blog.sctux.com/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://blog.sctux.com/2018/12/07/k8s-ji-qun-zhongpause-rong-qi-shi-gan-ma-de/&title=《K8s集群中pause容器是干嘛的~》 — 运维人&source=😊" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.sctux.com/2018/12/07/k8s-ji-qun-zhongpause-rong-qi-shi-gan-ma-de/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《K8s集群中pause容器是干嘛的~》 — 运维人&url=https://blog.sctux.com/2018/12/07/k8s-ji-qun-zhongpause-rong-qi-shi-gan-ma-de/&via=https://blog.sctux.com" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=https://blog.sctux.com/2018/12/07/k8s-ji-qun-zhongpause-rong-qi-shi-gan-ma-de/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+<div class="page-modal wx-share" id="wxShare">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <img src="//api.qrserver.com/v1/create-qr-code/?data=https://blog.sctux.com/2018/12/07/k8s-ji-qun-zhongpause-rong-qi-shi-gan-ma-de/" alt="微信分享二维码">
+</div>
+
+
+
+
+    <script src="//cdn.bootcss.com/node-waves/0.7.4/waves.min.js"></script>
+<script>
+var BLOG = { ROOT: '/', SHARE: true, REWARD: true };
+
+
+</script>
+
+<script src="/js/main.min.js?v=1.7.2"></script>
+
+
+<div class="search-panel" id="search-panel">
+    <ul class="search-result" id="search-result"></ul>
+</div>
+<template id="search-tpl">
+<li class="item">
+    <a href="{path}" class="waves-block waves-effect">
+        <div class="title ellipsis" title="{title}">{title}</div>
+        <div class="flex-row flex-middle">
+            <div class="tags ellipsis">
+                {tags}
+            </div>
+            <time class="flex-col time">{date}</time>
+        </div>
+    </a>
+</li>
+</template>
+
+<script src="/js/search.min.js?v=1.7.2" async></script>
+
+
+
+
+
+
+
+
+<script>
+(function() {
+    var OriginTitile = document.title, titleTime;
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            document.title = '老弟，死哪儿去啦~！';
+            clearTimeout(titleTime);
+        } else {
+            document.title = '(つェ⊂)咦!老弟来啦!';
+            titleTime = setTimeout(function() {
+                document.title = OriginTitile;
+            },2000);
+        }
+    });
+})();
+</script>
+
+
+
+</body>
+</html>

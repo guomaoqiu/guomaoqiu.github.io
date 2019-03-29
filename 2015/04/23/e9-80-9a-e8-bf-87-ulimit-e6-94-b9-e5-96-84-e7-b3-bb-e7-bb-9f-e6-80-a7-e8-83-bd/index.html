@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.8.0">
+    
+
+    
+
+    
+
+
+
+    <meta charset="utf-8">
+    
+    
+    
+    
+    <title>通过 Ulimit 改善系统性能 | 运维人 | Devops、Linux、Kubernetes、Docker、Flask、Python、Shell</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    
+    <meta name="theme-color" content="#3F51B5">
+    
+    
+    <meta name="keywords" content="ulimit">
+    <meta name="description" content="概述 系统性能一直是一个受关注的话题，如何通过最简单的设置来实现最有效的性能调优，如何在有限资源的条件下保证程序的运作，ulimit 是我们在处理这些问题时，经常使用的一种简单手段。ulimit 是一种 linux 系统的内键功能，它具有一套参数集，用于为由它生成的 shell 进程及其子进程的资源使用设置限制。本文将在后面的章节中详细说明 ulimit 的功能，使用以及它的影响，并以具体的例子来">
+<meta name="keywords" content="ulimit">
+<meta property="og:type" content="article">
+<meta property="og:title" content="通过 Ulimit 改善系统性能">
+<meta property="og:url" content="https://blog.sctux.com/2015/04/23/e9-80-9a-e8-bf-87-ulimit-e6-94-b9-e5-96-84-e7-b3-bb-e7-bb-9f-e6-80-a7-e8-83-bd/index.html">
+<meta property="og:site_name" content="运维人">
+<meta property="og:description" content="概述 系统性能一直是一个受关注的话题，如何通过最简单的设置来实现最有效的性能调优，如何在有限资源的条件下保证程序的运作，ulimit 是我们在处理这些问题时，经常使用的一种简单手段。ulimit 是一种 linux 系统的内键功能，它具有一套参数集，用于为由它生成的 shell 进程及其子进程的资源使用设置限制。本文将在后面的章节中详细说明 ulimit 的功能，使用以及它的影响，并以具体的例子来">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://www.ibm.com/developerworks/cn/linux/l-cn-ulimit/images/image001.jpg">
+<meta property="og:image" content="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/04/QQ截图20150423202805.png">
+<meta property="og:updated_time" content="2018-12-19T14:39:54.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="通过 Ulimit 改善系统性能">
+<meta name="twitter:description" content="概述 系统性能一直是一个受关注的话题，如何通过最简单的设置来实现最有效的性能调优，如何在有限资源的条件下保证程序的运作，ulimit 是我们在处理这些问题时，经常使用的一种简单手段。ulimit 是一种 linux 系统的内键功能，它具有一套参数集，用于为由它生成的 shell 进程及其子进程的资源使用设置限制。本文将在后面的章节中详细说明 ulimit 的功能，使用以及它的影响，并以具体的例子来">
+<meta name="twitter:image" content="https://www.ibm.com/developerworks/cn/linux/l-cn-ulimit/images/image001.jpg">
+    
+    <link rel="shortcut icon" href="/favicon.ico">
+    <link rel="stylesheet" href="/css/style.css?v=1.7.2">
+    <script>window.lazyScripts=[]</script>
+
+    <!-- custom head -->
+    
+
+</head>
+
+<body>
+    <div id="loading" class="active"></div>
+
+    <aside id="menu">
+  <div class="inner flex-row-vertical">
+    <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menu-off">
+        <i class="icon icon-lg icon-close"></i>
+    </a>
+    <div class="brand-wrap" style="background-image:url(/img/brand.jpg)">
+      <div class="brand">
+        <a href="/" class="avatar waves-effect waves-circle waves-light">
+          <img src="/img/avatar.jpg">
+        </a>
+        <hgroup class="introduce">
+          <h5 class="nickname">OutMan</h5>
+          <a href="mailto:2399447849@qq.com" title="2399447849@qq.com" class="mail">2399447849@qq.com</a>
+        </hgroup>
+      </div>
+    </div>
+    <div class="scroll-wrap flex-col">
+      <ul class="nav">
+        
+            <li class="waves-block waves-effect">
+              <a href="/">
+                <i class="icon icon-lg icon-home"></i>
+                主页
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/archives">
+                <i class="icon icon-lg icon-archives"></i>
+                归档
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/tags">
+                <i class="icon icon-lg icon-tags"></i>
+                标签
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/categories">
+                <i class="icon icon-lg icon-th-list"></i>
+                分类
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://github.com/guomaoqiu" target="_blank">
+                <i class="icon icon-lg icon-github"></i>
+                Github
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/works">
+                <i class="icon icon-lg icon-hand-peace-o"></i>
+                作品
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="http://demo.sctux.com" target="_blank">
+                <i class="icon icon-lg icon-link"></i>
+                DevOpsPlatform
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="http://resume.sctux.com/" target="_blank">
+                <i class="icon icon-lg icon-heart"></i>
+                我的简历
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/about">
+                <i class="icon icon-lg icon-user"></i>
+                关于我
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://blog.sctux.com/2019/02/27/skilltree/Skilltree.jpg" target="_blank">
+                <i class="icon icon-lg icon-tree"></i>
+                我的技能树
+              </a>
+            </li>
+        
+      </ul>
+    </div>
+  </div>
+</aside>
+
+    <main id="main">
+        <header class="top-header" id="header">
+    <div class="flex-row">
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light on" id="menu-toggle">
+          <i class="icon icon-lg icon-navicon"></i>
+        </a>
+        <div class="flex-col header-title ellipsis">通过 Ulimit 改善系统性能</div>
+        
+        <div class="search-wrap" id="search-wrap">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="back">
+                <i class="icon icon-lg icon-chevron-left"></i>
+            </a>
+            <input type="text" id="key" class="search-input" autocomplete="off" placeholder="输入感兴趣的关键字">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="search">
+                <i class="icon icon-lg icon-search"></i>
+            </a>
+        </div>
+        
+        
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menuShare">
+            <i class="icon icon-lg icon-share-alt"></i>
+        </a>
+        
+    </div>
+</header>
+<header class="content-header post-header">
+
+    <div class="container fade-scale">
+        <h1 class="title">通过 Ulimit 改善系统性能</h1>
+        <h5 class="subtitle">
+            
+                <time datetime="2015-04-23T12:29:29.000Z" itemprop="datePublished" class="page-time">
+  2015-04-23
+</time>
+
+
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/必备知识/">必备知识</a></li></ul>
+
+            
+        </h5>
+    </div>
+
+    
+
+
+</header>
+
+
+<div class="container body-wrap">
+    
+
+<article id="post-e9-80-9a-e8-bf-87-ulimit-e6-94-b9-e5-96-84-e7-b3-bb-e7-bb-9f-e6-80-a7-e8-83-bd" class="post-article article-type-post fade" itemprop="blogPost">
+
+    <div class="post-card">
+        <h1 class="post-card-title">通过 Ulimit 改善系统性能</h1>
+        <div class="post-meta">
+            <time class="post-time" title="2015-04-23 20:29:29" datetime="2015-04-23T12:29:29.000Z" itemprop="datePublished">2015-04-23</time>
+
+            
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/必备知识/">必备知识</a></li></ul>
+
+
+
+            
+
+        </div>
+        <div class="post-content" id="post-content" itemprop="postContent">
+            <p><strong>概述</strong> 系统性能一直是一个受关注的话题，如何通过最简单的设置来实现最有效的性能调优，如何在有限资源的条件下保证程序的运作，ulimit 是我们在处理这些问题时，经常使用的一种简单手段。ulimit 是一种 linux 系统的内键功能，它具有一套参数集，用于为由它生成的 shell 进程及其子进程的资源使用设置限制。本文将在后面的章节中详细说明 ulimit 的功能，使用以及它的影响，并以具体的例子来详细地阐述它在限制资源使用方面的影响。 <strong>ulimit 的功能和用法</strong> <strong>ulimit 功能简述</strong> 假设有这样一种情况，当一台 Linux 主机上同时登陆了 10 个人，在系统资源无限制的情况下，这 10 个用户同时打开了 500 个文档，而假设每个文档的大小有 10M，这时系统的内存资源就会受到巨大的挑战。 而实际应用的环境要比这种假设复杂的多，例如在一个嵌入式开发环境中，各方面的资源都是非常紧缺的，对于开启文件描述符的数量，分配堆栈的大小，CPU 时间，虚拟内存大小，等等，都有非常严格的要求。资源的合理限制和分配，不仅仅是保证系统可用性的必要条件，也与系统上软件运行的性能有着密不可分的联系。这时，ulimit 可以起到很大的作用，它是一种简单并且有效的实现资源限制的方式。 ulimit 用于限制 shell 启动进程所占用的资源，支持以下各种类型的限制：所创建的内核文件的大小、进程数据块的大小、Shell 进程创建文件的大小、内存锁住的大小、常驻内存集的大小、打开文件描述符的数量、分配堆栈的最大大小、CPU 时间、单个用户的最大线程数、Shell 进程所能使用的最大虚拟内存。同时，它支持硬资源和软资源的限制。 作为临时限制，ulimit 可以作用于通过使用其命令登录的 shell 会话，在会话终止时便结束限制，并不影响于其他 shell 会话。而对于长期的固定限制，ulimit 命令语句又可以被添加到由登录 shell 读取的文件中，作用于特定的 shell 用户。 <figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="https://www.ibm.com/developerworks/cn/linux/l-cn-ulimit/images/image001.jpg" alt="ulimit 的使用" title="">
+                </div>
+                <div class="image-caption">ulimit 的使用</div>
+            </figure> 在下面的章节中，将详细介绍如何使用 ulimit 做相应的资源限制。 如何使用 ulimit ulimit 通过一些参数选项来管理不同种类的系统资源。在本节，我们将讲解这些参数的使用。 ulimit 命令的格式为：ulimit [options] [limit] 具体的 options 含义以及简单示例可以参考以下表格。</p>
+<p><strong>表 1. ulimit 参数说明</strong></p>
+<p>选项 [options]</p>
+<p>含义</p>
+<p>例子</p>
+<p>-H</p>
+<p>设置硬资源限制，一旦设置不能增加。</p>
+<p>ulimit – Hs 64；限制硬资源，线程栈大小为 64K。</p>
+<p>-S</p>
+<p>设置软资源限制，设置后可以增加，但是不能超过硬资源设置。</p>
+<p>ulimit – Sn 32；限制软资源，32 个文件描述符。</p>
+<p>-a</p>
+<p>显示当前所有的 limit 信息。</p>
+<p>ulimit – a；显示当前所有的 limit 信息。</p>
+<p>-c</p>
+<p>最大的 core 文件的大小， 以 blocks 为单位。</p>
+<p>ulimit – c unlimited； 对生成的 core 文件的大小不进行限制。</p>
+<p>-d</p>
+<p>进程最大的数据段的大小，以 Kbytes 为单位。</p>
+<p>ulimit -d unlimited；对进程的数据段大小不进行限制。</p>
+<p>-f</p>
+<p>进程可以创建文件的最大值，以 blocks 为单位。</p>
+<p>ulimit – f 2048；限制进程可以创建的最大文件大小为 2048 blocks。</p>
+<p>-l</p>
+<p>最大可加锁内存大小，以 Kbytes 为单位。</p>
+<p>ulimit – l 32；限制最大可加锁内存大小为 32 Kbytes。</p>
+<p>-m</p>
+<p>最大内存大小，以 Kbytes 为单位。</p>
+<p>ulimit – m unlimited；对最大内存不进行限制。</p>
+<p>-n</p>
+<p>可以打开最大文件描述符的数量。</p>
+<p>ulimit – n 128；限制最大可以使用 128 个文件描述符。</p>
+<p>-p</p>
+<p>管道缓冲区的大小，以 Kbytes 为单位。</p>
+<p>ulimit – p 512；限制管道缓冲区的大小为 512 Kbytes。</p>
+<p>-s</p>
+<p>线程栈大小，以 Kbytes 为单位。</p>
+<p>ulimit – s 512；限制线程栈的大小为 512 Kbytes。</p>
+<p>-t</p>
+<p>最大的 CPU 占用时间，以秒为单位。</p>
+<p>ulimit – t unlimited；对最大的 CPU 占用时间不进行限制。</p>
+<p>-u</p>
+<p>用户最大可用的进程数。</p>
+<p>ulimit – u 64；限制用户最多可以使用 64 个进程。</p>
+<p>-v</p>
+<p>进程最大可用的虚拟内存，以 Kbytes 为单位。</p>
+<p>ulimit – v 200000；限制最大可用的虚拟内存为 200000 Kbytes。</p>
+<p>新装的linux默认只有1024，当作负载较大的服务器时，很容易遇到error: too many open files。因此，需要将其改大。 使用 ulimit -n 65535 可即时修改，但重启后就无效了。（注ulimit -SHn 65535 等效 ulimit -n 65535，-S指soft，-H指hard) 有如下三种修改方式： 1.在/etc/rc.local 中增加一行 ulimit -SHn 65535 2.在/etc/profile 中增加一行 ulimit -SHn 65535 3.在/etc/security/limits.conf最后增加如下两行记录 <em> soft nofile 65535 </em> hard nofile 65535 [<figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/04/QQ截图20150423202805.png" alt="QQ截图20150423202805](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/04/QQ截图20150423202805.png)" title="">
+                </div>
+                <div class="image-caption">QQ截图20150423202805](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/04/QQ截图20150423202805.png)</div>
+            </figure></p>
+
+        </div>
+
+        <blockquote class="post-copyright">
+    
+    <div class="content">
+        
+<span class="post-time">
+    最后更新时间：<time datetime="2018-12-19T14:39:54.000Z" itemprop="dateUpdated">2018-12-19 22:39:54</time>
+</span><br>
+
+
+        
+        该文链接：<a href="/2015/04/23/e9-80-9a-e8-bf-87-ulimit-e6-94-b9-e5-96-84-e7-b3-bb-e7-bb-9f-e6-80-a7-e8-83-bd/" target="_blank" rel="external">https://blog.sctux.com/2015/04/23/e9-80-9a-e8-bf-87-ulimit-e6-94-b9-e5-96-84-e7-b3-bb-e7-bb-9f-e6-80-a7-e8-83-bd/</a>
+        
+    </div>
+    
+    <footer>
+        <a href="https://blog.sctux.com">
+            <img src="/img/avatar.jpg" alt="OutMan">
+            OutMan
+        </a>
+    </footer>
+</blockquote>
+
+        
+<div class="page-reward">
+    <a id="rewardBtn" href="javascript:;" class="page-reward-btn waves-effect waves-circle waves-light">赏</a>
+</div>
+
+
+
+        <div class="post-footer">
+            
+	<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/ulimit/">ulimit</a></li></ul>
+
+
+            
+<div class="page-share-wrap">
+    
+
+<div class="page-share" id="pageShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://blog.sctux.com/2015/04/23/e9-80-9a-e8-bf-87-ulimit-e6-94-b9-e5-96-84-e7-b3-bb-e7-bb-9f-e6-80-a7-e8-83-bd/&title=《通过 Ulimit 改善系统性能》 — 运维人&pic=https://blog.sctux.com/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://blog.sctux.com/2015/04/23/e9-80-9a-e8-bf-87-ulimit-e6-94-b9-e5-96-84-e7-b3-bb-e7-bb-9f-e6-80-a7-e8-83-bd/&title=《通过 Ulimit 改善系统性能》 — 运维人&source=😊" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.sctux.com/2015/04/23/e9-80-9a-e8-bf-87-ulimit-e6-94-b9-e5-96-84-e7-b3-bb-e7-bb-9f-e6-80-a7-e8-83-bd/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《通过 Ulimit 改善系统性能》 — 运维人&url=https://blog.sctux.com/2015/04/23/e9-80-9a-e8-bf-87-ulimit-e6-94-b9-e5-96-84-e7-b3-bb-e7-bb-9f-e6-80-a7-e8-83-bd/&via=https://blog.sctux.com" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=https://blog.sctux.com/2015/04/23/e9-80-9a-e8-bf-87-ulimit-e6-94-b9-e5-96-84-e7-b3-bb-e7-bb-9f-e6-80-a7-e8-83-bd/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+
+    <a href="javascript:;" id="shareFab" class="page-share-fab waves-effect waves-circle">
+        <i class="icon icon-share-alt icon-lg"></i>
+    </a>
+</div>
+
+
+
+        </div>
+    </div>
+
+    
+<nav class="post-nav flex-row flex-justify-between">
+  
+    <div class="waves-block waves-effect prev">
+      <a href="/2015/06/19/linux-e7-b3-bb-e7-bb-9f-e5-88-9d-e5-a7-8b-e5-8c-96/" id="post-prev" class="post-nav-link">
+        <div class="tips"><i class="icon icon-angle-left icon-lg icon-pr"></i> Prev</div>
+        <h4 class="title">Linux系统初始化脚本</h4>
+      </a>
+    </div>
+  
+
+  
+    <div class="waves-block waves-effect next">
+      <a href="/2015/04/15/e6-95-b0-e6-8d-ae-e5-ba-93-e9-93-be-e6-8e-a5-e8-b6-85-e6-97-b6-ef-bc-8c-e5-8f-af-e8-83-bd-e5-8e-9f-e5-9b-a0-e7-94-b1-e4-ba-8e-e7-a9-ba-e9-97-b4-e4-b8-8d-e8-b6-b3-e9-80-a0-e6-88-90/" id="post-next" class="post-nav-link">
+        <div class="tips">Next <i class="icon icon-angle-right icon-lg icon-pl"></i></div>
+        <h4 class="title">数据库链接超时，可能原因由于空间不足造成</h4>
+      </a>
+    </div>
+  
+</nav>
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Valine Comments -->
+    <div class="comments vcomment" id="comments"></div>
+    <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+    <script src="//unpkg.com/valine@latest/dist/Valine.min.js"></script>
+    <!-- Valine Comments script -->
+    <script>
+        var GUEST_INFO = ['nick','mail','link'];
+        var guest_info = 'nick,mail,link'.split(',').filter(function(item){
+          return GUEST_INFO.indexOf(item) > -1
+        });
+        new Valine({
+            el: '#comments',
+            notify: 'true' == 'true',
+            verify: 'true' == 'true',
+            appId: "lHxnnDHJXDgMoFpCbdx8A4q7-gzGzoHsz",
+            appKey: "W8H2NuO8chyDlCEQzionLuuV",
+            avatar: "monsterid",
+            placeholder: "来都来了，说点啥子吧~🌹 (友情提醒，留下正确的邮箱地址可以第一时间获取评论反馈)",
+            guest_info: guest_info.length == 0 ? GUEST_INFO : guest_info,
+            pageSize: "10"
+        })
+    </script>
+    <!-- Valine Comments end -->
+
+
+
+
+
+
+
+</article>
+
+<div id="reward" class="page-modal reward-lay">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <h3 class="reward-title">
+        <i class="icon icon-quote-left"></i>
+        谢谢大爷~
+        <i class="icon icon-quote-right"></i>
+    </h3>
+    <div class="reward-content">
+        
+        <div class="reward-code">
+            <img id="rewardCode" src="/img/wechat.jpg" alt="打赏二维码">
+        </div>
+        
+        <label class="reward-toggle">
+            <input id="rewardToggle" type="checkbox" class="reward-toggle-check" data-wechat="/img/wechat.jpg" data-alipay="/img/alipay.jpg">
+            <div class="reward-toggle-ctrol">
+                <span class="reward-toggle-item wechat">微信</span>
+                <span class="reward-toggle-label"></span>
+                <span class="reward-toggle-item alipay">支付宝</span>
+            </div>
+        </label>
+        
+    </div>
+</div>
+
+
+
+</div>
+
+        <footer class="footer">
+    <div class="top">
+        
+
+        <p>
+            
+            <span>博客内容遵循 <a rel="license" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh">知识共享 署名 - 非商业性 - 相同方式共享 4.0 国际协议</a></span>
+        </p>
+    </div>
+    <div class="bottom">
+        <p><span>OutMan &copy; 2013 - 2019</span>
+            <span>
+                
+                <a href="http://www.miitbeian.gov.cn/" target="_blank">蜀ICP备007号-1</a><br>
+                
+                Power by <a href="http://hexo.io/" target="_blank">Hexo</a> Theme <a href="https://github.com/yscoder/hexo-theme-indigo" target="_blank">indigo</a>
+            </span>
+        </p>
+    </div>
+</footer>
+
+    </main>
+    <div class="mask" id="mask"></div>
+<a href="javascript:;" id="gotop" class="waves-effect waves-circle waves-light"><span class="icon icon-lg icon-chevron-up"></span></a>
+
+
+
+<div class="global-share" id="globalShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://blog.sctux.com/2015/04/23/e9-80-9a-e8-bf-87-ulimit-e6-94-b9-e5-96-84-e7-b3-bb-e7-bb-9f-e6-80-a7-e8-83-bd/&title=《通过 Ulimit 改善系统性能》 — 运维人&pic=https://blog.sctux.com/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://blog.sctux.com/2015/04/23/e9-80-9a-e8-bf-87-ulimit-e6-94-b9-e5-96-84-e7-b3-bb-e7-bb-9f-e6-80-a7-e8-83-bd/&title=《通过 Ulimit 改善系统性能》 — 运维人&source=😊" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.sctux.com/2015/04/23/e9-80-9a-e8-bf-87-ulimit-e6-94-b9-e5-96-84-e7-b3-bb-e7-bb-9f-e6-80-a7-e8-83-bd/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《通过 Ulimit 改善系统性能》 — 运维人&url=https://blog.sctux.com/2015/04/23/e9-80-9a-e8-bf-87-ulimit-e6-94-b9-e5-96-84-e7-b3-bb-e7-bb-9f-e6-80-a7-e8-83-bd/&via=https://blog.sctux.com" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=https://blog.sctux.com/2015/04/23/e9-80-9a-e8-bf-87-ulimit-e6-94-b9-e5-96-84-e7-b3-bb-e7-bb-9f-e6-80-a7-e8-83-bd/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+<div class="page-modal wx-share" id="wxShare">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <img src="//api.qrserver.com/v1/create-qr-code/?data=https://blog.sctux.com/2015/04/23/e9-80-9a-e8-bf-87-ulimit-e6-94-b9-e5-96-84-e7-b3-bb-e7-bb-9f-e6-80-a7-e8-83-bd/" alt="微信分享二维码">
+</div>
+
+
+
+
+    <script src="//cdn.bootcss.com/node-waves/0.7.4/waves.min.js"></script>
+<script>
+var BLOG = { ROOT: '/', SHARE: true, REWARD: true };
+
+
+</script>
+
+<script src="/js/main.min.js?v=1.7.2"></script>
+
+
+<div class="search-panel" id="search-panel">
+    <ul class="search-result" id="search-result"></ul>
+</div>
+<template id="search-tpl">
+<li class="item">
+    <a href="{path}" class="waves-block waves-effect">
+        <div class="title ellipsis" title="{title}">{title}</div>
+        <div class="flex-row flex-middle">
+            <div class="tags ellipsis">
+                {tags}
+            </div>
+            <time class="flex-col time">{date}</time>
+        </div>
+    </a>
+</li>
+</template>
+
+<script src="/js/search.min.js?v=1.7.2" async></script>
+
+
+
+
+
+
+
+
+<script>
+(function() {
+    var OriginTitile = document.title, titleTime;
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            document.title = '老弟，死哪儿去啦~！';
+            clearTimeout(titleTime);
+        } else {
+            document.title = '(つェ⊂)咦!老弟来啦!';
+            titleTime = setTimeout(function() {
+                document.title = OriginTitile;
+            },2000);
+        }
+    });
+})();
+</script>
+
+
+
+</body>
+</html>

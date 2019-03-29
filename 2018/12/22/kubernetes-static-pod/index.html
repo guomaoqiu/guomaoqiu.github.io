@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.8.0">
+    
+
+    
+
+    
+
+
+
+    <meta charset="utf-8">
+    
+    
+    
+    
+    <title>理解kubernetes中的静态Pod | 运维人 | Devops、Linux、Kubernetes、Docker、Flask、Python、Shell</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    
+    <meta name="theme-color" content="#3F51B5">
+    
+    
+    <meta name="keywords" content="kubernetes,Static Pod">
+    <meta name="description" content="概述今儿是冬至，尽管如此，学习的脚步还是不能停下，今天学习实践一下kubernetes中的静态pod是什么？ 我们知道在前面Pod的声明周期管理都是通过像DaemonSet、StatefulSet、Deployment这种方式创建管理的，而官方文档介绍了一种特殊的pod就是静态Pod， 什么是静态Pod静态Pod是由kubelet进行管理，仅存在于特定Node上的Pod。它们不能通过API Ser">
+<meta name="keywords" content="kubernetes,Static Pod">
+<meta property="og:type" content="article">
+<meta property="og:title" content="理解kubernetes中的静态Pod">
+<meta property="og:url" content="https://blog.sctux.com/2018/12/22/kubernetes-static-pod/index.html">
+<meta property="og:site_name" content="运维人">
+<meta property="og:description" content="概述今儿是冬至，尽管如此，学习的脚步还是不能停下，今天学习实践一下kubernetes中的静态pod是什么？ 我们知道在前面Pod的声明周期管理都是通过像DaemonSet、StatefulSet、Deployment这种方式创建管理的，而官方文档介绍了一种特殊的pod就是静态Pod， 什么是静态Pod静态Pod是由kubelet进行管理，仅存在于特定Node上的Pod。它们不能通过API Ser">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://blog.sctux.com/2018/12/22/kubernetes-static-pod/static-pod-from-url.png">
+<meta property="og:updated_time" content="2019-01-01T03:55:06.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="理解kubernetes中的静态Pod">
+<meta name="twitter:description" content="概述今儿是冬至，尽管如此，学习的脚步还是不能停下，今天学习实践一下kubernetes中的静态pod是什么？ 我们知道在前面Pod的声明周期管理都是通过像DaemonSet、StatefulSet、Deployment这种方式创建管理的，而官方文档介绍了一种特殊的pod就是静态Pod， 什么是静态Pod静态Pod是由kubelet进行管理，仅存在于特定Node上的Pod。它们不能通过API Ser">
+<meta name="twitter:image" content="https://blog.sctux.com/2018/12/22/kubernetes-static-pod/static-pod-from-url.png">
+    
+    <link rel="shortcut icon" href="/favicon.ico">
+    <link rel="stylesheet" href="/css/style.css?v=1.7.2">
+    <script>window.lazyScripts=[]</script>
+
+    <!-- custom head -->
+    
+
+</head>
+
+<body>
+    <div id="loading" class="active"></div>
+
+    <aside id="menu">
+  <div class="inner flex-row-vertical">
+    <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menu-off">
+        <i class="icon icon-lg icon-close"></i>
+    </a>
+    <div class="brand-wrap" style="background-image:url(/img/brand.jpg)">
+      <div class="brand">
+        <a href="/" class="avatar waves-effect waves-circle waves-light">
+          <img src="/img/avatar.jpg">
+        </a>
+        <hgroup class="introduce">
+          <h5 class="nickname">OutMan</h5>
+          <a href="mailto:2399447849@qq.com" title="2399447849@qq.com" class="mail">2399447849@qq.com</a>
+        </hgroup>
+      </div>
+    </div>
+    <div class="scroll-wrap flex-col">
+      <ul class="nav">
+        
+            <li class="waves-block waves-effect">
+              <a href="/">
+                <i class="icon icon-lg icon-home"></i>
+                主页
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/archives">
+                <i class="icon icon-lg icon-archives"></i>
+                归档
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/tags">
+                <i class="icon icon-lg icon-tags"></i>
+                标签
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/categories">
+                <i class="icon icon-lg icon-th-list"></i>
+                分类
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://github.com/guomaoqiu" target="_blank">
+                <i class="icon icon-lg icon-github"></i>
+                Github
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/works">
+                <i class="icon icon-lg icon-hand-peace-o"></i>
+                作品
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="http://demo.sctux.com" target="_blank">
+                <i class="icon icon-lg icon-link"></i>
+                DevOpsPlatform
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="http://resume.sctux.com/" target="_blank">
+                <i class="icon icon-lg icon-heart"></i>
+                我的简历
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/about">
+                <i class="icon icon-lg icon-user"></i>
+                关于我
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://blog.sctux.com/2019/02/27/skilltree/Skilltree.jpg" target="_blank">
+                <i class="icon icon-lg icon-tree"></i>
+                我的技能树
+              </a>
+            </li>
+        
+      </ul>
+    </div>
+  </div>
+</aside>
+
+    <main id="main">
+        <header class="top-header" id="header">
+    <div class="flex-row">
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light on" id="menu-toggle">
+          <i class="icon icon-lg icon-navicon"></i>
+        </a>
+        <div class="flex-col header-title ellipsis">理解kubernetes中的静态Pod</div>
+        
+        <div class="search-wrap" id="search-wrap">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="back">
+                <i class="icon icon-lg icon-chevron-left"></i>
+            </a>
+            <input type="text" id="key" class="search-input" autocomplete="off" placeholder="输入感兴趣的关键字">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="search">
+                <i class="icon icon-lg icon-search"></i>
+            </a>
+        </div>
+        
+        
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menuShare">
+            <i class="icon icon-lg icon-share-alt"></i>
+        </a>
+        
+    </div>
+</header>
+<header class="content-header post-header">
+
+    <div class="container fade-scale">
+        <h1 class="title">理解kubernetes中的静态Pod</h1>
+        <h5 class="subtitle">
+            
+                <time datetime="2018-12-22T03:02:30.000Z" itemprop="datePublished" class="page-time">
+  2018-12-22
+</time>
+
+
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/kubernetes/">kubernetes</a></li></ul>
+
+            
+        </h5>
+    </div>
+
+    
+
+
+</header>
+
+
+<div class="container body-wrap">
+    
+    <aside class="post-widget">
+        <nav class="post-toc-wrap post-toc-shrink" id="post-toc">
+            <h4>TOC</h4>
+            <ol class="post-toc"><li class="post-toc-item post-toc-level-1"><a class="post-toc-link" href="#概述"><span class="post-toc-number">1.</span> <span class="post-toc-text">概述</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#什么是静态Pod"><span class="post-toc-number">1.1.</span> <span class="post-toc-text">什么是静态Pod</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#静态Pod的创建"><span class="post-toc-number">1.1.1.</span> <span class="post-toc-text">静态Pod的创建:</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-4"><a class="post-toc-link" href="#通过配置文件创建"><span class="post-toc-number">1.1.1.1.</span> <span class="post-toc-text">通过配置文件创建</span></a></li><li class="post-toc-item post-toc-level-4"><a class="post-toc-link" href="#通过url来创建"><span class="post-toc-number">1.1.1.2.</span> <span class="post-toc-text">通过url来创建:</span></a></li></ol></li></ol></li></ol></li></ol>
+        </nav>
+    </aside>
+
+
+<article id="post-kubernetes-static-pod" class="post-article article-type-post fade" itemprop="blogPost">
+
+    <div class="post-card">
+        <h1 class="post-card-title">理解kubernetes中的静态Pod</h1>
+        <div class="post-meta">
+            <time class="post-time" title="2018-12-22 11:02:30" datetime="2018-12-22T03:02:30.000Z" itemprop="datePublished">2018-12-22</time>
+
+            
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/kubernetes/">kubernetes</a></li></ul>
+
+
+
+            
+
+        </div>
+        <div class="post-content" id="post-content" itemprop="postContent">
+            <h1 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h1><p>今儿是冬至，尽管如此，学习的脚步还是不能停下，今天学习实践一下kubernetes中的静态pod是什么？</p>
+<p>我们知道在前面Pod的声明周期管理都是通过像DaemonSet、StatefulSet、Deployment这种方式创建管理的，而官方文档介绍了一种特殊的pod就是静态Pod，</p>
+<h2 id="什么是静态Pod"><a href="#什么是静态Pod" class="headerlink" title="什么是静态Pod"></a>什么是静态Pod</h2><p>静态Pod是由kubelet进行管理，仅存在于特定Node上的Pod。它们不能通过API Server进行管理，无法与ReplicationController、Deployment或DaemonSet进行关联，并且kubelet也无法对其健康检查。</p>
+<h3 id="静态Pod的创建"><a href="#静态Pod的创建" class="headerlink" title="静态Pod的创建:"></a>静态Pod的创建:</h3><p>静态pod可以通过两种方式创建：使用配置文件或HTTP。</p>
+<h4 id="通过配置文件创建"><a href="#通过配置文件创建" class="headerlink" title="通过配置文件创建"></a>通过配置文件创建</h4><p>配置文件只是特定目录中json或yaml格式的标准pod定义。他通过在kubelet守护进程中添加配置参数<code>--pod-manifest-path=&lt;the directory&gt;</code> 来运行静态Pod，kubelet经常会它定期扫描目录；</p>
+<p>例如，如何将一个简单web服务作为静态pod启动</p>
+<p>选择运行静态pod的节点服务器<br>不一定是node节点，只要有kubelet进程所在的节点都可以运行静态pod</p>
+<p>我在某个节点上创建一个放置一个Web服务器pod定义的描述文件文件夹，例如/etc/kubelet.d/static-web.yaml</p>
+<figure class="highlight dts"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">$ mkdir <span class="meta-keyword">/etc/</span>kubelet.d/</span><br><span class="line">$ cat <span class="params">&lt;&lt;EOF &gt;</span><span class="meta-keyword">/etc/</span>kubelet.d/static-web.yaml</span><br><span class="line"><span class="symbol">apiVersion:</span> v1</span><br><span class="line"><span class="symbol">kind:</span> Pod</span><br><span class="line"><span class="symbol">metadata:</span></span><br><span class="line"><span class="symbol">  name:</span> static-web</span><br><span class="line"><span class="symbol">  labels:</span></span><br><span class="line"><span class="symbol">    role:</span> myrole</span><br><span class="line"><span class="symbol">spec:</span></span><br><span class="line"><span class="symbol">  containers:</span></span><br><span class="line">    - name: web</span><br><span class="line"><span class="symbol">      image:</span> nginx</span><br><span class="line"><span class="symbol">      ports:</span></span><br><span class="line">        - name: web</span><br><span class="line"><span class="symbol">          containerPort:</span> <span class="number">80</span></span><br><span class="line"><span class="symbol">          protocol:</span> TCP</span><br><span class="line">EOF</span><br><span class="line"></span><br><span class="line">$ ls <span class="meta-keyword">/etc/</span>kubelet.d/</span><br><span class="line">static-web.yaml</span><br></pre></td></tr></table></figure>
+<p>通过使用–pod-manifest-path=/etc/kubelet.d/参数运行它，在节点上配置我的kubelet守护程序以使用此目录。<br>比如我这里kubelet启动参数位于/etc/systemd/system/kubelet.service.d/10-kubelet.conf, 修改配置，然后将参数加入到现有参数配置项中(安装方式不尽相同，但是道理一样)</p>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">$ vim /etc/systemd/system/kubelet<span class="selector-class">.service</span><span class="selector-class">.d</span>/<span class="number">10</span>-kubelet.conf</span><br><span class="line">······</span><br><span class="line">······</span><br><span class="line">Environment=<span class="string">"KUBELET_EXTRA_ARGS=--cluster-dns=10.96.0.10 --cluster-domain=cluster.local --pod-manifest-path=/etc/kubelet.d/"</span></span><br><span class="line">······</span><br><span class="line">······</span><br></pre></td></tr></table></figure>
+<p>保存退出，reload一下systemd daeomon ,重启kubelet服务进程</p>
+<figure class="highlight elixir"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$ </span>systemctl daemon-reload</span><br><span class="line"><span class="variable">$ </span>systemctl restart kubelet</span><br></pre></td></tr></table></figure>
+<p>前面说啦，当kubelet启动时，它会自动启动在指定的目录–pod-manifest-path=或–manifest-url=参数中定义的所有pod ，即我们的static-web。<br>再该节点上检查是否创建成功：</p>
+<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl <span class="builtin-name">get</span> pods -o wide</span><br><span class="line">NAME                READY     STATUS    RESTARTS   AGE      <span class="built_in"> IP </span>           NODE    </span><br><span class="line">static-web-k8s-m1   1/1       Running   0          2m        10.244.2.32   k8s-m1</span><br></pre></td></tr></table></figure>
+<p>上面也提到了，他不归任何部署方式来管理，即使我们尝试kubelet命令去删除</p>
+<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl delete pod static-web-k8s-m1</span><br><span class="line">pod <span class="string">"static-web-k8s-m1"</span> deleted</span><br><span class="line">$ kubectl <span class="builtin-name">get</span> pods -o wide</span><br><span class="line">NAME                READY     STATUS    RESTARTS   AGE      <span class="built_in"> IP </span>       NODE      NOMINATED NODE</span><br><span class="line">static-web-k8s-m1   0/1       Pending   0          2s        &lt;none&gt;    k8s-m1    &lt;none&gt;</span><br></pre></td></tr></table></figure>
+<p>可以看出静态pod通过这种方式是没法删除的</p>
+<p>那我如何去删除或者说是动态的添加一个pod呢？<br>这种机制已经知道，kubelet进程会定期扫描配置的目录（/etc/kubelet.d在我的示例）以进行更改，并在文件出现/消失在此目录中时添加/删除pod。</p>
+<h4 id="通过url来创建"><a href="#通过url来创建" class="headerlink" title="通过url来创建:"></a>通过url来创建:</h4><p>例如，我在这个<a href="https://blog.sctux.com/kubernetes/yaml/static-pod.json">url</a>放置了一个pod创建的描述文件</p>
+<p>那么上面提到了如何修改？通过url来创建的？就是kubelet启动配置参数中配置<code>--manifest-url</code>指向即可</p>
+<figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="/2018/12/22/kubernetes-static-pod/static-pod-from-url.png" alt="static-pod-from-url" title="">
+                </div>
+                <div class="image-caption">static-pod-from-url</div>
+            </figure>
+<p>ok 以上就是如何创建静态Pod的具体食用方法，那什么场景需要用到它，这个我个人觉得还是因人或因环境而已，毕竟kubernetes开发出了这个功能，就说明有用武之地的。</p>
+<p>同时在kubelet-conf.yml可以指定直接指定这个StaticPod的描述文件存放目录:</p>
+<figure class="highlight clean"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">$ cat kubelet-conf.yml</span><br><span class="line">......</span><br><span class="line">......</span><br><span class="line">staticPodPath: /etc/kubernetes/manifests</span><br><span class="line">......</span><br><span class="line">......</span><br></pre></td></tr></table></figure>
+<p>但是还是需要在启动参数中配置 <code>--pod-manifest-path</code></p>
+
+        </div>
+
+        <blockquote class="post-copyright">
+    
+    <div class="content">
+        
+<span class="post-time">
+    最后更新时间：<time datetime="2019-01-01T03:55:06.000Z" itemprop="dateUpdated">2019-01-01 11:55:06</time>
+</span><br>
+
+
+        
+        该文链接：<a href="/2018/12/22/kubernetes-static-pod/" target="_blank" rel="external">https://blog.sctux.com/2018/12/22/kubernetes-static-pod/</a>
+        
+    </div>
+    
+    <footer>
+        <a href="https://blog.sctux.com">
+            <img src="/img/avatar.jpg" alt="OutMan">
+            OutMan
+        </a>
+    </footer>
+</blockquote>
+
+        
+<div class="page-reward">
+    <a id="rewardBtn" href="javascript:;" class="page-reward-btn waves-effect waves-circle waves-light">赏</a>
+</div>
+
+
+
+        <div class="post-footer">
+            
+	<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Static-Pod/">Static Pod</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/kubernetes/">kubernetes</a></li></ul>
+
+
+            
+<div class="page-share-wrap">
+    
+
+<div class="page-share" id="pageShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://blog.sctux.com/2018/12/22/kubernetes-static-pod/&title=《理解kubernetes中的静态Pod》 — 运维人&pic=https://blog.sctux.com/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://blog.sctux.com/2018/12/22/kubernetes-static-pod/&title=《理解kubernetes中的静态Pod》 — 运维人&source=😊" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.sctux.com/2018/12/22/kubernetes-static-pod/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《理解kubernetes中的静态Pod》 — 运维人&url=https://blog.sctux.com/2018/12/22/kubernetes-static-pod/&via=https://blog.sctux.com" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=https://blog.sctux.com/2018/12/22/kubernetes-static-pod/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+
+    <a href="javascript:;" id="shareFab" class="page-share-fab waves-effect waves-circle">
+        <i class="icon icon-share-alt icon-lg"></i>
+    </a>
+</div>
+
+
+
+        </div>
+    </div>
+
+    
+<nav class="post-nav flex-row flex-justify-between">
+  
+    <div class="waves-block waves-effect prev">
+      <a href="/2018/12/23/kubernetes-etcd-secret/" id="post-prev" class="post-nav-link">
+        <div class="tips"><i class="icon icon-angle-left icon-lg icon-pr"></i> Prev</div>
+        <h4 class="title">理解Kubernetes安全的持久化保存键值-Etcd</h4>
+      </a>
+    </div>
+  
+
+  
+    <div class="waves-block waves-effect next">
+      <a href="/2018/12/20/kubernetes-secret/" id="post-next" class="post-nav-link">
+        <div class="tips">Next <i class="icon icon-angle-right icon-lg icon-pl"></i></div>
+        <h4 class="title">理解kubernetes中的Secret</h4>
+      </a>
+    </div>
+  
+</nav>
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Valine Comments -->
+    <div class="comments vcomment" id="comments"></div>
+    <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+    <script src="//unpkg.com/valine@latest/dist/Valine.min.js"></script>
+    <!-- Valine Comments script -->
+    <script>
+        var GUEST_INFO = ['nick','mail','link'];
+        var guest_info = 'nick,mail,link'.split(',').filter(function(item){
+          return GUEST_INFO.indexOf(item) > -1
+        });
+        new Valine({
+            el: '#comments',
+            notify: 'true' == 'true',
+            verify: 'true' == 'true',
+            appId: "lHxnnDHJXDgMoFpCbdx8A4q7-gzGzoHsz",
+            appKey: "W8H2NuO8chyDlCEQzionLuuV",
+            avatar: "monsterid",
+            placeholder: "来都来了，说点啥子吧~🌹 (友情提醒，留下正确的邮箱地址可以第一时间获取评论反馈)",
+            guest_info: guest_info.length == 0 ? GUEST_INFO : guest_info,
+            pageSize: "10"
+        })
+    </script>
+    <!-- Valine Comments end -->
+
+
+
+
+
+
+
+</article>
+
+<div id="reward" class="page-modal reward-lay">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <h3 class="reward-title">
+        <i class="icon icon-quote-left"></i>
+        谢谢大爷~
+        <i class="icon icon-quote-right"></i>
+    </h3>
+    <div class="reward-content">
+        
+        <div class="reward-code">
+            <img id="rewardCode" src="/img/wechat.jpg" alt="打赏二维码">
+        </div>
+        
+        <label class="reward-toggle">
+            <input id="rewardToggle" type="checkbox" class="reward-toggle-check" data-wechat="/img/wechat.jpg" data-alipay="/img/alipay.jpg">
+            <div class="reward-toggle-ctrol">
+                <span class="reward-toggle-item wechat">微信</span>
+                <span class="reward-toggle-label"></span>
+                <span class="reward-toggle-item alipay">支付宝</span>
+            </div>
+        </label>
+        
+    </div>
+</div>
+
+
+
+</div>
+
+        <footer class="footer">
+    <div class="top">
+        
+
+        <p>
+            
+            <span>博客内容遵循 <a rel="license" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh">知识共享 署名 - 非商业性 - 相同方式共享 4.0 国际协议</a></span>
+        </p>
+    </div>
+    <div class="bottom">
+        <p><span>OutMan &copy; 2013 - 2019</span>
+            <span>
+                
+                <a href="http://www.miitbeian.gov.cn/" target="_blank">蜀ICP备007号-1</a><br>
+                
+                Power by <a href="http://hexo.io/" target="_blank">Hexo</a> Theme <a href="https://github.com/yscoder/hexo-theme-indigo" target="_blank">indigo</a>
+            </span>
+        </p>
+    </div>
+</footer>
+
+    </main>
+    <div class="mask" id="mask"></div>
+<a href="javascript:;" id="gotop" class="waves-effect waves-circle waves-light"><span class="icon icon-lg icon-chevron-up"></span></a>
+
+
+
+<div class="global-share" id="globalShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://blog.sctux.com/2018/12/22/kubernetes-static-pod/&title=《理解kubernetes中的静态Pod》 — 运维人&pic=https://blog.sctux.com/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://blog.sctux.com/2018/12/22/kubernetes-static-pod/&title=《理解kubernetes中的静态Pod》 — 运维人&source=😊" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.sctux.com/2018/12/22/kubernetes-static-pod/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《理解kubernetes中的静态Pod》 — 运维人&url=https://blog.sctux.com/2018/12/22/kubernetes-static-pod/&via=https://blog.sctux.com" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=https://blog.sctux.com/2018/12/22/kubernetes-static-pod/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+<div class="page-modal wx-share" id="wxShare">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <img src="//api.qrserver.com/v1/create-qr-code/?data=https://blog.sctux.com/2018/12/22/kubernetes-static-pod/" alt="微信分享二维码">
+</div>
+
+
+
+
+    <script src="//cdn.bootcss.com/node-waves/0.7.4/waves.min.js"></script>
+<script>
+var BLOG = { ROOT: '/', SHARE: true, REWARD: true };
+
+
+</script>
+
+<script src="/js/main.min.js?v=1.7.2"></script>
+
+
+<div class="search-panel" id="search-panel">
+    <ul class="search-result" id="search-result"></ul>
+</div>
+<template id="search-tpl">
+<li class="item">
+    <a href="{path}" class="waves-block waves-effect">
+        <div class="title ellipsis" title="{title}">{title}</div>
+        <div class="flex-row flex-middle">
+            <div class="tags ellipsis">
+                {tags}
+            </div>
+            <time class="flex-col time">{date}</time>
+        </div>
+    </a>
+</li>
+</template>
+
+<script src="/js/search.min.js?v=1.7.2" async></script>
+
+
+
+
+
+
+
+
+<script>
+(function() {
+    var OriginTitile = document.title, titleTime;
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            document.title = '老弟，死哪儿去啦~！';
+            clearTimeout(titleTime);
+        } else {
+            document.title = '(つェ⊂)咦!老弟来啦!';
+            titleTime = setTimeout(function() {
+                document.title = OriginTitile;
+            },2000);
+        }
+    });
+})();
+</script>
+
+
+
+</body>
+</html>

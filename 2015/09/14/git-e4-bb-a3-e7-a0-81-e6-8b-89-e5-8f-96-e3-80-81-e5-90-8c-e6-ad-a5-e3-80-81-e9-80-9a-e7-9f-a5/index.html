@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.8.0">
+    
+
+    
+
+    
+
+
+
+    <meta charset="utf-8">
+    
+    
+    
+    
+    <title>Git 代码拉取、同步、通知 | 运维人 | Devops、Linux、Kubernetes、Docker、Flask、Python、Shell</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    
+    <meta name="theme-color" content="#3F51B5">
+    
+    
+    <meta name="keywords" content="">
+    <meta name="description" content="代码托管到gtihub，开发人员进行本地修改push到仓库后，这里使用pull在web服务器上定期拉去代码至开发开发服务器 more code_sync_template.sh  #!/bin/shupdate_dir=”/home/demo/“ #every time upload code main dirwebroot=”/var/www/template” #bak_dir=”/coded">
+<meta name="keywords" content="devops,Linux,Kubernetes,Flask,Python,Shell">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Git 代码拉取、同步、通知">
+<meta property="og:url" content="https://blog.sctux.com/2015/09/14/git-e4-bb-a3-e7-a0-81-e6-8b-89-e5-8f-96-e3-80-81-e5-90-8c-e6-ad-a5-e3-80-81-e9-80-9a-e7-9f-a5/index.html">
+<meta property="og:site_name" content="运维人">
+<meta property="og:description" content="代码托管到gtihub，开发人员进行本地修改push到仓库后，这里使用pull在web服务器上定期拉去代码至开发开发服务器 more code_sync_template.sh  #!/bin/shupdate_dir=”/home/demo/“ #every time upload code main dirwebroot=”/var/www/template” #bak_dir=”/coded">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2018-12-19T14:39:54.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Git 代码拉取、同步、通知">
+<meta name="twitter:description" content="代码托管到gtihub，开发人员进行本地修改push到仓库后，这里使用pull在web服务器上定期拉去代码至开发开发服务器 more code_sync_template.sh  #!/bin/shupdate_dir=”/home/demo/“ #every time upload code main dirwebroot=”/var/www/template” #bak_dir=”/coded">
+    
+    <link rel="shortcut icon" href="/favicon.ico">
+    <link rel="stylesheet" href="/css/style.css?v=1.7.2">
+    <script>window.lazyScripts=[]</script>
+
+    <!-- custom head -->
+    
+
+</head>
+
+<body>
+    <div id="loading" class="active"></div>
+
+    <aside id="menu">
+  <div class="inner flex-row-vertical">
+    <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menu-off">
+        <i class="icon icon-lg icon-close"></i>
+    </a>
+    <div class="brand-wrap" style="background-image:url(/img/brand.jpg)">
+      <div class="brand">
+        <a href="/" class="avatar waves-effect waves-circle waves-light">
+          <img src="/img/avatar.jpg">
+        </a>
+        <hgroup class="introduce">
+          <h5 class="nickname">OutMan</h5>
+          <a href="mailto:2399447849@qq.com" title="2399447849@qq.com" class="mail">2399447849@qq.com</a>
+        </hgroup>
+      </div>
+    </div>
+    <div class="scroll-wrap flex-col">
+      <ul class="nav">
+        
+            <li class="waves-block waves-effect">
+              <a href="/">
+                <i class="icon icon-lg icon-home"></i>
+                主页
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/archives">
+                <i class="icon icon-lg icon-archives"></i>
+                归档
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/tags">
+                <i class="icon icon-lg icon-tags"></i>
+                标签
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/categories">
+                <i class="icon icon-lg icon-th-list"></i>
+                分类
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://github.com/guomaoqiu" target="_blank">
+                <i class="icon icon-lg icon-github"></i>
+                Github
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/works">
+                <i class="icon icon-lg icon-hand-peace-o"></i>
+                作品
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="http://demo.sctux.com" target="_blank">
+                <i class="icon icon-lg icon-link"></i>
+                DevOpsPlatform
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="http://resume.sctux.com/" target="_blank">
+                <i class="icon icon-lg icon-heart"></i>
+                我的简历
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/about">
+                <i class="icon icon-lg icon-user"></i>
+                关于我
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://blog.sctux.com/2019/02/27/skilltree/Skilltree.jpg" target="_blank">
+                <i class="icon icon-lg icon-tree"></i>
+                我的技能树
+              </a>
+            </li>
+        
+      </ul>
+    </div>
+  </div>
+</aside>
+
+    <main id="main">
+        <header class="top-header" id="header">
+    <div class="flex-row">
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light on" id="menu-toggle">
+          <i class="icon icon-lg icon-navicon"></i>
+        </a>
+        <div class="flex-col header-title ellipsis">Git 代码拉取、同步、通知</div>
+        
+        <div class="search-wrap" id="search-wrap">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="back">
+                <i class="icon icon-lg icon-chevron-left"></i>
+            </a>
+            <input type="text" id="key" class="search-input" autocomplete="off" placeholder="输入感兴趣的关键字">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="search">
+                <i class="icon icon-lg icon-search"></i>
+            </a>
+        </div>
+        
+        
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menuShare">
+            <i class="icon icon-lg icon-share-alt"></i>
+        </a>
+        
+    </div>
+</header>
+<header class="content-header post-header">
+
+    <div class="container fade-scale">
+        <h1 class="title">Git 代码拉取、同步、通知</h1>
+        <h5 class="subtitle">
+            
+                <time datetime="2015-09-14T06:10:14.000Z" itemprop="datePublished" class="page-time">
+  2015-09-14
+</time>
+
+
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/Python/">Python</a><ul class="article-category-list-child"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/Python/Shell/">Shell</a></li></ul></li></ul>
+
+            
+        </h5>
+    </div>
+
+    
+
+
+</header>
+
+
+<div class="container body-wrap">
+    
+
+<article id="post-git-e4-bb-a3-e7-a0-81-e6-8b-89-e5-8f-96-e3-80-81-e5-90-8c-e6-ad-a5-e3-80-81-e9-80-9a-e7-9f-a5" class="post-article article-type-post fade" itemprop="blogPost">
+
+    <div class="post-card">
+        <h1 class="post-card-title">Git 代码拉取、同步、通知</h1>
+        <div class="post-meta">
+            <time class="post-time" title="2015-09-14 14:10:14" datetime="2015-09-14T06:10:14.000Z" itemprop="datePublished">2015-09-14</time>
+
+            
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/Python/">Python</a><ul class="article-category-list-child"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/Python/Shell/">Shell</a></li></ul></li></ul>
+
+
+
+            
+
+        </div>
+        <div class="post-content" id="post-content" itemprop="postContent">
+            <p>代码托管到gtihub，开发人员进行本地修改push到仓库后，这里使用pull在web服务器上定期拉去代码至开发开发服务器</p>
+<p>more code_sync_template.sh </p>
+<p>#!/bin/sh<br>update_dir=”/home/demo/“ #every time upload code main dir<br>webroot=”/var/www/template”</p>
+<p>#bak_dir=”/codedata/bak/deploy” #backup file main dir<br>gibin=”/usr/bin/git” #git bin path<br>rsync_bin=”/usr/bin/rsync”  #rsync path</p>
+<p>#这个变量定义的是代码拉取到本地之后同步到web目录时过排除一些特定的文件</p>
+<p>#rsync_exclude=”.svn|<em>.gz|</em>.cache|<em>.txt|</em>.git|_tmp|temp|pma|dsn.php|gem*|global_config.php<br>“<br>Name=”template”<br>LOG=”/var/log/code_sync_template.log”<br>TIME=`date +%F\ %T`<br>OLD_IFS=”$IFS”  #backup IFS<br>COMMAND=”sed -n ‘/$TIME start/,\$p’ $LOG &gt; /tmp/template.log”</p>
+<p>#get gitos code to local<br>pull_code()<br>{<br>if [ -d $update_dir/$Name ];then</p>
+<pre><code>if cd $update_dir/$Name &amp;&amp; $gibin pull git@这里是你的代码仓库地址 &amp;&gt;&gt;
+</code></pre><p> $LOG ;then<br>           echo -e “\033[32m `date` git pull code success \033[m”<br>      else<br>           echo -e “\033[31m `date` git pull code error \033[m” &amp;&amp; exit 1<br>      fi<br>else<br>     echo -e “\033[32m Clone code to local. \033[m”<br>     cd $update_dir &amp;&amp; $gibin clone git@这里是你的代码仓库地址<br>fi<br>}</p>
+<p>#sync local code to webroot</p>
+<p>#定义的是将最新拉取到的代码同步到web目录<br>sync_code()<br>{    </p>
+<p>#$rsync_bin -uavz $update_dir/$Name $webroot/$Name<br>if [ “$rsync_exclude” ];then<br>IFS=”|”<br>   exclude_arr=($rsync_exclude)<br>     for e_arr in ${exclude_arr[@]};do<br>          echo $e_arr &gt;&gt;/tmp/code_exclude_list<br>     done<br>    $rsync_bin -avz –exclude-from=”/tmp/code_exclude_list”  $update_dir/$Name/<em> $webr<br>oot/<br>else<br>    $rsync_bin -avz  $update_dir/$Name/</em> $webroot/<br>fi<br>IFS=”$OLD_IFS”<br>}</p>
+<p>Notice(){</p>
+<pre><code>#这个是通过一个eval命令来执行一段命令，这个命令描述的是从上次脚本执行记录日志后开始到最后的日志信息
+</code></pre><p>eval $COMMAND </p>
+<pre><code>#这里是在过滤此次同步是记录的日志中pull有没有文件更新
+</code></pre><p>grep -E “files changed|Fast-forward” /tmp/template.log<br>if [ $? -eq 0 ];then</p>
+<pre><code>    #这里使用一个python脚本来获取pull时更新了的具体文件有哪些，然后将内容通过邮件发送到指定邮箱
+python /home/demo/mail-template.py   
+</code></pre><p>else<br>        exit 5<br>fi<br>}</p>
+<p>echo ‘ ‘ &gt;&gt; $LOG<br>echo -e “\033[42;37m ############ Template $TIME start ############ \033[m” &gt;&gt; $LOG<br>echo -e “\033[47;30m Template Pull remote code to local. \033[0m” &gt;&gt; $LOG<br>echo -e “\033[47;30m Template Pull remote code to local. \033[0m”<br>pull_code &gt;&gt; $LOG<br>echo -e “\033[47;30m Template Sync local code to wwwroot.\033[0m” &gt;&gt; $LOG<br>echo -e “\033[47;30m Template Sync local code to wwwroot.\033[0m”<br>sync_code &gt;&gt; $LOG<br>echo -e “\033[46;37m ############ Template $TIME  end  ############ \033[m” &gt;&gt; $LOG<br>echo ‘ ‘ &gt;&gt; $LOG<br>Notice</p>
+<p>  邮件通知脚本，能够在自定义的时间周期内获取到最新代码时 能发送邮件到指定的邮箱，能够自动提醒管理人员知悉这一动作。</p>
+<p>#!/usr/bin/env python</p>
+<p>#-*- coding: UTF-8 -*-<br>import smtplib<br>import os,sys<br>from email.mime.text import MIMEText</p>
+<p>mailto_list=[<a href="mailto:&#39;guomaoqiu@gmail.com" target="_blank" rel="noopener">&#39;guomaoqiu@gmail.com</a>‘]<br>mail_host=’smtp.qq.com’<br>mail_port=’25’<br>mail_user=’2399447849’<br>mail_pass=’xxxxxx’<br>mail_postfix=’qq.com’</p>
+<p>filename = “/tmp/template.log”</p>
+<p>fo = open(filename,”rb”)<br>filecon = fo.read();<br>str1 = “<pre>{0}</pre>“.format(filecon)</p>
+<p>def send_mail(to_list,sub,content):<br>    me=”Code Sync Notice【Template】”+”&lt;”+mail_user+”@”+mail_postfix+”&gt;”<br>    msg = MIMEText(content,_subtype=’html’,_charset=’utt-8’)<br>    msg[‘Subject’] = sub<br>    msg[‘From’]=me<br>    msg[‘to’]=”;”.join(to_list)<br>    try:<br>        s = smtplib.SMTP()<br>       s.connect(mail_host)<br>    s.login(mail_user,mail_pass)<br>    s.sendmail(me,to_list,msg.as_string())<br>    s.close()<br>    return True<br>    except Exception, e:<br>    print str(e)<br>    return False<br>if __name__==’__main__‘:<br>   if send_mail(mailto_list,”New Files Are Added”,str1):<br>    print “发送成功”<br>   else:<br>    print “发送失败”</p>
+
+        </div>
+
+        <blockquote class="post-copyright">
+    
+    <div class="content">
+        
+<span class="post-time">
+    最后更新时间：<time datetime="2018-12-19T14:39:54.000Z" itemprop="dateUpdated">2018-12-19 22:39:54</time>
+</span><br>
+
+
+        
+        该文链接：<a href="/2015/09/14/git-e4-bb-a3-e7-a0-81-e6-8b-89-e5-8f-96-e3-80-81-e5-90-8c-e6-ad-a5-e3-80-81-e9-80-9a-e7-9f-a5/" target="_blank" rel="external">https://blog.sctux.com/2015/09/14/git-e4-bb-a3-e7-a0-81-e6-8b-89-e5-8f-96-e3-80-81-e5-90-8c-e6-ad-a5-e3-80-81-e9-80-9a-e7-9f-a5/</a>
+        
+    </div>
+    
+    <footer>
+        <a href="https://blog.sctux.com">
+            <img src="/img/avatar.jpg" alt="OutMan">
+            OutMan
+        </a>
+    </footer>
+</blockquote>
+
+        
+<div class="page-reward">
+    <a id="rewardBtn" href="javascript:;" class="page-reward-btn waves-effect waves-circle waves-light">赏</a>
+</div>
+
+
+
+        <div class="post-footer">
+            
+
+            
+<div class="page-share-wrap">
+    
+
+<div class="page-share" id="pageShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://blog.sctux.com/2015/09/14/git-e4-bb-a3-e7-a0-81-e6-8b-89-e5-8f-96-e3-80-81-e5-90-8c-e6-ad-a5-e3-80-81-e9-80-9a-e7-9f-a5/&title=《Git 代码拉取、同步、通知》 — 运维人&pic=https://blog.sctux.com/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://blog.sctux.com/2015/09/14/git-e4-bb-a3-e7-a0-81-e6-8b-89-e5-8f-96-e3-80-81-e5-90-8c-e6-ad-a5-e3-80-81-e9-80-9a-e7-9f-a5/&title=《Git 代码拉取、同步、通知》 — 运维人&source=😊" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.sctux.com/2015/09/14/git-e4-bb-a3-e7-a0-81-e6-8b-89-e5-8f-96-e3-80-81-e5-90-8c-e6-ad-a5-e3-80-81-e9-80-9a-e7-9f-a5/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《Git 代码拉取、同步、通知》 — 运维人&url=https://blog.sctux.com/2015/09/14/git-e4-bb-a3-e7-a0-81-e6-8b-89-e5-8f-96-e3-80-81-e5-90-8c-e6-ad-a5-e3-80-81-e9-80-9a-e7-9f-a5/&via=https://blog.sctux.com" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=https://blog.sctux.com/2015/09/14/git-e4-bb-a3-e7-a0-81-e6-8b-89-e5-8f-96-e3-80-81-e5-90-8c-e6-ad-a5-e3-80-81-e9-80-9a-e7-9f-a5/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+
+    <a href="javascript:;" id="shareFab" class="page-share-fab waves-effect waves-circle">
+        <i class="icon icon-share-alt icon-lg"></i>
+    </a>
+</div>
+
+
+
+        </div>
+    </div>
+
+    
+<nav class="post-nav flex-row flex-justify-between">
+  
+    <div class="waves-block waves-effect prev">
+      <a href="/2015/09/15/python-os-system-e7-9a-84-e7-bb-93-e6-9e-9c-e4-b8-8d-e8-83-bd-e8-b5-8b-e5-80-bc-e5-88-b0-e5-8f-98-e9-87-8f/" id="post-prev" class="post-nav-link">
+        <div class="tips"><i class="icon icon-angle-left icon-lg icon-pr"></i> Prev</div>
+        <h4 class="title">Python os.system的结果不能赋值到变量</h4>
+      </a>
+    </div>
+  
+
+  
+    <div class="waves-block waves-effect next">
+      <a href="/2015/09/10/python-e5-8f-91-e9-80-81-e9-82-ae-e4-bb-b6-e9-82-ae-e4-bb-b6-e5-86-85-e5-ae-b9-e4-bb-8e-e6-96-87-e4-bb-b6-e8-af-bb-e5-85-a5/" id="post-next" class="post-nav-link">
+        <div class="tips">Next <i class="icon icon-angle-right icon-lg icon-pl"></i></div>
+        <h4 class="title">Python发送邮件(邮件内容从文件读入)</h4>
+      </a>
+    </div>
+  
+</nav>
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Valine Comments -->
+    <div class="comments vcomment" id="comments"></div>
+    <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+    <script src="//unpkg.com/valine@latest/dist/Valine.min.js"></script>
+    <!-- Valine Comments script -->
+    <script>
+        var GUEST_INFO = ['nick','mail','link'];
+        var guest_info = 'nick,mail,link'.split(',').filter(function(item){
+          return GUEST_INFO.indexOf(item) > -1
+        });
+        new Valine({
+            el: '#comments',
+            notify: 'true' == 'true',
+            verify: 'true' == 'true',
+            appId: "lHxnnDHJXDgMoFpCbdx8A4q7-gzGzoHsz",
+            appKey: "W8H2NuO8chyDlCEQzionLuuV",
+            avatar: "monsterid",
+            placeholder: "来都来了，说点啥子吧~🌹 (友情提醒，留下正确的邮箱地址可以第一时间获取评论反馈)",
+            guest_info: guest_info.length == 0 ? GUEST_INFO : guest_info,
+            pageSize: "10"
+        })
+    </script>
+    <!-- Valine Comments end -->
+
+
+
+
+
+
+
+</article>
+
+<div id="reward" class="page-modal reward-lay">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <h3 class="reward-title">
+        <i class="icon icon-quote-left"></i>
+        谢谢大爷~
+        <i class="icon icon-quote-right"></i>
+    </h3>
+    <div class="reward-content">
+        
+        <div class="reward-code">
+            <img id="rewardCode" src="/img/wechat.jpg" alt="打赏二维码">
+        </div>
+        
+        <label class="reward-toggle">
+            <input id="rewardToggle" type="checkbox" class="reward-toggle-check" data-wechat="/img/wechat.jpg" data-alipay="/img/alipay.jpg">
+            <div class="reward-toggle-ctrol">
+                <span class="reward-toggle-item wechat">微信</span>
+                <span class="reward-toggle-label"></span>
+                <span class="reward-toggle-item alipay">支付宝</span>
+            </div>
+        </label>
+        
+    </div>
+</div>
+
+
+
+</div>
+
+        <footer class="footer">
+    <div class="top">
+        
+
+        <p>
+            
+            <span>博客内容遵循 <a rel="license" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh">知识共享 署名 - 非商业性 - 相同方式共享 4.0 国际协议</a></span>
+        </p>
+    </div>
+    <div class="bottom">
+        <p><span>OutMan &copy; 2013 - 2019</span>
+            <span>
+                
+                <a href="http://www.miitbeian.gov.cn/" target="_blank">蜀ICP备007号-1</a><br>
+                
+                Power by <a href="http://hexo.io/" target="_blank">Hexo</a> Theme <a href="https://github.com/yscoder/hexo-theme-indigo" target="_blank">indigo</a>
+            </span>
+        </p>
+    </div>
+</footer>
+
+    </main>
+    <div class="mask" id="mask"></div>
+<a href="javascript:;" id="gotop" class="waves-effect waves-circle waves-light"><span class="icon icon-lg icon-chevron-up"></span></a>
+
+
+
+<div class="global-share" id="globalShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://blog.sctux.com/2015/09/14/git-e4-bb-a3-e7-a0-81-e6-8b-89-e5-8f-96-e3-80-81-e5-90-8c-e6-ad-a5-e3-80-81-e9-80-9a-e7-9f-a5/&title=《Git 代码拉取、同步、通知》 — 运维人&pic=https://blog.sctux.com/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://blog.sctux.com/2015/09/14/git-e4-bb-a3-e7-a0-81-e6-8b-89-e5-8f-96-e3-80-81-e5-90-8c-e6-ad-a5-e3-80-81-e9-80-9a-e7-9f-a5/&title=《Git 代码拉取、同步、通知》 — 运维人&source=😊" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.sctux.com/2015/09/14/git-e4-bb-a3-e7-a0-81-e6-8b-89-e5-8f-96-e3-80-81-e5-90-8c-e6-ad-a5-e3-80-81-e9-80-9a-e7-9f-a5/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《Git 代码拉取、同步、通知》 — 运维人&url=https://blog.sctux.com/2015/09/14/git-e4-bb-a3-e7-a0-81-e6-8b-89-e5-8f-96-e3-80-81-e5-90-8c-e6-ad-a5-e3-80-81-e9-80-9a-e7-9f-a5/&via=https://blog.sctux.com" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=https://blog.sctux.com/2015/09/14/git-e4-bb-a3-e7-a0-81-e6-8b-89-e5-8f-96-e3-80-81-e5-90-8c-e6-ad-a5-e3-80-81-e9-80-9a-e7-9f-a5/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+<div class="page-modal wx-share" id="wxShare">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <img src="//api.qrserver.com/v1/create-qr-code/?data=https://blog.sctux.com/2015/09/14/git-e4-bb-a3-e7-a0-81-e6-8b-89-e5-8f-96-e3-80-81-e5-90-8c-e6-ad-a5-e3-80-81-e9-80-9a-e7-9f-a5/" alt="微信分享二维码">
+</div>
+
+
+
+
+    <script src="//cdn.bootcss.com/node-waves/0.7.4/waves.min.js"></script>
+<script>
+var BLOG = { ROOT: '/', SHARE: true, REWARD: true };
+
+
+</script>
+
+<script src="/js/main.min.js?v=1.7.2"></script>
+
+
+<div class="search-panel" id="search-panel">
+    <ul class="search-result" id="search-result"></ul>
+</div>
+<template id="search-tpl">
+<li class="item">
+    <a href="{path}" class="waves-block waves-effect">
+        <div class="title ellipsis" title="{title}">{title}</div>
+        <div class="flex-row flex-middle">
+            <div class="tags ellipsis">
+                {tags}
+            </div>
+            <time class="flex-col time">{date}</time>
+        </div>
+    </a>
+</li>
+</template>
+
+<script src="/js/search.min.js?v=1.7.2" async></script>
+
+
+
+
+
+
+
+
+<script>
+(function() {
+    var OriginTitile = document.title, titleTime;
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            document.title = '老弟，死哪儿去啦~！';
+            clearTimeout(titleTime);
+        } else {
+            document.title = '(つェ⊂)咦!老弟来啦!';
+            titleTime = setTimeout(function() {
+                document.title = OriginTitile;
+            },2000);
+        }
+    });
+})();
+</script>
+
+
+
+</body>
+</html>

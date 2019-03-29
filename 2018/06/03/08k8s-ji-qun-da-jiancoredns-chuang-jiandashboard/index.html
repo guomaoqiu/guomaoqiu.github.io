@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.8.0">
+    
+
+    
+
+    
+
+
+
+    <meta charset="utf-8">
+    
+    
+    
+    
+    <title>08-K8s集群搭建---CoreDNS创建&amp;DashBoard | 运维人 | Devops、Linux、Kubernetes、Docker、Flask、Python、Shell</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    
+    <meta name="theme-color" content="#3F51B5">
+    
+    
+    <meta name="keywords" content="k8s集群搭建">
+    <meta name="description" content="由于k8s集群内部的服务发现都是通过DNS来发现并实现的，所以需要依赖DNS服务 1.创建coredns.yaml文件:[root@linux-node1 ~]# cat &amp;gt; coredns.yaml &amp;lt;&amp;lt; EOF apiVersion: v1 kind: ServiceAccount metadata:   name: coredns   namespace: kube-sys">
+<meta name="keywords" content="k8s集群搭建">
+<meta property="og:type" content="article">
+<meta property="og:title" content="08-K8s集群搭建---CoreDNS创建&amp;DashBoard">
+<meta property="og:url" content="https://blog.sctux.com/2018/06/03/08k8s-ji-qun-da-jiancoredns-chuang-jiandashboard/index.html">
+<meta property="og:site_name" content="运维人">
+<meta property="og:description" content="由于k8s集群内部的服务发现都是通过DNS来发现并实现的，所以需要依赖DNS服务 1.创建coredns.yaml文件:[root@linux-node1 ~]# cat &amp;gt; coredns.yaml &amp;lt;&amp;lt; EOF apiVersion: v1 kind: ServiceAccount metadata:   name: coredns   namespace: kube-sys">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2018/06/long.jpeg">
+<meta property="og:image" content="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2018/06/15280837316773.jpg">
+<meta property="og:updated_time" content="2018-12-19T14:39:54.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="08-K8s集群搭建---CoreDNS创建&amp;DashBoard">
+<meta name="twitter:description" content="由于k8s集群内部的服务发现都是通过DNS来发现并实现的，所以需要依赖DNS服务 1.创建coredns.yaml文件:[root@linux-node1 ~]# cat &amp;gt; coredns.yaml &amp;lt;&amp;lt; EOF apiVersion: v1 kind: ServiceAccount metadata:   name: coredns   namespace: kube-sys">
+<meta name="twitter:image" content="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2018/06/long.jpeg">
+    
+    <link rel="shortcut icon" href="/favicon.ico">
+    <link rel="stylesheet" href="/css/style.css?v=1.7.2">
+    <script>window.lazyScripts=[]</script>
+
+    <!-- custom head -->
+    
+
+</head>
+
+<body>
+    <div id="loading" class="active"></div>
+
+    <aside id="menu">
+  <div class="inner flex-row-vertical">
+    <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menu-off">
+        <i class="icon icon-lg icon-close"></i>
+    </a>
+    <div class="brand-wrap" style="background-image:url(/img/brand.jpg)">
+      <div class="brand">
+        <a href="/" class="avatar waves-effect waves-circle waves-light">
+          <img src="/img/avatar.jpg">
+        </a>
+        <hgroup class="introduce">
+          <h5 class="nickname">OutMan</h5>
+          <a href="mailto:2399447849@qq.com" title="2399447849@qq.com" class="mail">2399447849@qq.com</a>
+        </hgroup>
+      </div>
+    </div>
+    <div class="scroll-wrap flex-col">
+      <ul class="nav">
+        
+            <li class="waves-block waves-effect">
+              <a href="/">
+                <i class="icon icon-lg icon-home"></i>
+                主页
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/archives">
+                <i class="icon icon-lg icon-archives"></i>
+                归档
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/tags">
+                <i class="icon icon-lg icon-tags"></i>
+                标签
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/categories">
+                <i class="icon icon-lg icon-th-list"></i>
+                分类
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://github.com/guomaoqiu" target="_blank">
+                <i class="icon icon-lg icon-github"></i>
+                Github
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/works">
+                <i class="icon icon-lg icon-hand-peace-o"></i>
+                作品
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="http://demo.sctux.com" target="_blank">
+                <i class="icon icon-lg icon-link"></i>
+                DevOpsPlatform
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="http://resume.sctux.com/" target="_blank">
+                <i class="icon icon-lg icon-heart"></i>
+                我的简历
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/about">
+                <i class="icon icon-lg icon-user"></i>
+                关于我
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://blog.sctux.com/2019/02/27/skilltree/Skilltree.jpg" target="_blank">
+                <i class="icon icon-lg icon-tree"></i>
+                我的技能树
+              </a>
+            </li>
+        
+      </ul>
+    </div>
+  </div>
+</aside>
+
+    <main id="main">
+        <header class="top-header" id="header">
+    <div class="flex-row">
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light on" id="menu-toggle">
+          <i class="icon icon-lg icon-navicon"></i>
+        </a>
+        <div class="flex-col header-title ellipsis">08-K8s集群搭建---CoreDNS创建&amp;DashBoard</div>
+        
+        <div class="search-wrap" id="search-wrap">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="back">
+                <i class="icon icon-lg icon-chevron-left"></i>
+            </a>
+            <input type="text" id="key" class="search-input" autocomplete="off" placeholder="输入感兴趣的关键字">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="search">
+                <i class="icon icon-lg icon-search"></i>
+            </a>
+        </div>
+        
+        
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menuShare">
+            <i class="icon icon-lg icon-share-alt"></i>
+        </a>
+        
+    </div>
+</header>
+<header class="content-header post-header">
+
+    <div class="container fade-scale">
+        <h1 class="title">08-K8s集群搭建---CoreDNS创建&amp;DashBoard</h1>
+        <h5 class="subtitle">
+            
+                <time datetime="2018-06-03T08:45:37.000Z" itemprop="datePublished" class="page-time">
+  2018-06-03
+</time>
+
+
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/虚拟化-amp-云计算-amp-大数据/">虚拟化&amp;云计算&amp;大数据</a></li></ul>
+
+            
+        </h5>
+    </div>
+
+    
+
+
+</header>
+
+
+<div class="container body-wrap">
+    
+    <aside class="post-widget">
+        <nav class="post-toc-wrap post-toc-shrink" id="post-toc">
+            <h4>TOC</h4>
+            <ol class="post-toc"><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#1-创建coredns-yaml文件"><span class="post-toc-number">1.</span> <span class="post-toc-text">1.创建coredns.yaml文件:</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#2-运行创建"><span class="post-toc-number">1.1.</span> <span class="post-toc-text">2.运行创建:</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#3-查看创建结果"><span class="post-toc-number">1.2.</span> <span class="post-toc-text">3.查看创建结果:</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#4-验证创建结果"><span class="post-toc-number">1.3.</span> <span class="post-toc-text">4. 验证创建结果:</span></a></li></ol></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#DashBoard"><span class="post-toc-number">2.</span> <span class="post-toc-text">DashBoard</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#部署dashboard"><span class="post-toc-number">2.1.</span> <span class="post-toc-text">部署dashboard</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#登录"><span class="post-toc-number">2.2.</span> <span class="post-toc-text">登录:</span></a></li></ol></li></ol>
+        </nav>
+    </aside>
+
+
+<article id="post-08k8s-ji-qun-da-jiancoredns-chuang-jiandashboard" class="post-article article-type-post fade" itemprop="blogPost">
+
+    <div class="post-card">
+        <h1 class="post-card-title">08-K8s集群搭建---CoreDNS创建&DashBoard</h1>
+        <div class="post-meta">
+            <time class="post-time" title="2018-06-03 16:45:37" datetime="2018-06-03T08:45:37.000Z" itemprop="datePublished">2018-06-03</time>
+
+            
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/虚拟化-amp-云计算-amp-大数据/">虚拟化&amp;云计算&amp;大数据</a></li></ul>
+
+
+
+            
+
+        </div>
+        <div class="post-content" id="post-content" itemprop="postContent">
+            <p>由于k8s集群内部的服务发现都是通过DNS来发现并实现的，所以需要依赖DNS服务</p>
+<h2 id="1-创建coredns-yaml文件"><a href="#1-创建coredns-yaml文件" class="headerlink" title="1.创建coredns.yaml文件:"></a>1.创建coredns.yaml文件:</h2><pre><code>[root@linux-node1 ~]# cat &gt; coredns.yaml &lt;&lt; EOF
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: coredns
+  namespace: kube-system
+  labels:
+      kubernetes.io/cluster-service: &quot;true&quot;
+      addonmanager.kubernetes.io/mode: Reconcile
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    kubernetes.io/bootstrapping: rbac-defaults
+    addonmanager.kubernetes.io/mode: Reconcile
+  name: system:coredns
+rules:
+- apiGroups:
+  - &quot;&quot;
+  resources:
+  - endpoints
+  - services
+  - pods
+  - namespaces
+  verbs:
+  - list
+  - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  annotations:
+    rbac.authorization.kubernetes.io/autoupdate: &quot;true&quot;
+  labels:
+    kubernetes.io/bootstrapping: rbac-defaults
+    addonmanager.kubernetes.io/mode: EnsureExists
+  name: system:coredns
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:coredns
+subjects:
+- kind: ServiceAccount
+  name: coredns
+  namespace: kube-system
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: coredns
+  namespace: kube-system
+  labels:
+      addonmanager.kubernetes.io/mode: EnsureExists
+data:
+  Corefile: |
+    .:53 {
+        errors
+        health
+        kubernetes cluster.local. in-addr.arpa ip6.arpa {
+            pods insecure
+            upstream
+            fallthrough in-addr.arpa ip6.arpa
+        }
+        prometheus :9153
+        proxy . /etc/resolv.conf
+        cache 30
+    }
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: coredns
+  namespace: kube-system
+  labels:
+    k8s-app: coredns
+    kubernetes.io/cluster-service: &quot;true&quot;
+    addonmanager.kubernetes.io/mode: Reconcile
+    kubernetes.io/name: &quot;CoreDNS&quot;
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+  selector:
+    matchLabels:
+      k8s-app: coredns
+  template:
+    metadata:
+      labels:
+        k8s-app: coredns
+    spec:
+      serviceAccountName: coredns
+      tolerations:
+        - key: node-role.kubernetes.io/master
+          effect: NoSchedule
+        - key: &quot;CriticalAddonsOnly&quot;
+          operator: &quot;Exists&quot;
+      containers:
+      - name: coredns
+        image: coredns/coredns:1.0.6
+        imagePullPolicy: IfNotPresent
+        resources:
+          limits:
+            memory: 170Mi
+          requests:
+            cpu: 100m
+            memory: 70Mi
+        args: [ &quot;-conf&quot;, &quot;/etc/coredns/Corefile&quot; ]
+        volumeMounts:
+        - name: config-volume
+          mountPath: /etc/coredns
+        ports:
+        - containerPort: 53
+          name: dns
+          protocol: UDP
+        - containerPort: 53
+          name: dns-tcp
+          protocol: TCP
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+            scheme: HTTP
+          initialDelaySeconds: 60
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 5
+      dnsPolicy: Default
+      volumes:
+        - name: config-volume
+          configMap:
+            name: coredns
+            items:
+            - key: Corefile
+              path: Corefile
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: coredns
+  namespace: kube-system
+  labels:
+    k8s-app: coredns
+    kubernetes.io/cluster-service: &quot;true&quot;
+    addonmanager.kubernetes.io/mode: Reconcile
+    kubernetes.io/name: &quot;CoreDNS&quot;
+spec:
+  selector:
+    k8s-app: coredns
+  clusterIP: 10.1.0.2  #!!!!!!!关键点!!!!!!!
+  ports:
+  - name: dns
+    port: 53
+    protocol: UDP
+  - name: dns-tcp
+    port: 53
+    protocol: TCP
+
+EOF
+# 注意 cluster ip 需要跟service ip是在一个网段
+</code></pre><h3 id="2-运行创建"><a href="#2-运行创建" class="headerlink" title="2.运行创建:"></a>2.运行创建:</h3><pre><code>[root@linux-node1 ~]# kubectl create -f coredns.yaml
+deployment.extensions &quot;coredns&quot; created
+Error from server (AlreadyExists): error when creating &quot;coredns.yaml&quot;: serviceaccounts &quot;coredns&quot; already exists
+Error from server (AlreadyExists): error when creating &quot;coredns.yaml&quot;: clusterroles.rbac.authorization.k8s.io &quot;system:coredns&quot; already exists
+Error from server (AlreadyExists): error when creating &quot;coredns.yaml&quot;: clusterrolebindings.rbac.authorization.k8s.io &quot;system:coredns&quot; already exists
+Error from server (AlreadyExists): error when creating &quot;coredns.yaml&quot;: configmaps &quot;coredns&quot; already exists
+Error from server (Invalid): error when creating &quot;coredns.yaml&quot;: Service &quot;coredns&quot; is invalid: spec.clusterIP: Invalid value: &quot;10.1.0.2&quot;: provided IP is already allocated
+
+# 忽略以上错误，由于我已经安装过了。
+</code></pre><h3 id="3-查看创建结果"><a href="#3-查看创建结果" class="headerlink" title="3.查看创建结果:"></a>3.查看创建结果:</h3><pre><code># 注意: 与k8s相关的组件或者服务都是在kube-system这个命名空间 所以这里 -n 指定了命名空间为kube-system
+[root@linux-node1 ~]# kubectl get deployment -n kube-system
+NAME                   DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE
+coredns                2         2         2            2           12m
+
+
+# 查看service
+[root@linux-node1 ~]# kubectl get service -n kube-system
+NAME                   TYPE        CLUSTER-IP    EXTERNAL-IP   PORT(S)         AGE
+coredns                ClusterIP   10.1.0.2      &lt;none&gt;        53/UDP,53/TCP   32m
+
+# 通过LVS查看这个cluster的信息
+[root@linux-node2 ~]# ipvsadm -Ln | grep -v &quot;:80&quot;
+IP Virtual Server version 1.2.1 (size=4096)
+Prot LocalAddress:Port Scheduler Flags
+  -&gt; RemoteAddress:Port           Forward Weight ActiveConn InActConn
+TCP  10.1.0.1:443 rr persistent 10800
+  -&gt; 192.168.56.11:6443           Masq    1      2          0  
+TCP  10.1.0.2:53 rr
+  -&gt; 10.2.70.216:53               Masq    1      0          0
+  -&gt; 10.2.97.209:53               Masq    1      0          0
+UDP  10.1.0.2:53 rr
+  -&gt; 10.2.70.216:53               Masq    1      0          0
+  -&gt; 10.2.97.209:53               Masq    1      0          0
+
+# 可以看到通过LVS转向了两个Pod, 查看pod:
+[root@linux-node1 ~]# kubectl get pod -n kube-system -o wide
+NAME                                    READY     STATUS    RESTARTS   AGE       IP            NODE
+coredns-77c989547b-55kjb                1/1       Running   0          19m       10.2.97.209   192.168.56.13
+coredns-77c989547b-qvfw4                1/1       Running   0          19m       10.2.70.216   192.168.56.12
+</code></pre><h3 id="4-验证创建结果"><a href="#4-验证创建结果" class="headerlink" title="4. 验证创建结果:"></a>4. 验证创建结果:</h3><p>启动一个容器</p>
+<pre><code># 可以看出来已经获取到了dns服务的VIP地址
+[root@linux-node1 ~]# kubectl exec -it nginx-deployment-75d56bb955-b4z4k /bin/sh
+# cat /etc/resolv.conf
+nameserver 10.1.0.2 
+search default.svc.cluster.localping . svc.cluster.local. cluster.local. example.com
+options ndots:5
+</code></pre><p>梳理主要内容：</p>
+<ul>
+<li>在k8s集群中，服务是运行在Pod中的，Pod的发现和副本间负载均衡是我们面临的问题。</li>
+<li>通过Service可以解决这两个问题，但访问Service也需要对应的IP，因此又引入了Service发现的问题。</li>
+<li>得益于coredns插件，我们可以通过域名来访问集群内的Service，解决了Service发现的问题。</li>
+<li>为了让Pod中的容器可以使用coredns来解析域名，k8s会修改容器的/etc/resolv.conf配置。</li>
+</ul>
+<p>有了以上机制的保证，就可以在Pod中通过Service名称和namespace非常方便地访问对应的服务了。</p>
+<h2 id="DashBoard"><a href="#DashBoard" class="headerlink" title="DashBoard"></a>DashBoard</h2><h3 id="部署dashboard"><a href="#部署dashboard" class="headerlink" title="部署dashboard"></a>部署dashboard</h3><pre><code>[root@linux-node1 ~]# kubectl create -f dashboard/
+# 查看集群详情
+[root@linux-node1 ~]# kubectl cluster-info
+Kubernetes master is running at https://192.168.56.11:6443
+CoreDNS is running at https://192.168.56.11:6443/api/v1/namespaces/kube-system/services/coredns:dns/proxy
+kubernetes-dashboard is running at https://192.168.56.11:6443/api/v1/namespaces/kube-system/services/https:kubernetes-dashboard:/proxy
+
+To further debug and diagnose cluster problems, use &apos;kubectl cluster-info dump&apos;.
+
+
+[root@linux-node1 src]# kubectl get services kubernetes-dashboard -n kube-system
+NAME                   TYPE       CLUSTER-IP    EXTERNAL-IP   PORT(S)         AGE
+kubernetes-dashboard   NodePort   10.1.27.148   &lt;none&gt;        443:28966/TCP   3d
+</code></pre><h3 id="登录"><a href="#登录" class="headerlink" title="登录:"></a>登录:</h3><p><figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2018/06/long.jpeg" alt="" title="">
+                </div>
+                <div class="image-caption"></div>
+            </figure>￼</p>
+<p>获取登录令牌:</p>
+<pre><code>[root@linux-node1 src]# kubectl -n kube-system describe secret $(kubectl -n kube-system get secret | grep admin-user | awk &apos;{print $1}&apos;)
+# 复制 token的内容部分 输入 登录
+</code></pre><p><img src="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2018/06/15280837316773.jpg" alt="">￼</p>
+
+        </div>
+
+        <blockquote class="post-copyright">
+    
+    <div class="content">
+        
+<span class="post-time">
+    最后更新时间：<time datetime="2018-12-19T14:39:54.000Z" itemprop="dateUpdated">2018-12-19 22:39:54</time>
+</span><br>
+
+
+        
+        该文链接：<a href="/2018/06/03/08k8s-ji-qun-da-jiancoredns-chuang-jiandashboard/" target="_blank" rel="external">https://blog.sctux.com/2018/06/03/08k8s-ji-qun-da-jiancoredns-chuang-jiandashboard/</a>
+        
+    </div>
+    
+    <footer>
+        <a href="https://blog.sctux.com">
+            <img src="/img/avatar.jpg" alt="OutMan">
+            OutMan
+        </a>
+    </footer>
+</blockquote>
+
+        
+<div class="page-reward">
+    <a id="rewardBtn" href="javascript:;" class="page-reward-btn waves-effect waves-circle waves-light">赏</a>
+</div>
+
+
+
+        <div class="post-footer">
+            
+	<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/k8s集群搭建/">k8s集群搭建</a></li></ul>
+
+
+            
+<div class="page-share-wrap">
+    
+
+<div class="page-share" id="pageShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://blog.sctux.com/2018/06/03/08k8s-ji-qun-da-jiancoredns-chuang-jiandashboard/&title=《08-K8s集群搭建---CoreDNS创建&DashBoard》 — 运维人&pic=https://blog.sctux.com/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://blog.sctux.com/2018/06/03/08k8s-ji-qun-da-jiancoredns-chuang-jiandashboard/&title=《08-K8s集群搭建---CoreDNS创建&DashBoard》 — 运维人&source=😊" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.sctux.com/2018/06/03/08k8s-ji-qun-da-jiancoredns-chuang-jiandashboard/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《08-K8s集群搭建---CoreDNS创建&DashBoard》 — 运维人&url=https://blog.sctux.com/2018/06/03/08k8s-ji-qun-da-jiancoredns-chuang-jiandashboard/&via=https://blog.sctux.com" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=https://blog.sctux.com/2018/06/03/08k8s-ji-qun-da-jiancoredns-chuang-jiandashboard/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+
+    <a href="javascript:;" id="shareFab" class="page-share-fab waves-effect waves-circle">
+        <i class="icon icon-share-alt icon-lg"></i>
+    </a>
+</div>
+
+
+
+        </div>
+    </div>
+
+    
+<nav class="post-nav flex-row flex-justify-between">
+  
+    <div class="waves-block waves-effect prev">
+      <a href="/2018/06/08/09k8s-ji-qun-da-jianjian-kong-zhan-shi-jie-mian-an/" id="post-prev" class="post-nav-link">
+        <div class="tips"><i class="icon icon-angle-left icon-lg icon-pr"></i> Prev</div>
+        <h4 class="title">09-K8s集群搭建---监控展示界面安装</h4>
+      </a>
+    </div>
+  
+
+  
+    <div class="waves-block waves-effect next">
+      <a href="/2018/06/03/07k8s-ji-qun-da-jianchuang-jiank8s-ying-yong/" id="post-next" class="post-nav-link">
+        <div class="tips">Next <i class="icon icon-angle-right icon-lg icon-pl"></i></div>
+        <h4 class="title">07-K8s集群搭建---创建K8s应用</h4>
+      </a>
+    </div>
+  
+</nav>
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Valine Comments -->
+    <div class="comments vcomment" id="comments"></div>
+    <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+    <script src="//unpkg.com/valine@latest/dist/Valine.min.js"></script>
+    <!-- Valine Comments script -->
+    <script>
+        var GUEST_INFO = ['nick','mail','link'];
+        var guest_info = 'nick,mail,link'.split(',').filter(function(item){
+          return GUEST_INFO.indexOf(item) > -1
+        });
+        new Valine({
+            el: '#comments',
+            notify: 'true' == 'true',
+            verify: 'true' == 'true',
+            appId: "lHxnnDHJXDgMoFpCbdx8A4q7-gzGzoHsz",
+            appKey: "W8H2NuO8chyDlCEQzionLuuV",
+            avatar: "monsterid",
+            placeholder: "来都来了，说点啥子吧~🌹 (友情提醒，留下正确的邮箱地址可以第一时间获取评论反馈)",
+            guest_info: guest_info.length == 0 ? GUEST_INFO : guest_info,
+            pageSize: "10"
+        })
+    </script>
+    <!-- Valine Comments end -->
+
+
+
+
+
+
+
+</article>
+
+<div id="reward" class="page-modal reward-lay">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <h3 class="reward-title">
+        <i class="icon icon-quote-left"></i>
+        谢谢大爷~
+        <i class="icon icon-quote-right"></i>
+    </h3>
+    <div class="reward-content">
+        
+        <div class="reward-code">
+            <img id="rewardCode" src="/img/wechat.jpg" alt="打赏二维码">
+        </div>
+        
+        <label class="reward-toggle">
+            <input id="rewardToggle" type="checkbox" class="reward-toggle-check" data-wechat="/img/wechat.jpg" data-alipay="/img/alipay.jpg">
+            <div class="reward-toggle-ctrol">
+                <span class="reward-toggle-item wechat">微信</span>
+                <span class="reward-toggle-label"></span>
+                <span class="reward-toggle-item alipay">支付宝</span>
+            </div>
+        </label>
+        
+    </div>
+</div>
+
+
+
+</div>
+
+        <footer class="footer">
+    <div class="top">
+        
+
+        <p>
+            
+            <span>博客内容遵循 <a rel="license" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh">知识共享 署名 - 非商业性 - 相同方式共享 4.0 国际协议</a></span>
+        </p>
+    </div>
+    <div class="bottom">
+        <p><span>OutMan &copy; 2013 - 2019</span>
+            <span>
+                
+                <a href="http://www.miitbeian.gov.cn/" target="_blank">蜀ICP备007号-1</a><br>
+                
+                Power by <a href="http://hexo.io/" target="_blank">Hexo</a> Theme <a href="https://github.com/yscoder/hexo-theme-indigo" target="_blank">indigo</a>
+            </span>
+        </p>
+    </div>
+</footer>
+
+    </main>
+    <div class="mask" id="mask"></div>
+<a href="javascript:;" id="gotop" class="waves-effect waves-circle waves-light"><span class="icon icon-lg icon-chevron-up"></span></a>
+
+
+
+<div class="global-share" id="globalShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://blog.sctux.com/2018/06/03/08k8s-ji-qun-da-jiancoredns-chuang-jiandashboard/&title=《08-K8s集群搭建---CoreDNS创建&DashBoard》 — 运维人&pic=https://blog.sctux.com/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://blog.sctux.com/2018/06/03/08k8s-ji-qun-da-jiancoredns-chuang-jiandashboard/&title=《08-K8s集群搭建---CoreDNS创建&DashBoard》 — 运维人&source=😊" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.sctux.com/2018/06/03/08k8s-ji-qun-da-jiancoredns-chuang-jiandashboard/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《08-K8s集群搭建---CoreDNS创建&DashBoard》 — 运维人&url=https://blog.sctux.com/2018/06/03/08k8s-ji-qun-da-jiancoredns-chuang-jiandashboard/&via=https://blog.sctux.com" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=https://blog.sctux.com/2018/06/03/08k8s-ji-qun-da-jiancoredns-chuang-jiandashboard/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+<div class="page-modal wx-share" id="wxShare">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <img src="//api.qrserver.com/v1/create-qr-code/?data=https://blog.sctux.com/2018/06/03/08k8s-ji-qun-da-jiancoredns-chuang-jiandashboard/" alt="微信分享二维码">
+</div>
+
+
+
+
+    <script src="//cdn.bootcss.com/node-waves/0.7.4/waves.min.js"></script>
+<script>
+var BLOG = { ROOT: '/', SHARE: true, REWARD: true };
+
+
+</script>
+
+<script src="/js/main.min.js?v=1.7.2"></script>
+
+
+<div class="search-panel" id="search-panel">
+    <ul class="search-result" id="search-result"></ul>
+</div>
+<template id="search-tpl">
+<li class="item">
+    <a href="{path}" class="waves-block waves-effect">
+        <div class="title ellipsis" title="{title}">{title}</div>
+        <div class="flex-row flex-middle">
+            <div class="tags ellipsis">
+                {tags}
+            </div>
+            <time class="flex-col time">{date}</time>
+        </div>
+    </a>
+</li>
+</template>
+
+<script src="/js/search.min.js?v=1.7.2" async></script>
+
+
+
+
+
+
+
+
+<script>
+(function() {
+    var OriginTitile = document.title, titleTime;
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            document.title = '老弟，死哪儿去啦~！';
+            clearTimeout(titleTime);
+        } else {
+            document.title = '(つェ⊂)咦!老弟来啦!';
+            titleTime = setTimeout(function() {
+                document.title = OriginTitile;
+            },2000);
+        }
+    });
+})();
+</script>
+
+
+
+</body>
+</html>

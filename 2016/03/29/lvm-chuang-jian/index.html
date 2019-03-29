@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.8.0">
+    
+
+    
+
+    
+
+
+
+    <meta charset="utf-8">
+    
+    
+    
+    
+    <title>Lvm的创建 | 运维人 | Devops、Linux、Kubernetes、Docker、Flask、Python、Shell</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    
+    <meta name="theme-color" content="#3F51B5">
+    
+    
+    <meta name="keywords" content="lvm">
+    <meta name="description" content="1. 查看磁盘：[root@localhost ~]# fdisk -l ...... 磁盘 /dev/sdb：21.5 GB, 21474836480 字节，41943040 个扇区 Units = 扇区 of 1 * 512 = 512 bytes 扇区大小(逻辑/物理)：512 字节 / 512 字节 I/O 大小(最小/最佳)：512 字节 / 512 字节  磁盘 /dev/sdc：21">
+<meta name="keywords" content="lvm">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Lvm的创建">
+<meta property="og:url" content="https://blog.sctux.com/2016/03/29/lvm-chuang-jian/index.html">
+<meta property="og:site_name" content="运维人">
+<meta property="og:description" content="1. 查看磁盘：[root@localhost ~]# fdisk -l ...... 磁盘 /dev/sdb：21.5 GB, 21474836480 字节，41943040 个扇区 Units = 扇区 of 1 * 512 = 512 bytes 扇区大小(逻辑/物理)：512 字节 / 512 字节 I/O 大小(最小/最佳)：512 字节 / 512 字节  磁盘 /dev/sdc：21">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2018-12-19T14:39:54.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Lvm的创建">
+<meta name="twitter:description" content="1. 查看磁盘：[root@localhost ~]# fdisk -l ...... 磁盘 /dev/sdb：21.5 GB, 21474836480 字节，41943040 个扇区 Units = 扇区 of 1 * 512 = 512 bytes 扇区大小(逻辑/物理)：512 字节 / 512 字节 I/O 大小(最小/最佳)：512 字节 / 512 字节  磁盘 /dev/sdc：21">
+    
+    <link rel="shortcut icon" href="/favicon.ico">
+    <link rel="stylesheet" href="/css/style.css?v=1.7.2">
+    <script>window.lazyScripts=[]</script>
+
+    <!-- custom head -->
+    
+
+</head>
+
+<body>
+    <div id="loading" class="active"></div>
+
+    <aside id="menu">
+  <div class="inner flex-row-vertical">
+    <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menu-off">
+        <i class="icon icon-lg icon-close"></i>
+    </a>
+    <div class="brand-wrap" style="background-image:url(/img/brand.jpg)">
+      <div class="brand">
+        <a href="/" class="avatar waves-effect waves-circle waves-light">
+          <img src="/img/avatar.jpg">
+        </a>
+        <hgroup class="introduce">
+          <h5 class="nickname">OutMan</h5>
+          <a href="mailto:2399447849@qq.com" title="2399447849@qq.com" class="mail">2399447849@qq.com</a>
+        </hgroup>
+      </div>
+    </div>
+    <div class="scroll-wrap flex-col">
+      <ul class="nav">
+        
+            <li class="waves-block waves-effect">
+              <a href="/">
+                <i class="icon icon-lg icon-home"></i>
+                主页
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/archives">
+                <i class="icon icon-lg icon-archives"></i>
+                归档
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/tags">
+                <i class="icon icon-lg icon-tags"></i>
+                标签
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/categories">
+                <i class="icon icon-lg icon-th-list"></i>
+                分类
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://github.com/guomaoqiu" target="_blank">
+                <i class="icon icon-lg icon-github"></i>
+                Github
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/works">
+                <i class="icon icon-lg icon-hand-peace-o"></i>
+                作品
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="http://demo.sctux.com" target="_blank">
+                <i class="icon icon-lg icon-link"></i>
+                DevOpsPlatform
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="http://resume.sctux.com/" target="_blank">
+                <i class="icon icon-lg icon-heart"></i>
+                我的简历
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/about">
+                <i class="icon icon-lg icon-user"></i>
+                关于我
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://blog.sctux.com/2019/02/27/skilltree/Skilltree.jpg" target="_blank">
+                <i class="icon icon-lg icon-tree"></i>
+                我的技能树
+              </a>
+            </li>
+        
+      </ul>
+    </div>
+  </div>
+</aside>
+
+    <main id="main">
+        <header class="top-header" id="header">
+    <div class="flex-row">
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light on" id="menu-toggle">
+          <i class="icon icon-lg icon-navicon"></i>
+        </a>
+        <div class="flex-col header-title ellipsis">Lvm的创建</div>
+        
+        <div class="search-wrap" id="search-wrap">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="back">
+                <i class="icon icon-lg icon-chevron-left"></i>
+            </a>
+            <input type="text" id="key" class="search-input" autocomplete="off" placeholder="输入感兴趣的关键字">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="search">
+                <i class="icon icon-lg icon-search"></i>
+            </a>
+        </div>
+        
+        
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menuShare">
+            <i class="icon icon-lg icon-share-alt"></i>
+        </a>
+        
+    </div>
+</header>
+<header class="content-header post-header">
+
+    <div class="container fade-scale">
+        <h1 class="title">Lvm的创建</h1>
+        <h5 class="subtitle">
+            
+                <time datetime="2016-03-28T17:57:13.000Z" itemprop="datePublished" class="page-time">
+  2016-03-29
+</time>
+
+
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/必备知识/">必备知识</a></li></ul>
+
+            
+        </h5>
+    </div>
+
+    
+
+
+</header>
+
+
+<div class="container body-wrap">
+    
+    <aside class="post-widget">
+        <nav class="post-toc-wrap post-toc-shrink" id="post-toc">
+            <h4>TOC</h4>
+            <ol class="post-toc"><li class="post-toc-item post-toc-level-4"><a class="post-toc-link" href="#1-查看磁盘："><span class="post-toc-number">1.</span> <span class="post-toc-text">1. 查看磁盘：</span></a></li><li class="post-toc-item post-toc-level-4"><a class="post-toc-link" href="#2-对两块磁盘进行lvm格式分区"><span class="post-toc-number">2.</span> <span class="post-toc-text">2. 对两块磁盘进行lvm格式分区</span></a></li><li class="post-toc-item post-toc-level-4"><a class="post-toc-link" href="#3-创建物理卷-PV"><span class="post-toc-number">3.</span> <span class="post-toc-text">3. 创建物理卷(PV)</span></a></li><li class="post-toc-item post-toc-level-4"><a class="post-toc-link" href="#4-将PV加入到卷组中-VG"><span class="post-toc-number">4.</span> <span class="post-toc-text">4. 将PV加入到卷组中(VG)</span></a></li><li class="post-toc-item post-toc-level-4"><a class="post-toc-link" href="#5-创建一个10G大小的lvm"><span class="post-toc-number">5.</span> <span class="post-toc-text">5. 创建一个10G大小的lvm</span></a></li><li class="post-toc-item post-toc-level-4"><a class="post-toc-link" href="#6-格式化这个lvm成xfs文件系统"><span class="post-toc-number">6.</span> <span class="post-toc-text">6. 格式化这个lvm成xfs文件系统</span></a></li><li class="post-toc-item post-toc-level-4"><a class="post-toc-link" href="#7-逻辑卷扩容"><span class="post-toc-number">7.</span> <span class="post-toc-text">7. 逻辑卷扩容</span></a></li><li class="post-toc-item post-toc-level-4"><a class="post-toc-link" href="#8-使用xfs-growfs命令在线调整xfs格式文件系统大小"><span class="post-toc-number">8.</span> <span class="post-toc-text">8. 使用xfs_growfs命令在线调整xfs格式文件系统大小</span></a></li><li class="post-toc-item post-toc-level-4"><a class="post-toc-link" href="#9-加入现有的卷组中："><span class="post-toc-number">9.</span> <span class="post-toc-text">9 .加入现有的卷组中：</span></a></li><li class="post-toc-item post-toc-level-4"><a class="post-toc-link" href="#注意："><span class="post-toc-number">10.</span> <span class="post-toc-text">注意：</span></a></li></ol>
+        </nav>
+    </aside>
+
+
+<article id="post-lvm-chuang-jian" class="post-article article-type-post fade" itemprop="blogPost">
+
+    <div class="post-card">
+        <h1 class="post-card-title">Lvm的创建</h1>
+        <div class="post-meta">
+            <time class="post-time" title="2016-03-29 01:57:13" datetime="2016-03-28T17:57:13.000Z" itemprop="datePublished">2016-03-29</time>
+
+            
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/必备知识/">必备知识</a></li></ul>
+
+
+
+            
+
+        </div>
+        <div class="post-content" id="post-content" itemprop="postContent">
+            <h4 id="1-查看磁盘："><a href="#1-查看磁盘：" class="headerlink" title="1. 查看磁盘："></a>1. 查看磁盘：</h4><pre><code>[root@localhost ~]# fdisk -l
+......
+磁盘 /dev/sdb：21.5 GB, 21474836480 字节，41943040 个扇区
+Units = 扇区 of 1 * 512 = 512 bytes
+扇区大小(逻辑/物理)：512 字节 / 512 字节
+I/O 大小(最小/最佳)：512 字节 / 512 字节
+
+磁盘 /dev/sdc：21.5 GB, 21474836480 字节，41943040 个扇区
+Units = 扇区 of 1 * 512 = 512 bytes
+扇区大小(逻辑/物理)：512 字节 / 512 字节
+I/O 大小(最小/最佳)：512 字节 / 512 字节
+......
+</code></pre><h4 id="2-对两块磁盘进行lvm格式分区"><a href="#2-对两块磁盘进行lvm格式分区" class="headerlink" title="2. 对两块磁盘进行lvm格式分区"></a>2. 对两块磁盘进行lvm格式分区</h4><pre><code>fdisk /dev/sdb/ --&gt; n --&gt; p --&gt; 分区号(默认) --&gt; 起始扇区(默认) --&gt; last扇区(默认)
+# 修改分区格式
+t --&gt; 8e Linux LVM(分区格式为lvm) --&gt; w (保存)
+
+# 退出后对磁盘/dev/sdc 执行相同操作即可
+</code></pre><h4 id="3-创建物理卷-PV"><a href="#3-创建物理卷-PV" class="headerlink" title="3. 创建物理卷(PV)"></a>3. 创建物理卷(PV)</h4><pre><code>[root@localhost ~]# pvcreate /dev/sdb1
+  Physical volume &quot;/dev/sdb1&quot; successfully created
+[root@localhost ~]# pvcreate /dev/sdc1
+  Physical volume &quot;/dev/sdc1&quot; successfully created
+[root@localhost ~]#
+# pvdisplay 显示详细PV信息
+  &quot;/dev/sdb1&quot; is a new physical volume of &quot;20.00 GiB&quot;
+  --- NEW Physical volume ---
+  PV Name               /dev/sdb1
+  VG Name
+  PV Size               20.00 GiB
+  Allocatable           NO
+  PE Size               0
+  Total PE              0
+  Free PE               0
+  Allocated PE          0
+  PV UUID               LcLg0U-gofo-MapY-eilj-OpkQ-TYMO-nSDfh3
+
+  &quot;/dev/sdc1&quot; is a new physical volume of &quot;20.00 GiB&quot;
+  --- NEW Physical volume ---
+  PV Name               /dev/sdc1
+  VG Name
+  PV Size               20.00 GiB
+  Allocatable           NO
+  PE Size               0
+  Total PE              0
+  Free PE               0
+  Allocated PE          0
+  PV UUID               r9Dp6u-S1hL-EmXb-6M7c-yefR-Bzts-B0Rdtd
+</code></pre><h4 id="4-将PV加入到卷组中-VG"><a href="#4-将PV加入到卷组中-VG" class="headerlink" title="4. 将PV加入到卷组中(VG)"></a>4. 将PV加入到卷组中(VG)</h4><pre><code>[root@localhost ~]# vgcreate vg-group /dev/sdb1 /dev/sdc1
+  Volume group &quot;vg-group&quot; successfully created
+</code></pre><h4 id="5-创建一个10G大小的lvm"><a href="#5-创建一个10G大小的lvm" class="headerlink" title="5. 创建一个10G大小的lvm"></a>5. 创建一个10G大小的lvm</h4><pre><code>[root@localhost ~]# vgs
+  VG       #PV #LV #SN Attr   VSize  VFree
+  centos     1   2   0 wz--n- 19.51g     0
+  vg-group   2   0   0 wz--n- 39.99g 39.99g
+[root@localhost ~]# lvcreate -L 10G -n data vg-group
+  Logical volume &quot;data&quot; created
+[root@localhost ~]# lvs
+  LV   VG       Attr       LSize  Pool Origin Data%  Move Log Cpy%Sync Convert
+  root centos   -wi-ao---- 17.51g
+  swap centos   -wi-ao----  2.00g
+  data vg-group -wi-a----- 10.00g
+</code></pre><h4 id="6-格式化这个lvm成xfs文件系统"><a href="#6-格式化这个lvm成xfs文件系统" class="headerlink" title="6. 格式化这个lvm成xfs文件系统"></a>6. 格式化这个lvm成xfs文件系统</h4><pre><code>[root@localhost ~]# mkfs.xfs /dev/vg-group/data   # 注意这个路径是/dev/卷组名/lvm名
+meta-data=/dev/vg-group/data     isize=256    agcount=4, agsize=655360 blks
+         =                       sectsz=512   attr=2, projid32bit=1
+         =                       crc=0
+data     =                       bsize=4096   blocks=2621440, imaxpct=25
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0 ftype=0
+log      =internal log           bsize=4096   blocks=2560, version=2
+         =                       sectsz=512   sunit=0 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+[root@localhost ~]# lvs
+  LV   VG       Attr       LSize  Pool Origin Data%  Move Log Cpy%Sync Convert
+  root centos   -wi-ao---- 17.51g
+  swap centos   -wi-ao----  2.00g
+  data vg-group -wi-a----- 10.00g
+[root@localhost ~]#
+</code></pre><h4 id="7-逻辑卷扩容"><a href="#7-逻辑卷扩容" class="headerlink" title="7. 逻辑卷扩容"></a>7. 逻辑卷扩容</h4><pre><code>使用 lvextend 命令进行逻辑卷扩容。我把所有剩余空间都分配给了data
+[root@localhost ~]# lvextend -l +100%FREE /dev/vg-group/data
+  Extending logical volume data to 39.99 GiB
+  Logical volume data successfully resized
+[root@localhost ~]# lvs
+  LV   VG       Attr       LSize  Pool Origin Data%  Move Log Cpy%Sync Convert
+  root centos   -wi-ao---- 17.51g
+  swap centos   -wi-ao----  2.00g
+  data vg-group -wi-a----- 39.99g
+
+[root@localhost ~]# mkdir /data
+[root@localhost ~]# mount /dev/vg-group/data /data/
+[root@localhost ~]# df -hT | grep &quot;data&quot;   # 可以看到这时候的data 只有10G，可是我们的lvm已经有40G
+/dev/mapper/vg--group-data xfs        10G   33M   10G    1% /data
+</code></pre><h4 id="8-使用xfs-growfs命令在线调整xfs格式文件系统大小"><a href="#8-使用xfs-growfs命令在线调整xfs格式文件系统大小" class="headerlink" title="8. 使用xfs_growfs命令在线调整xfs格式文件系统大小"></a>8. 使用xfs_growfs命令在线调整xfs格式文件系统大小</h4><pre><code>[root@localhost ~]# xfs_growfs /dev/vg-group/data
+meta-data=/dev/mapper/vg--group-data isize=256    agcount=4, agsize=655360 blks
+         =                       sectsz=512   attr=2, projid32bit=1
+         =                       crc=0
+data     =                       bsize=4096   blocks=2621440, imaxpct=25
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0 ftype=0
+log      =internal               bsize=4096   blocks=2560, version=2
+         =                       sectsz=512   sunit=0 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+data blocks changed from 2621440 to 10483712
+[root@localhost ~]# df -hT | grep &quot;data&quot;
+/dev/mapper/vg--group-data xfs        40G   33M   40G    1% /data
+</code></pre><h4 id="9-加入现有的卷组中："><a href="#9-加入现有的卷组中：" class="headerlink" title="9 .加入现有的卷组中："></a>9 .加入现有的卷组中：</h4><pre><code>(1)# 查看现有卷组
+[root@localhost ~]# vgs
+  VG       #PV #LV #SN Attr   VSize  VFree
+  centos     1   2   0 wz--n- 19.51g    0
+  vg-group   2   1   0 wz--n- 39.99g    0
+
+(2)#查看新加磁盘,还是先分区，然后更改lvm格式(略)
+[root@localhost ~]# fdisk -l | grep sdd
+磁盘 /dev/sdd：21.5 GB, 21474836480 字节，41943040 个扇区
+/dev/sdd1            2048    41943039    20970496   8e  Linux LVM
+
+(3)#使用 vgextend 命令把/dev/sdd1加入到centos
+[root@localhost ~]# vgextend centos /dev/sdd1
+  Volume group &quot;centos&quot; successfully extended
+[root@localhost ~]# vgs
+  VG       #PV #LV #SN Attr   VSize  VFree
+  centos     2   2   0 wz--n- 39.50g 20.00g
+  vg-group   2   1   0 wz--n- 39.99g     0
+
+(4)使用 lvextend 命令进行逻辑卷root扩容。我把所有剩余空间都分配给了root
+[root@localhost ~]# lvextend -l +100%FREE /dev/centos/root
+  Extending logical volume root to 37.50 GiB
+  Logical volume root successfully resized
+
+[root@localhost ~]# xfs_growfs /dev/centos/root
+meta-data=/dev/mapper/centos-root isize=256    agcount=4, agsize=1147392 blks
+         =                       sectsz=512   attr=2, projid32bit=1
+         =                       crc=0
+data     =                       bsize=4096   blocks=4589568, imaxpct=25
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0 ftype=0
+log      =internal               bsize=4096   blocks=2560, version=2
+         =                       sectsz=512   sunit=0 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+data blocks changed from 4589568 to 9831424
+[root@localhost ~]#
+# 此时我们的根分区就得到了扩容啦；
+[root@localhost ~]# df -hT | grep &quot;root&quot;
+/dev/mapper/centos-root    xfs        38G  929M   37G    3% /
+</code></pre><h4 id="注意："><a href="#注意：" class="headerlink" title="注意："></a>注意：</h4><pre><code>pvs -- vgs -- lvs
+</code></pre>
+        </div>
+
+        <blockquote class="post-copyright">
+    
+    <div class="content">
+        
+<span class="post-time">
+    最后更新时间：<time datetime="2018-12-19T14:39:54.000Z" itemprop="dateUpdated">2018-12-19 22:39:54</time>
+</span><br>
+
+
+        
+        该文链接：<a href="/2016/03/29/lvm-chuang-jian/" target="_blank" rel="external">https://blog.sctux.com/2016/03/29/lvm-chuang-jian/</a>
+        
+    </div>
+    
+    <footer>
+        <a href="https://blog.sctux.com">
+            <img src="/img/avatar.jpg" alt="OutMan">
+            OutMan
+        </a>
+    </footer>
+</blockquote>
+
+        
+<div class="page-reward">
+    <a id="rewardBtn" href="javascript:;" class="page-reward-btn waves-effect waves-circle waves-light">赏</a>
+</div>
+
+
+
+        <div class="post-footer">
+            
+	<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/lvm/">lvm</a></li></ul>
+
+
+            
+<div class="page-share-wrap">
+    
+
+<div class="page-share" id="pageShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://blog.sctux.com/2016/03/29/lvm-chuang-jian/&title=《Lvm的创建》 — 运维人&pic=https://blog.sctux.com/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://blog.sctux.com/2016/03/29/lvm-chuang-jian/&title=《Lvm的创建》 — 运维人&source=😊" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.sctux.com/2016/03/29/lvm-chuang-jian/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《Lvm的创建》 — 运维人&url=https://blog.sctux.com/2016/03/29/lvm-chuang-jian/&via=https://blog.sctux.com" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=https://blog.sctux.com/2016/03/29/lvm-chuang-jian/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+
+    <a href="javascript:;" id="shareFab" class="page-share-fab waves-effect waves-circle">
+        <i class="icon icon-share-alt icon-lg"></i>
+    </a>
+</div>
+
+
+
+        </div>
+    </div>
+
+    
+<nav class="post-nav flex-row flex-justify-between">
+  
+    <div class="waves-block waves-effect prev">
+      <a href="/2016/04/18/jenkins-e9-85-8d-e7-bd-ae-e4-bb-a4-e7-89-8c-e8-bf-9c-e7-a8-8b-e8-a7-a6-e5-8f-91-e9-a1-b9-e7-9b-ae-e6-9e-84-e5-bb-ba/" id="post-prev" class="post-nav-link">
+        <div class="tips"><i class="icon icon-angle-left icon-lg icon-pr"></i> Prev</div>
+        <h4 class="title">Jenkins配置令牌远程触发项目构建</h4>
+      </a>
+    </div>
+  
+
+  
+    <div class="waves-block waves-effect next">
+      <a href="/2016/03/19/mysql-e6-8a-a5-e9-94-99error-1030-hy000-e8-a7-a3-e5-86-b3-e8-bf-87-e7-a8-8b/" id="post-next" class="post-nav-link">
+        <div class="tips">Next <i class="icon icon-angle-right icon-lg icon-pl"></i></div>
+        <h4 class="title">MySQL报错ERROR 1030 (HY000): 解决过程</h4>
+      </a>
+    </div>
+  
+</nav>
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Valine Comments -->
+    <div class="comments vcomment" id="comments"></div>
+    <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+    <script src="//unpkg.com/valine@latest/dist/Valine.min.js"></script>
+    <!-- Valine Comments script -->
+    <script>
+        var GUEST_INFO = ['nick','mail','link'];
+        var guest_info = 'nick,mail,link'.split(',').filter(function(item){
+          return GUEST_INFO.indexOf(item) > -1
+        });
+        new Valine({
+            el: '#comments',
+            notify: 'true' == 'true',
+            verify: 'true' == 'true',
+            appId: "lHxnnDHJXDgMoFpCbdx8A4q7-gzGzoHsz",
+            appKey: "W8H2NuO8chyDlCEQzionLuuV",
+            avatar: "monsterid",
+            placeholder: "来都来了，说点啥子吧~🌹 (友情提醒，留下正确的邮箱地址可以第一时间获取评论反馈)",
+            guest_info: guest_info.length == 0 ? GUEST_INFO : guest_info,
+            pageSize: "10"
+        })
+    </script>
+    <!-- Valine Comments end -->
+
+
+
+
+
+
+
+</article>
+
+<div id="reward" class="page-modal reward-lay">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <h3 class="reward-title">
+        <i class="icon icon-quote-left"></i>
+        谢谢大爷~
+        <i class="icon icon-quote-right"></i>
+    </h3>
+    <div class="reward-content">
+        
+        <div class="reward-code">
+            <img id="rewardCode" src="/img/wechat.jpg" alt="打赏二维码">
+        </div>
+        
+        <label class="reward-toggle">
+            <input id="rewardToggle" type="checkbox" class="reward-toggle-check" data-wechat="/img/wechat.jpg" data-alipay="/img/alipay.jpg">
+            <div class="reward-toggle-ctrol">
+                <span class="reward-toggle-item wechat">微信</span>
+                <span class="reward-toggle-label"></span>
+                <span class="reward-toggle-item alipay">支付宝</span>
+            </div>
+        </label>
+        
+    </div>
+</div>
+
+
+
+</div>
+
+        <footer class="footer">
+    <div class="top">
+        
+
+        <p>
+            
+            <span>博客内容遵循 <a rel="license" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh">知识共享 署名 - 非商业性 - 相同方式共享 4.0 国际协议</a></span>
+        </p>
+    </div>
+    <div class="bottom">
+        <p><span>OutMan &copy; 2013 - 2019</span>
+            <span>
+                
+                <a href="http://www.miitbeian.gov.cn/" target="_blank">蜀ICP备007号-1</a><br>
+                
+                Power by <a href="http://hexo.io/" target="_blank">Hexo</a> Theme <a href="https://github.com/yscoder/hexo-theme-indigo" target="_blank">indigo</a>
+            </span>
+        </p>
+    </div>
+</footer>
+
+    </main>
+    <div class="mask" id="mask"></div>
+<a href="javascript:;" id="gotop" class="waves-effect waves-circle waves-light"><span class="icon icon-lg icon-chevron-up"></span></a>
+
+
+
+<div class="global-share" id="globalShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://blog.sctux.com/2016/03/29/lvm-chuang-jian/&title=《Lvm的创建》 — 运维人&pic=https://blog.sctux.com/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://blog.sctux.com/2016/03/29/lvm-chuang-jian/&title=《Lvm的创建》 — 运维人&source=😊" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.sctux.com/2016/03/29/lvm-chuang-jian/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《Lvm的创建》 — 运维人&url=https://blog.sctux.com/2016/03/29/lvm-chuang-jian/&via=https://blog.sctux.com" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=https://blog.sctux.com/2016/03/29/lvm-chuang-jian/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+<div class="page-modal wx-share" id="wxShare">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <img src="//api.qrserver.com/v1/create-qr-code/?data=https://blog.sctux.com/2016/03/29/lvm-chuang-jian/" alt="微信分享二维码">
+</div>
+
+
+
+
+    <script src="//cdn.bootcss.com/node-waves/0.7.4/waves.min.js"></script>
+<script>
+var BLOG = { ROOT: '/', SHARE: true, REWARD: true };
+
+
+</script>
+
+<script src="/js/main.min.js?v=1.7.2"></script>
+
+
+<div class="search-panel" id="search-panel">
+    <ul class="search-result" id="search-result"></ul>
+</div>
+<template id="search-tpl">
+<li class="item">
+    <a href="{path}" class="waves-block waves-effect">
+        <div class="title ellipsis" title="{title}">{title}</div>
+        <div class="flex-row flex-middle">
+            <div class="tags ellipsis">
+                {tags}
+            </div>
+            <time class="flex-col time">{date}</time>
+        </div>
+    </a>
+</li>
+</template>
+
+<script src="/js/search.min.js?v=1.7.2" async></script>
+
+
+
+
+
+
+
+
+<script>
+(function() {
+    var OriginTitile = document.title, titleTime;
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            document.title = '老弟，死哪儿去啦~！';
+            clearTimeout(titleTime);
+        } else {
+            document.title = '(つェ⊂)咦!老弟来啦!';
+            titleTime = setTimeout(function() {
+                document.title = OriginTitile;
+            },2000);
+        }
+    });
+})();
+</script>
+
+
+
+</body>
+</html>

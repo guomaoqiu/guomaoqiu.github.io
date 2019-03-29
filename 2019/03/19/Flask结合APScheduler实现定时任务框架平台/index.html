@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.8.0">
+    
+
+    
+
+    
+
+
+
+    <meta charset="utf-8">
+    
+    
+    
+    
+    <title>如何让添加定时作业任务变得更加优雅 | 运维人 | Devops、Linux、Kubernetes、Docker、Flask、Python、Shell</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    
+    <meta name="theme-color" content="#3F51B5">
+    
+    
+    <meta name="keywords" content="Flask APScheduler">
+    <meta name="description" content="序 APSCheduler 简介在平常的工作中有些工作都需要定时任务来推动，例如项目中有一个定时刷新排行榜的程序脚本、定时时爬出网站的URL程序、定时检测钓鱼网站的程序等等，都涉及到了">
+<meta name="keywords" content="Flask APScheduler">
+<meta property="og:type" content="article">
+<meta property="og:title" content="如何让添加定时作业任务变得更加优雅">
+<meta property="og:url" content="https://blog.sctux.com/2019/03/19/Flask结合APScheduler实现定时任务框架平台/index.html">
+<meta property="og:site_name" content="运维人">
+<meta property="og:description" content="序 APSCheduler 简介在平常的工作中有些工作都需要定时任务来推动，例如项目中有一个定时刷新排行榜的程序脚本、定时时爬出网站的URL程序、定时检测钓鱼网站的程序等等，都涉及到了">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://blog.sctux.com/2019/03/19/Flask结合APScheduler实现定时任务框架平台/info.png">
+<meta property="og:image" content="https://blog.sctux.com/2019/03/19/Flask结合APScheduler实现定时任务框架平台/liuchengtu.png">
+<meta property="og:image" content="https://blog.sctux.com/2019/03/19/Flask结合APScheduler实现定时任务框架平台/login.png">
+<meta property="og:image" content="https://blog.sctux.com/2019/03/19/Flask结合APScheduler实现定时任务框架平台/pausejob.png">
+<meta property="og:image" content="https://blog.sctux.com/2019/03/19/Flask结合APScheduler实现定时任务框架平台/addjob.png">
+<meta property="og:image" content="https://blog.sctux.com/2019/03/19/Flask结合APScheduler实现定时任务框架平台/stdout.png">
+<meta property="og:updated_time" content="2019-03-27T03:22:01.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="如何让添加定时作业任务变得更加优雅">
+<meta name="twitter:description" content="序 APSCheduler 简介在平常的工作中有些工作都需要定时任务来推动，例如项目中有一个定时刷新排行榜的程序脚本、定时时爬出网站的URL程序、定时检测钓鱼网站的程序等等，都涉及到了">
+<meta name="twitter:image" content="https://blog.sctux.com/2019/03/19/Flask结合APScheduler实现定时任务框架平台/info.png">
+    
+    <link rel="shortcut icon" href="/favicon.ico">
+    <link rel="stylesheet" href="/css/style.css?v=1.7.2">
+    <script>window.lazyScripts=[]</script>
+
+    <!-- custom head -->
+    
+
+</head>
+
+<body>
+    <div id="loading" class="active"></div>
+
+    <aside id="menu">
+  <div class="inner flex-row-vertical">
+    <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menu-off">
+        <i class="icon icon-lg icon-close"></i>
+    </a>
+    <div class="brand-wrap" style="background-image:url(/img/brand.jpg)">
+      <div class="brand">
+        <a href="/" class="avatar waves-effect waves-circle waves-light">
+          <img src="/img/avatar.jpg">
+        </a>
+        <hgroup class="introduce">
+          <h5 class="nickname">OutMan</h5>
+          <a href="mailto:2399447849@qq.com" title="2399447849@qq.com" class="mail">2399447849@qq.com</a>
+        </hgroup>
+      </div>
+    </div>
+    <div class="scroll-wrap flex-col">
+      <ul class="nav">
+        
+            <li class="waves-block waves-effect">
+              <a href="/">
+                <i class="icon icon-lg icon-home"></i>
+                主页
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/archives">
+                <i class="icon icon-lg icon-archives"></i>
+                归档
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/tags">
+                <i class="icon icon-lg icon-tags"></i>
+                标签
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/categories">
+                <i class="icon icon-lg icon-th-list"></i>
+                分类
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://github.com/guomaoqiu" target="_blank">
+                <i class="icon icon-lg icon-github"></i>
+                Github
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/works">
+                <i class="icon icon-lg icon-hand-peace-o"></i>
+                作品
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="http://demo.sctux.com" target="_blank">
+                <i class="icon icon-lg icon-link"></i>
+                DevOpsPlatform
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="http://resume.sctux.com/" target="_blank">
+                <i class="icon icon-lg icon-heart"></i>
+                我的简历
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/about">
+                <i class="icon icon-lg icon-user"></i>
+                关于我
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://blog.sctux.com/2019/02/27/skilltree/Skilltree.jpg" target="_blank">
+                <i class="icon icon-lg icon-tree"></i>
+                我的技能树
+              </a>
+            </li>
+        
+      </ul>
+    </div>
+  </div>
+</aside>
+
+    <main id="main">
+        <header class="top-header" id="header">
+    <div class="flex-row">
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light on" id="menu-toggle">
+          <i class="icon icon-lg icon-navicon"></i>
+        </a>
+        <div class="flex-col header-title ellipsis">如何让添加定时作业任务变得更加优雅</div>
+        
+        <div class="search-wrap" id="search-wrap">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="back">
+                <i class="icon icon-lg icon-chevron-left"></i>
+            </a>
+            <input type="text" id="key" class="search-input" autocomplete="off" placeholder="输入感兴趣的关键字">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="search">
+                <i class="icon icon-lg icon-search"></i>
+            </a>
+        </div>
+        
+        
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menuShare">
+            <i class="icon icon-lg icon-share-alt"></i>
+        </a>
+        
+    </div>
+</header>
+<header class="content-header post-header">
+
+    <div class="container fade-scale">
+        <h1 class="title">如何让添加定时作业任务变得更加优雅</h1>
+        <h5 class="subtitle">
+            
+                <time datetime="2019-03-19T06:32:01.000Z" itemprop="datePublished" class="page-time">
+  2019-03-19
+</time>
+
+
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/定时任务/">定时任务</a></li></ul>
+
+            
+        </h5>
+    </div>
+
+    
+
+
+</header>
+
+
+<div class="container body-wrap">
+    
+    <aside class="post-widget">
+        <nav class="post-toc-wrap post-toc-shrink" id="post-toc">
+            <h4>TOC</h4>
+            <ol class="post-toc"><li class="post-toc-item post-toc-level-1"><a class="post-toc-link" href="#序-APSCheduler-简介"><span class="post-toc-number">1.</span> <span class="post-toc-text">序 APSCheduler 简介</span></a></li><li class="post-toc-item post-toc-level-1"><a class="post-toc-link" href="#APScheduler有四个组成部分"><span class="post-toc-number">2.</span> <span class="post-toc-text">APScheduler有四个组成部分</span></a></li></ol>
+        </nav>
+    </aside>
+
+
+<article id="post-Flask结合APScheduler实现定时任务框架平台" class="post-article article-type-post fade" itemprop="blogPost">
+
+    <div class="post-card">
+        <h1 class="post-card-title">如何让添加定时作业任务变得更加优雅</h1>
+        <div class="post-meta">
+            <time class="post-time" title="2019-03-19 14:32:01" datetime="2019-03-19T06:32:01.000Z" itemprop="datePublished">2019-03-19</time>
+
+            
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/定时任务/">定时任务</a></li></ul>
+
+
+
+            
+
+        </div>
+        <div class="post-content" id="post-content" itemprop="postContent">
+             <figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="/2019/03/19/Flask结合APScheduler实现定时任务框架平台/info.png" alt="" title="">
+                </div>
+                <div class="image-caption"></div>
+            </figure>
+<h1 id="序-APSCheduler-简介"><a href="#序-APSCheduler-简介" class="headerlink" title="序 APSCheduler 简介"></a>序 APSCheduler 简介</h1><p>在平常的工作中有些工作都需要定时任务来推动，例如项目中有一个定时刷新排行榜的程序脚本、定时时爬出网站的URL程序、定时检测钓鱼网站的程序等等，都涉及到了关于定时任务的问题；虽然这些定时任务在服务器上面都能通过crontab来做；其次想到的是利用time模块的time.sleep()方法使程序休眠来达到定时任务的目的，虽然前两者也可以，但是总觉得不是那么的专业，😁所以就找到了python的定时任务模块APScheduler;</p>
+<p><strong>APScheduler基于Quartz的一个Python定时任务框架，实现了Quartz的所有功能，使用起来十分方便。提供了基于日期、固定时间间隔以及crontab类型的任务，并且可以持久化任务。基于这些功能，我们可以很方便的实现一个python定时任务系统。</strong></p>
+<p>同时APScheduler还提供了Flask的扩展<code>Flask-Apscheduler</code>, 那正好就可以拿来做一个集成定时任务平台;</p>
+<figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="/2019/03/19/Flask结合APScheduler实现定时任务框架平台/liuchengtu.png" alt="APScheduler工作原理" title="">
+                </div>
+                <div class="image-caption">APScheduler工作原理</div>
+            </figure>
+<h1 id="APScheduler有四个组成部分"><a href="#APScheduler有四个组成部分" class="headerlink" title="APScheduler有四个组成部分"></a>APScheduler有四个组成部分</h1><ol>
+<li><p><code>触发器(trigger)</code>包含调度逻辑，每一个作业有它自己的触发器，用于决定接下来哪一个作业会运行。除了他们自己初始配置意外，触发器完全是无状态的。</p>
+ <figure class="highlight livecodeserver"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line">cron: 类linux下的crontab格式,属于定时调度</span><br><span class="line">interval:每隔多久调度一次</span><br><span class="line"><span class="built_in">date</span>:一次性调度</span><br><span class="line"></span><br><span class="line"><span class="comment">#1. cron风格</span></span><br><span class="line">(int|str) 表示参数既可以是int类型，也可以是str类型</span><br><span class="line">(datetime | str) 表示参数既可以是datetime类型，也可以是str类型</span><br><span class="line">year (int|str) – <span class="number">4</span>-digit year -（表示四位数的年份，如<span class="number">2008</span>年）</span><br><span class="line">month (int|str) – month (<span class="number">1</span><span class="number">-12</span>) -（表示取值范围为<span class="number">1</span><span class="number">-12</span>月）</span><br><span class="line">day (int|str) – day <span class="keyword">of</span> <span class="keyword">the</span> (<span class="number">1</span><span class="number">-31</span>) -（表示取值范围为<span class="number">1</span><span class="number">-31</span>日）</span><br><span class="line">week (int|str) – ISO week (<span class="number">1</span><span class="number">-53</span>) -（格里历<span class="number">2006</span>年<span class="number">12</span>月<span class="number">31</span>日可以写成<span class="number">2006</span>年-W52<span class="number">-7</span>（扩展形式）或<span class="number">2006</span>W527（紧凑形式））</span><br><span class="line">day_of_week (int|str) – <span class="built_in">number</span> <span class="keyword">or</span> name <span class="keyword">of</span> weekday (<span class="number">0</span><span class="number">-6</span> <span class="keyword">or</span> mon,tue,wed,thu,fri,sat,sun) - （表示一周中的第几天，既可以用<span class="number">0</span><span class="number">-6</span>表示也可以用其英语缩写表示）</span><br><span class="line">hour (int|str) – hour (<span class="number">0</span><span class="number">-23</span>) - （表示取值范围为<span class="number">0</span><span class="number">-23</span>时）</span><br><span class="line">minute (int|str) – minute (<span class="number">0</span><span class="number">-59</span>) - （表示取值范围为<span class="number">0</span><span class="number">-59</span>分）</span><br><span class="line"><span class="keyword">second</span> (int|str) – <span class="keyword">second</span> (<span class="number">0</span><span class="number">-59</span>) - （表示取值范围为<span class="number">0</span><span class="number">-59</span>秒）</span><br><span class="line">start_date (datetime|str) – earliest possible <span class="built_in">date</span>/<span class="built_in">time</span> <span class="built_in">to</span> trigger <span class="keyword">on</span> (<span class="title">inclusive</span>) - （表示开始时间）</span><br><span class="line">end_date (datetime|str) – latest possible <span class="built_in">date</span>/<span class="built_in">time</span> <span class="built_in">to</span> trigger <span class="keyword">on</span> (<span class="title">inclusive</span>) - （表示结束时间）</span><br><span class="line">timezone (datetime.tzinfo|str) – <span class="built_in">time</span> zone <span class="built_in">to</span> use <span class="keyword">for</span> <span class="keyword">the</span> <span class="built_in">date</span>/<span class="built_in">time</span> calculations (defaults <span class="built_in">to</span> scheduler timezone) -（表示时区取值）</span><br><span class="line"><span class="comment">#如:在6,7,8,11,12月份的第三个星期五的00:00,01:00,02:00,03:00 执行该程序</span></span><br><span class="line">sched.add_job(my_job, <span class="string">'cron'</span>, month=<span class="string">'6-8,11-12'</span>, day=<span class="string">'3rd fri'</span>, hour=<span class="string">'0-3'</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment">#2.interval风格</span></span><br><span class="line">weeks (int) – <span class="built_in">number</span> <span class="keyword">of</span> weeks <span class="built_in">to</span> <span class="built_in">wait</span></span><br><span class="line">days (int) – <span class="built_in">number</span> <span class="keyword">of</span> days <span class="built_in">to</span> <span class="built_in">wait</span></span><br><span class="line">hours (int) – <span class="built_in">number</span> <span class="keyword">of</span> hours <span class="built_in">to</span> <span class="built_in">wait</span></span><br><span class="line">minutes (int) – <span class="built_in">number</span> <span class="keyword">of</span> minutes <span class="built_in">to</span> <span class="built_in">wait</span></span><br><span class="line"><span class="built_in">seconds</span> (int) – <span class="built_in">number</span> <span class="keyword">of</span> <span class="built_in">seconds</span> <span class="built_in">to</span> <span class="built_in">wait</span></span><br><span class="line">start_date (datetime|str) – starting point <span class="keyword">for</span> <span class="keyword">the</span> interval calculation</span><br><span class="line">end_date (datetime|str) – latest possible <span class="built_in">date</span>/<span class="built_in">time</span> <span class="built_in">to</span> trigger <span class="keyword">on</span></span><br><span class="line">timezone (datetime.tzinfo|str) – <span class="built_in">time</span> zone <span class="built_in">to</span> use <span class="keyword">for</span> <span class="keyword">the</span> <span class="built_in">date</span>/<span class="built_in">time</span> calculations</span><br><span class="line"><span class="comment">#如:每隔2分钟执行一次</span></span><br><span class="line">scheduler.add_job(myfunc, <span class="string">'interval'</span>, minutes=<span class="number">2</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment">#3.date风格</span></span><br><span class="line">run_date (datetime|str) – <span class="keyword">the</span> <span class="built_in">date</span>/<span class="built_in">time</span> <span class="built_in">to</span> run <span class="keyword">the</span> job <span class="keyword">at</span>  -（任务开始的时间）</span><br><span class="line">timezone (datetime.tzinfo|str) – <span class="built_in">time</span> zone <span class="keyword">for</span> run_date <span class="keyword">if</span> <span class="keyword">it</span> doesn’t have <span class="literal">one</span> already</span><br><span class="line"><span class="comment">#如:在2009年11月6号16时30分5秒时执行</span></span><br><span class="line">sched.add_job(my_job, <span class="string">'date'</span>, run_date=datetime(<span class="number">2009</span>, <span class="number">11</span>, <span class="number">6</span>, <span class="number">16</span>, <span class="number">30</span>, <span class="number">5</span>), args=[<span class="string">'text'</span>])</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><code>作业存储(job store)</code>存储被调度的作业，默认的作业存储是简单地把作业保存在内存中，其他的作业存储是将作业保存在数据库中。一个作业的数据讲在保存在持久化作业存储时被序列化，并在加载时被反序列化。调度器不能分享同一个作业存储。</p>
+<p> jobstore则是指的是job持久化,默认job运行在内存中,可持久化在数据库,指定为mongo的MongoDBJobStore或者是使用sqlite的SQLAlchemyJobStore,同时可指定多种jobstore</p>
+</li>
+<li><p><code>执行器(executor)</code>处理作业的运行，他们通常通过在作业中提交制定的可调用对象到一个线程或者进城池来进行。当作业完成时，执行器将会通知调度器。</p>
+<p> 说白了就是指定任务是以线程池/进程池里运行,这在初始化时可以指定,同时可以指定最大的工作池,默认的为default: ThreadPoolExecutor,max-worker为20,当然也可以指定为processpool,默认max-worker为5</p>
+</li>
+<li><p><code>调度器(scheduler)</code>是其他的组成部分。你通常在应用只有一个调度器，应用的开发者通常不会直接处理作业存储、调度器和触发器，相反，调度器提供了处理这些的合适的接口。配置作业存储和执行器可以在调度器中完成，例如添加、修改和移除作业。<br>调度器分为以下几种,可根据不同的使用场景选用不同的调度器:</p>
+ <figure class="highlight avrasm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="symbol">BlockingScheduler:</span> 很明显这是种阻塞型,一般用在没有其它进程运行的场景下</span><br><span class="line"><span class="symbol">BackGroundScheduler:</span> 后台式,也就是单起一个进程/线程运行该任务,不影响主程序</span><br><span class="line"><span class="symbol">ASyncIOScheduler:</span></span><br><span class="line"><span class="symbol">GeventScheduler:</span></span><br><span class="line"><span class="symbol">TornadoScheduler:</span></span><br><span class="line"><span class="symbol">TwistedScheduler:</span></span><br><span class="line"><span class="symbol">QtScheduler:</span></span><br></pre></td></tr></table></figure>
+<p> 本人只使用过BlockingScheduler跟BackGroundScheduler,flask-scheduler使用的即为BackGroundScheduler,其它的后续再研究研究<br> 选择类型也很简单,初始化时直接实例化:</p>
+ <figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> apscheduler.schedulers.background import BackgroundScheduler</span><br><span class="line">scheduler = BackgroundScheduler()</span><br><span class="line"><span class="comment">#启动</span></span><br><span class="line">scheduler.start()</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<p>以上就是apscheduler主要组成的四个方面。那么既然有提供flask-apscheduler这个扩展，那一定是把apscheduler封装过后为我们提供更加方便的集成开发，这里我的存储选择了MySQL作为作业任务存储，因为我这里的平台的用户是用它来存储的；为了方便统一使用了MySQL;</p>
+<hr>
+<p>以下是这个项目的结构:</p>
+<figure class="highlight cs"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"> /data/study/github_repo/JobCenter $ tree -L <span class="number">2</span></span><br><span class="line">.</span><br><span class="line">├── LICENSE</span><br><span class="line">├── Pipfile</span><br><span class="line">├── Pipfile.<span class="keyword">lock</span></span><br><span class="line">├── README.md</span><br><span class="line">├── app</span><br><span class="line">│   ├── __init__.py</span><br><span class="line">│   ├── auth/  <span class="meta"># 平台登录相关</span></span><br><span class="line">│   ├── commands.py</span><br><span class="line">│   ├── config.py  <span class="meta"># 平台配置相关</span></span><br><span class="line">│   ├── decorators.py</span><br><span class="line">│   ├── email.py  <span class="meta"># 邮件发送</span></span><br><span class="line">│   ├── extensions.py</span><br><span class="line">│   ├── job/  <span class="meta"># 定时任务主要模块</span></span><br><span class="line">│   ├── main/  <span class="meta"># 主要用于路由</span></span><br><span class="line">│   ├── models.py  <span class="meta"># 数据模型</span></span><br><span class="line">│   ├── <span class="keyword">static</span>				</span><br><span class="line">│   ├── templates</span><br><span class="line">└── test.py</span><br></pre></td></tr></table></figure>
+<p>目前主要实现的功能有:</p>
+<ul>
+<li>可视化界面操作</li>
+<li>定时任务统一管理</li>
+<li>完全兼容Crontab</li>
+<li>支持秒级定时任务</li>
+<li>作业任务可搜索、暂停、编辑、删除</li>
+<li>作业任务持久化存储、三种不同触发器类型作业动态添加</li>
+</ul>
+<hr>
+<figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="/2019/03/19/Flask结合APScheduler实现定时任务框架平台/login.png" alt="清爽的登录界面" title="">
+                </div>
+                <div class="image-caption">清爽的登录界面</div>
+            </figure>
+<figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="/2019/03/19/Flask结合APScheduler实现定时任务框架平台/pausejob.png" alt="任务列表中暂停、恢复已添加任务" title="">
+                </div>
+                <div class="image-caption">任务列表中暂停、恢复已添加任务</div>
+            </figure>
+<figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="/2019/03/19/Flask结合APScheduler实现定时任务框架平台/addjob.png" alt="针对不同触发器动态增加任务" title="">
+                </div>
+                <div class="image-caption">针对不同触发器动态增加任务</div>
+            </figure>
+<figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="/2019/03/19/Flask结合APScheduler实现定时任务框架平台/stdout.png" alt="任务执行输出日志持久化存放并展示" title="">
+                </div>
+                <div class="image-caption">任务执行输出日志持久化存放并展示</div>
+            </figure>
+<p>欢迎star 欢迎提建议~<br>项目地址: <a href="https://github.com/guomaoqiu/JobCenter" target="_blank" rel="noopener">https://github.com/guomaoqiu/JobCenter</a></p>
+
+        </div>
+
+        <blockquote class="post-copyright">
+    
+    <div class="content">
+        
+<span class="post-time">
+    最后更新时间：<time datetime="2019-03-27T03:22:01.000Z" itemprop="dateUpdated">2019-03-27 11:22:01</time>
+</span><br>
+
+
+        
+        该文链接：<a href="/2019/03/19/Flask结合APScheduler实现定时任务框架平台/" target="_blank" rel="external">https://blog.sctux.com/2019/03/19/Flask结合APScheduler实现定时任务框架平台/</a>
+        
+    </div>
+    
+    <footer>
+        <a href="https://blog.sctux.com">
+            <img src="/img/avatar.jpg" alt="OutMan">
+            OutMan
+        </a>
+    </footer>
+</blockquote>
+
+        
+<div class="page-reward">
+    <a id="rewardBtn" href="javascript:;" class="page-reward-btn waves-effect waves-circle waves-light">赏</a>
+</div>
+
+
+
+        <div class="post-footer">
+            
+	<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Flask-APScheduler/">Flask APScheduler</a></li></ul>
+
+
+            
+<div class="page-share-wrap">
+    
+
+<div class="page-share" id="pageShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://blog.sctux.com/2019/03/19/Flask结合APScheduler实现定时任务框架平台/&title=《如何让添加定时作业任务变得更加优雅》 — 运维人&pic=https://blog.sctux.com/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://blog.sctux.com/2019/03/19/Flask结合APScheduler实现定时任务框架平台/&title=《如何让添加定时作业任务变得更加优雅》 — 运维人&source=😊" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.sctux.com/2019/03/19/Flask结合APScheduler实现定时任务框架平台/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《如何让添加定时作业任务变得更加优雅》 — 运维人&url=https://blog.sctux.com/2019/03/19/Flask结合APScheduler实现定时任务框架平台/&via=https://blog.sctux.com" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=https://blog.sctux.com/2019/03/19/Flask结合APScheduler实现定时任务框架平台/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+
+    <a href="javascript:;" id="shareFab" class="page-share-fab waves-effect waves-circle">
+        <i class="icon icon-share-alt icon-lg"></i>
+    </a>
+</div>
+
+
+
+        </div>
+    </div>
+
+    
+<nav class="post-nav flex-row flex-justify-between flex-row-reverse">
+  
+
+  
+    <div class="waves-block waves-effect next">
+      <a href="/2019/02/27/skilltree/" id="post-next" class="post-nav-link">
+        <div class="tips">Next <i class="icon icon-angle-right icon-lg icon-pl"></i></div>
+        <h4 class="title">个人运维技能树</h4>
+      </a>
+    </div>
+  
+</nav>
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Valine Comments -->
+    <div class="comments vcomment" id="comments"></div>
+    <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+    <script src="//unpkg.com/valine@latest/dist/Valine.min.js"></script>
+    <!-- Valine Comments script -->
+    <script>
+        var GUEST_INFO = ['nick','mail','link'];
+        var guest_info = 'nick,mail,link'.split(',').filter(function(item){
+          return GUEST_INFO.indexOf(item) > -1
+        });
+        new Valine({
+            el: '#comments',
+            notify: 'true' == 'true',
+            verify: 'true' == 'true',
+            appId: "lHxnnDHJXDgMoFpCbdx8A4q7-gzGzoHsz",
+            appKey: "W8H2NuO8chyDlCEQzionLuuV",
+            avatar: "monsterid",
+            placeholder: "来都来了，说点啥子吧~🌹 (友情提醒，留下正确的邮箱地址可以第一时间获取评论反馈)",
+            guest_info: guest_info.length == 0 ? GUEST_INFO : guest_info,
+            pageSize: "10"
+        })
+    </script>
+    <!-- Valine Comments end -->
+
+
+
+
+
+
+
+</article>
+
+<div id="reward" class="page-modal reward-lay">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <h3 class="reward-title">
+        <i class="icon icon-quote-left"></i>
+        谢谢大爷~
+        <i class="icon icon-quote-right"></i>
+    </h3>
+    <div class="reward-content">
+        
+        <div class="reward-code">
+            <img id="rewardCode" src="/img/wechat.jpg" alt="打赏二维码">
+        </div>
+        
+        <label class="reward-toggle">
+            <input id="rewardToggle" type="checkbox" class="reward-toggle-check" data-wechat="/img/wechat.jpg" data-alipay="/img/alipay.jpg">
+            <div class="reward-toggle-ctrol">
+                <span class="reward-toggle-item wechat">微信</span>
+                <span class="reward-toggle-label"></span>
+                <span class="reward-toggle-item alipay">支付宝</span>
+            </div>
+        </label>
+        
+    </div>
+</div>
+
+
+
+</div>
+
+        <footer class="footer">
+    <div class="top">
+        
+
+        <p>
+            
+            <span>博客内容遵循 <a rel="license" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh">知识共享 署名 - 非商业性 - 相同方式共享 4.0 国际协议</a></span>
+        </p>
+    </div>
+    <div class="bottom">
+        <p><span>OutMan &copy; 2013 - 2019</span>
+            <span>
+                
+                <a href="http://www.miitbeian.gov.cn/" target="_blank">蜀ICP备007号-1</a><br>
+                
+                Power by <a href="http://hexo.io/" target="_blank">Hexo</a> Theme <a href="https://github.com/yscoder/hexo-theme-indigo" target="_blank">indigo</a>
+            </span>
+        </p>
+    </div>
+</footer>
+
+    </main>
+    <div class="mask" id="mask"></div>
+<a href="javascript:;" id="gotop" class="waves-effect waves-circle waves-light"><span class="icon icon-lg icon-chevron-up"></span></a>
+
+
+
+<div class="global-share" id="globalShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://blog.sctux.com/2019/03/19/Flask结合APScheduler实现定时任务框架平台/&title=《如何让添加定时作业任务变得更加优雅》 — 运维人&pic=https://blog.sctux.com/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://blog.sctux.com/2019/03/19/Flask结合APScheduler实现定时任务框架平台/&title=《如何让添加定时作业任务变得更加优雅》 — 运维人&source=😊" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.sctux.com/2019/03/19/Flask结合APScheduler实现定时任务框架平台/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《如何让添加定时作业任务变得更加优雅》 — 运维人&url=https://blog.sctux.com/2019/03/19/Flask结合APScheduler实现定时任务框架平台/&via=https://blog.sctux.com" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=https://blog.sctux.com/2019/03/19/Flask结合APScheduler实现定时任务框架平台/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+<div class="page-modal wx-share" id="wxShare">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <img src="//api.qrserver.com/v1/create-qr-code/?data=https://blog.sctux.com/2019/03/19/Flask结合APScheduler实现定时任务框架平台/" alt="微信分享二维码">
+</div>
+
+
+
+
+    <script src="//cdn.bootcss.com/node-waves/0.7.4/waves.min.js"></script>
+<script>
+var BLOG = { ROOT: '/', SHARE: true, REWARD: true };
+
+
+</script>
+
+<script src="/js/main.min.js?v=1.7.2"></script>
+
+
+<div class="search-panel" id="search-panel">
+    <ul class="search-result" id="search-result"></ul>
+</div>
+<template id="search-tpl">
+<li class="item">
+    <a href="{path}" class="waves-block waves-effect">
+        <div class="title ellipsis" title="{title}">{title}</div>
+        <div class="flex-row flex-middle">
+            <div class="tags ellipsis">
+                {tags}
+            </div>
+            <time class="flex-col time">{date}</time>
+        </div>
+    </a>
+</li>
+</template>
+
+<script src="/js/search.min.js?v=1.7.2" async></script>
+
+
+
+
+
+
+
+
+<script>
+(function() {
+    var OriginTitile = document.title, titleTime;
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            document.title = '老弟，死哪儿去啦~！';
+            clearTimeout(titleTime);
+        } else {
+            document.title = '(つェ⊂)咦!老弟来啦!';
+            titleTime = setTimeout(function() {
+                document.title = OriginTitile;
+            },2000);
+        }
+    });
+})();
+</script>
+
+
+
+</body>
+</html>

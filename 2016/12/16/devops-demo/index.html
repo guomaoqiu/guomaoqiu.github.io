@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.8.0">
+    
+
+    
+
+    
+
+
+
+    <meta charset="utf-8">
+    
+    
+    
+    
+    <title>&#34;Devops&#34; Demo(如果文中图片显示不完整，请多次刷新) | 运维人 | Devops、Linux、Kubernetes、Docker、Flask、Python、Shell</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    
+    <meta name="theme-color" content="#3F51B5">
+    
+    
+    <meta name="keywords" content="自动化运维">
+    <meta name="description" content="今年断断续续在工作之余学习了一下 Python Web框架,下面简要说下学的东西主要有以下几个： Flask(包括各个子系统组件) + Bootstrap主要是第一个接触的就是Flask这个框架,期初给我的感觉就是开发起来非常的快捷、方便,各个子系统也有单独的学习资料,所以从一开始我也就一直断断续续的在折腾；Bootstrap DiaoBao了. SaltStack API(netapi/rest">
+<meta name="keywords" content="自动化运维">
+<meta property="og:type" content="article">
+<meta property="og:title" content="&quot;Devops&quot; Demo(如果文中图片显示不完整，请多次刷新)">
+<meta property="og:url" content="https://blog.sctux.com/2016/12/16/devops-demo/index.html">
+<meta property="og:site_name" content="运维人">
+<meta property="og:description" content="今年断断续续在工作之余学习了一下 Python Web框架,下面简要说下学的东西主要有以下几个： Flask(包括各个子系统组件) + Bootstrap主要是第一个接触的就是Flask这个框架,期初给我的感觉就是开发起来非常的快捷、方便,各个子系统也有单独的学习资料,所以从一开始我也就一直断断续续的在折腾；Bootstrap DiaoBao了. SaltStack API(netapi/rest">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2016/12/14818093599191.jpg">
+<meta property="og:image" content="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2016/12/14818078774983.jpg">
+<meta property="og:image" content="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2016/12/14818079617121.jpg">
+<meta property="og:image" content="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2016/12/14818560611617.jpg">
+<meta property="og:image" content="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2016/12/14818081121387.jpg">
+<meta property="og:image" content="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2016/12/14818082338278.jpg">
+<meta property="og:image" content="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2016/12/14818090897130.jpg">
+<meta property="og:image" content="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2016/12/14818092530495.jpg">
+<meta property="og:image" content="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2016/12/14818127314229.jpg">
+<meta property="og:updated_time" content="2018-12-19T14:39:54.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="&quot;Devops&quot; Demo(如果文中图片显示不完整，请多次刷新)">
+<meta name="twitter:description" content="今年断断续续在工作之余学习了一下 Python Web框架,下面简要说下学的东西主要有以下几个： Flask(包括各个子系统组件) + Bootstrap主要是第一个接触的就是Flask这个框架,期初给我的感觉就是开发起来非常的快捷、方便,各个子系统也有单独的学习资料,所以从一开始我也就一直断断续续的在折腾；Bootstrap DiaoBao了. SaltStack API(netapi/rest">
+<meta name="twitter:image" content="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2016/12/14818093599191.jpg">
+    
+    <link rel="shortcut icon" href="/favicon.ico">
+    <link rel="stylesheet" href="/css/style.css?v=1.7.2">
+    <script>window.lazyScripts=[]</script>
+
+    <!-- custom head -->
+    
+
+</head>
+
+<body>
+    <div id="loading" class="active"></div>
+
+    <aside id="menu">
+  <div class="inner flex-row-vertical">
+    <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menu-off">
+        <i class="icon icon-lg icon-close"></i>
+    </a>
+    <div class="brand-wrap" style="background-image:url(/img/brand.jpg)">
+      <div class="brand">
+        <a href="/" class="avatar waves-effect waves-circle waves-light">
+          <img src="/img/avatar.jpg">
+        </a>
+        <hgroup class="introduce">
+          <h5 class="nickname">OutMan</h5>
+          <a href="mailto:2399447849@qq.com" title="2399447849@qq.com" class="mail">2399447849@qq.com</a>
+        </hgroup>
+      </div>
+    </div>
+    <div class="scroll-wrap flex-col">
+      <ul class="nav">
+        
+            <li class="waves-block waves-effect">
+              <a href="/">
+                <i class="icon icon-lg icon-home"></i>
+                主页
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/archives">
+                <i class="icon icon-lg icon-archives"></i>
+                归档
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/tags">
+                <i class="icon icon-lg icon-tags"></i>
+                标签
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/categories">
+                <i class="icon icon-lg icon-th-list"></i>
+                分类
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://github.com/guomaoqiu" target="_blank">
+                <i class="icon icon-lg icon-github"></i>
+                Github
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/works">
+                <i class="icon icon-lg icon-hand-peace-o"></i>
+                作品
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="http://demo.sctux.com" target="_blank">
+                <i class="icon icon-lg icon-link"></i>
+                DevOpsPlatform
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="http://resume.sctux.com/" target="_blank">
+                <i class="icon icon-lg icon-heart"></i>
+                我的简历
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/about">
+                <i class="icon icon-lg icon-user"></i>
+                关于我
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://blog.sctux.com/2019/02/27/skilltree/Skilltree.jpg" target="_blank">
+                <i class="icon icon-lg icon-tree"></i>
+                我的技能树
+              </a>
+            </li>
+        
+      </ul>
+    </div>
+  </div>
+</aside>
+
+    <main id="main">
+        <header class="top-header" id="header">
+    <div class="flex-row">
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light on" id="menu-toggle">
+          <i class="icon icon-lg icon-navicon"></i>
+        </a>
+        <div class="flex-col header-title ellipsis">&#34;Devops&#34; Demo(如果文中图片显示不完整，请多次刷新)</div>
+        
+        <div class="search-wrap" id="search-wrap">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="back">
+                <i class="icon icon-lg icon-chevron-left"></i>
+            </a>
+            <input type="text" id="key" class="search-input" autocomplete="off" placeholder="输入感兴趣的关键字">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="search">
+                <i class="icon icon-lg icon-search"></i>
+            </a>
+        </div>
+        
+        
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menuShare">
+            <i class="icon icon-lg icon-share-alt"></i>
+        </a>
+        
+    </div>
+</header>
+<header class="content-header post-header">
+
+    <div class="container fade-scale">
+        <h1 class="title">&#34;Devops&#34; Demo(如果文中图片显示不完整，请多次刷新)</h1>
+        <h5 class="subtitle">
+            
+                <time datetime="2016-12-15T23:45:49.000Z" itemprop="datePublished" class="page-time">
+  2016-12-16
+</time>
+
+
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/自动化运维/">自动化运维</a></li></ul>
+
+            
+        </h5>
+    </div>
+
+    
+
+
+</header>
+
+
+<div class="container body-wrap">
+    
+    <aside class="post-widget">
+        <nav class="post-toc-wrap post-toc-shrink" id="post-toc">
+            <h4>TOC</h4>
+            <ol class="post-toc"><li class="post-toc-item post-toc-level-4"><a class="post-toc-link" href="#今年断断续续在工作之余学习了一下-Python-Web框架-下面简要说下学的东西主要有以下几个："><span class="post-toc-number">1.</span> <span class="post-toc-text">今年断断续续在工作之余学习了一下 Python Web框架,下面简要说下学的东西主要有以下几个：</span></a></li><li class="post-toc-item post-toc-level-4"><a class="post-toc-link" href="#Flask-包括各个子系统组件-Bootstrap"><span class="post-toc-number">2.</span> <span class="post-toc-text">Flask(包括各个子系统组件) + Bootstrap</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-5"><a class="post-toc-link" href="#主要是第一个接触的就是Flask这个框架-期初给我的感觉就是开发起来非常的快捷、方便-各个子系统也有单独的学习资料-所以从一开始我也就一直断断续续的在折腾；"><span class="post-toc-number">2.1.</span> <span class="post-toc-text">主要是第一个接触的就是Flask这个框架,期初给我的感觉就是开发起来非常的快捷、方便,各个子系统也有单独的学习资料,所以从一开始我也就一直断断续续的在折腾；</span></a></li><li class="post-toc-item post-toc-level-5"><a class="post-toc-link" href="#Bootstrap-DiaoBao了"><span class="post-toc-number">2.2.</span> <span class="post-toc-text">Bootstrap DiaoBao了.</span></a></li></ol></li><li class="post-toc-item post-toc-level-4"><a class="post-toc-link" href="#SaltStack-API-netapi-rest-cherrypy"><span class="post-toc-number">3.</span> <span class="post-toc-text">SaltStack API(netapi/rest_cherrypy)</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-5"><a class="post-toc-link" href="#这个就不用说了吧，运维人都知道；"><span class="post-toc-number">3.1.</span> <span class="post-toc-text">这个就不用说了吧，运维人都知道；</span></a></li><li class="post-toc-item post-toc-level-5"><a class="post-toc-link" href="#在掌握了SaltStack在命令行的用法之后就需要去学习、探索更多更便利的方法来实现我们想要的效果；"><span class="post-toc-number">3.2.</span> <span class="post-toc-text">在掌握了SaltStack在命令行的用法之后就需要去学习、探索更多更便利的方法来实现我们想要的效果；</span></a></li></ol></li><li class="post-toc-item post-toc-level-4"><a class="post-toc-link" href="#Zabbix-API"><span class="post-toc-number">4.</span> <span class="post-toc-text">Zabbix API</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-5"><a class="post-toc-link" href="#监控利器-zabbix-更不用说了。"><span class="post-toc-number">4.1.</span> <span class="post-toc-text">监控利器 zabbix, 更不用说了。</span></a></li><li class="post-toc-item post-toc-level-5"><a class="post-toc-link" href="#由于工作上的所需-增减服务器是常有的事-那怎么快速的去添加-删除主机呢-当然就要让接口帮忙去处理啦；"><span class="post-toc-number">4.2.</span> <span class="post-toc-text">由于工作上的所需,增减服务器是常有的事,那怎么快速的去添加/删除主机呢,当然就要让接口帮忙去处理啦；</span></a></li></ol></li><li class="post-toc-item post-toc-level-4"><a class="post-toc-link" href="#下面是demo的雏形："><span class="post-toc-number">5.</span> <span class="post-toc-text">下面是demo的雏形：</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-5"><a class="post-toc-link" href="#登录系统使用的是Flask自带的Flask-Login组件，验证码用的是Google的ReCAPTCHA-当然这个在Flask表单中已"><span class="post-toc-number">5.1.</span> <span class="post-toc-text">登录系统使用的是Flask自带的Flask-Login组件，验证码用的是Google的ReCAPTCHA,当然这个在Flask表单中已</span></a></li><li class="post-toc-item post-toc-level-5"><a class="post-toc-link" href="#SaltStack-命令执行-调用的是SaltApi-这里需要手动填写主机名-是个需要优化的地方-￼"><span class="post-toc-number">5.2.</span> <span class="post-toc-text">SaltStack 命令执行,调用的是SaltApi,这里需要手动填写主机名,是个需要优化的地方.
+                
+                    
+                    
+                
+                
+            ￼</span></a></li><li class="post-toc-item post-toc-level-5"><a class="post-toc-link" href="#当然有了这个执行命令-哥子就要做坏事了-这怎么行-那就把一些危险的命令添加到block-list当中-避免误操作"><span class="post-toc-number">5.3.</span> <span class="post-toc-text">当然有了这个执行命令,哥子就要做坏事了,这怎么行!那就把一些危险的命令添加到block_list当中,避免误操作.</span></a></li><li class="post-toc-item post-toc-level-5"><a class="post-toc-link" href="#⊙o⊙-…-这个做的不是太美观；数据是从数据库查询出来的-而这些服务器的”静态”数据都是通过SaltStack的grains获取到的-看到旁边那个Collet按钮了么-那个的功能就是一键获取各个minion的grains然后导入到数据库中，每当有新的minion加入时只要在此点击Collet-Salt就会马不停蹄的到新minion端拉取相关信息-然后写入数据库-删除按钮的作用是从数据库当中删除此条记录-￼"><span class="post-toc-number">5.4.</span> <span class="post-toc-text">(⊙o⊙)… 这个做的不是太美观；数据是从数据库查询出来的;而这些服务器的”静态”数据都是通过SaltStack的grains获取到的,看到旁边那个Collet按钮了么;那个的功能就是一键获取各个minion的grains然后导入到数据库中，每当有新的minion加入时只要在此点击Collet Salt就会马不停蹄的到新minion端拉取相关信息,然后写入数据库, 删除按钮的作用是从数据库当中删除此条记录.
+                
+                    
+                    
+                
+                
+            ￼</span></a></li><li class="post-toc-item post-toc-level-5"><a class="post-toc-link" href="#点击上图的详细就可以看到关于这台主机的详细状态了-Status这个是实时抓取的当前这台主机的当前状态-而下面的两张监控图形则是调用了Grafana"><span class="post-toc-number">5.5.</span> <span class="post-toc-text">点击上图的详细就可以看到关于这台主机的详细状态了,Status这个是实时抓取的当前这台主机的当前状态,而下面的两张监控图形则是调用了Grafana.</span></a></li><li class="post-toc-item post-toc-level-5"><a class="post-toc-link" href="#本想自己画图的-但是没太多的时间去研究前端方面的东西-况且图形化的东西也蛮多了-就比如zabbix里面的监控图不美观的话加上grafana渲染；再次就是ELK里面的图形-本想去调用ELK-API的-发现结合到这里也没啥卵用-要看图直接访问Kibana就行了；"><span class="post-toc-number">5.6.</span> <span class="post-toc-text">本想自己画图的,但是没太多的时间去研究前端方面的东西,况且图形化的东西也蛮多了,就比如zabbix里面的监控图不美观的话加上grafana渲染；再次就是ELK里面的图形,本想去调用ELK API的,发现结合到这里也没啥卵用,要看图直接访问Kibana就行了；</span></a></li><li class="post-toc-item post-toc-level-5"><a class="post-toc-link" href="#下面两张是关于ZabbixAPI的操作-添加服务器是通过上传一个固定格式的-xls格式文件-然后台去解析文件内容-调用API进行主机的添加-删除主机也同样调用API操作实现-￼"><span class="post-toc-number">5.7.</span> <span class="post-toc-text">下面两张是关于ZabbixAPI的操作,添加服务器是通过上传一个固定格式的.xls格式文件,然后台去解析文件内容,调用API进行主机的添加,删除主机也同样调用API操作实现.
+                
+                    
+                    
+                
+                
+            ￼</span></a></li><li class="post-toc-item post-toc-level-5"><a class="post-toc-link" href="#差不多实现的就是上面这些-其他功能还在继续学习、研究中…"><span class="post-toc-number">5.8.</span> <span class="post-toc-text">差不多实现的就是上面这些,其他功能还在继续学习、研究中…</span></a></li><li class="post-toc-item post-toc-level-5"><a class="post-toc-link" href="#望各路大神勿喷-希望能得到各位大神的建议-谢谢。"><span class="post-toc-number">5.9.</span> <span class="post-toc-text">望各路大神勿喷,希望能得到各位大神的建议,谢谢。</span></a></li></ol></li></ol>
+        </nav>
+    </aside>
+
+
+<article id="post-devops-demo" class="post-article article-type-post fade" itemprop="blogPost">
+
+    <div class="post-card">
+        <h1 class="post-card-title">"Devops" Demo(如果文中图片显示不完整，请多次刷新)</h1>
+        <div class="post-meta">
+            <time class="post-time" title="2016-12-16 07:45:49" datetime="2016-12-15T23:45:49.000Z" itemprop="datePublished">2016-12-16</time>
+
+            
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/自动化运维/">自动化运维</a></li></ul>
+
+
+
+            
+
+        </div>
+        <div class="post-content" id="post-content" itemprop="postContent">
+            <h4 id="今年断断续续在工作之余学习了一下-Python-Web框架-下面简要说下学的东西主要有以下几个："><a href="#今年断断续续在工作之余学习了一下-Python-Web框架-下面简要说下学的东西主要有以下几个：" class="headerlink" title="今年断断续续在工作之余学习了一下 Python Web框架,下面简要说下学的东西主要有以下几个："></a>今年断断续续在工作之余学习了一下 Python Web框架,下面简要说下学的东西主要有以下几个：</h4><ul>
+<li><h4 id="Flask-包括各个子系统组件-Bootstrap"><a href="#Flask-包括各个子系统组件-Bootstrap" class="headerlink" title="Flask(包括各个子系统组件) + Bootstrap"></a>Flask(包括各个子系统组件) + Bootstrap</h4><h5 id="主要是第一个接触的就是Flask这个框架-期初给我的感觉就是开发起来非常的快捷、方便-各个子系统也有单独的学习资料-所以从一开始我也就一直断断续续的在折腾；"><a href="#主要是第一个接触的就是Flask这个框架-期初给我的感觉就是开发起来非常的快捷、方便-各个子系统也有单独的学习资料-所以从一开始我也就一直断断续续的在折腾；" class="headerlink" title="主要是第一个接触的就是Flask这个框架,期初给我的感觉就是开发起来非常的快捷、方便,各个子系统也有单独的学习资料,所以从一开始我也就一直断断续续的在折腾；"></a>主要是第一个接触的就是Flask这个框架,期初给我的感觉就是开发起来非常的快捷、方便,各个子系统也有单独的学习资料,所以从一开始我也就一直断断续续的在折腾；</h5><h5 id="Bootstrap-DiaoBao了"><a href="#Bootstrap-DiaoBao了" class="headerlink" title="Bootstrap DiaoBao了."></a>Bootstrap DiaoBao了.</h5></li>
+<li><h4 id="SaltStack-API-netapi-rest-cherrypy"><a href="#SaltStack-API-netapi-rest-cherrypy" class="headerlink" title="SaltStack API(netapi/rest_cherrypy)"></a>SaltStack API(netapi/rest_cherrypy)</h4><h5 id="这个就不用说了吧，运维人都知道；"><a href="#这个就不用说了吧，运维人都知道；" class="headerlink" title="这个就不用说了吧，运维人都知道；"></a>这个就不用说了吧，运维人都知道；</h5><h5 id="在掌握了SaltStack在命令行的用法之后就需要去学习、探索更多更便利的方法来实现我们想要的效果；"><a href="#在掌握了SaltStack在命令行的用法之后就需要去学习、探索更多更便利的方法来实现我们想要的效果；" class="headerlink" title="在掌握了SaltStack在命令行的用法之后就需要去学习、探索更多更便利的方法来实现我们想要的效果；"></a>在掌握了SaltStack在命令行的用法之后就需要去学习、探索更多更便利的方法来实现我们想要的效果；</h5></li>
+<li><h4 id="Zabbix-API"><a href="#Zabbix-API" class="headerlink" title="Zabbix API"></a>Zabbix API</h4><h5 id="监控利器-zabbix-更不用说了。"><a href="#监控利器-zabbix-更不用说了。" class="headerlink" title="监控利器 zabbix, 更不用说了。"></a>监控利器 zabbix, 更不用说了。</h5><h5 id="由于工作上的所需-增减服务器是常有的事-那怎么快速的去添加-删除主机呢-当然就要让接口帮忙去处理啦；"><a href="#由于工作上的所需-增减服务器是常有的事-那怎么快速的去添加-删除主机呢-当然就要让接口帮忙去处理啦；" class="headerlink" title="由于工作上的所需,增减服务器是常有的事,那怎么快速的去添加/删除主机呢,当然就要让接口帮忙去处理啦；"></a>由于工作上的所需,增减服务器是常有的事,那怎么快速的去添加/删除主机呢,当然就要让接口帮忙去处理啦；</h5></li>
+</ul>
+<h4 id="下面是demo的雏形："><a href="#下面是demo的雏形：" class="headerlink" title="下面是demo的雏形："></a>下面是demo的雏形：</h4><h5 id="登录系统使用的是Flask自带的Flask-Login组件，验证码用的是Google的ReCAPTCHA-当然这个在Flask表单中已"><a href="#登录系统使用的是Flask自带的Flask-Login组件，验证码用的是Google的ReCAPTCHA-当然这个在Flask表单中已" class="headerlink" title="登录系统使用的是Flask自带的Flask-Login组件，验证码用的是Google的ReCAPTCHA,当然这个在Flask表单中已"></a>登录系统使用的是Flask自带的Flask-Login组件，验证码用的是Google的ReCAPTCHA,当然这个在Flask表单中已</h5><p>经集成了； <figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2016/12/14818093599191.jpg" alt="" title="">
+                </div>
+                <div class="image-caption"></div>
+            </figure>￼</p>
+<h5 id="SaltStack-命令执行-调用的是SaltApi-这里需要手动填写主机名-是个需要优化的地方-￼"><a href="#SaltStack-命令执行-调用的是SaltApi-这里需要手动填写主机名-是个需要优化的地方-￼" class="headerlink" title="SaltStack 命令执行,调用的是SaltApi,这里需要手动填写主机名,是个需要优化的地方.￼"></a>SaltStack 命令执行,调用的是SaltApi,这里需要手动填写主机名,是个需要优化的地方.<figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2016/12/14818078774983.jpg" alt="" title="">
+                </div>
+                <div class="image-caption"></div>
+            </figure>￼</h5><p><figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2016/12/14818079617121.jpg" alt="" title="">
+                </div>
+                <div class="image-caption"></div>
+            </figure>￼</p>
+<h5 id="当然有了这个执行命令-哥子就要做坏事了-这怎么行-那就把一些危险的命令添加到block-list当中-避免误操作"><a href="#当然有了这个执行命令-哥子就要做坏事了-这怎么行-那就把一些危险的命令添加到block-list当中-避免误操作" class="headerlink" title="当然有了这个执行命令,哥子就要做坏事了,这怎么行!那就把一些危险的命令添加到block_list当中,避免误操作."></a>当然有了这个执行命令,哥子就要做坏事了,这怎么行!那就把一些危险的命令添加到block_list当中,避免误操作.</h5><p><figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2016/12/14818560611617.jpg" alt="" title="">
+                </div>
+                <div class="image-caption"></div>
+            </figure>￼</p>
+<h5 id="⊙o⊙-…-这个做的不是太美观；数据是从数据库查询出来的-而这些服务器的”静态”数据都是通过SaltStack的grains获取到的-看到旁边那个Collet按钮了么-那个的功能就是一键获取各个minion的grains然后导入到数据库中，每当有新的minion加入时只要在此点击Collet-Salt就会马不停蹄的到新minion端拉取相关信息-然后写入数据库-删除按钮的作用是从数据库当中删除此条记录-￼"><a href="#⊙o⊙-…-这个做的不是太美观；数据是从数据库查询出来的-而这些服务器的”静态”数据都是通过SaltStack的grains获取到的-看到旁边那个Collet按钮了么-那个的功能就是一键获取各个minion的grains然后导入到数据库中，每当有新的minion加入时只要在此点击Collet-Salt就会马不停蹄的到新minion端拉取相关信息-然后写入数据库-删除按钮的作用是从数据库当中删除此条记录-￼" class="headerlink" title="(⊙o⊙)… 这个做的不是太美观；数据是从数据库查询出来的;而这些服务器的”静态”数据都是通过SaltStack的grains获取到的,看到旁边那个Collet按钮了么;那个的功能就是一键获取各个minion的grains然后导入到数据库中，每当有新的minion加入时只要在此点击Collet Salt就会马不停蹄的到新minion端拉取相关信息,然后写入数据库, 删除按钮的作用是从数据库当中删除此条记录.￼"></a>(⊙o⊙)… 这个做的不是太美观；数据是从数据库查询出来的;而这些服务器的”静态”数据都是通过SaltStack的grains获取到的,看到旁边那个<code>Collet</code>按钮了么;那个的功能就是一键获取各个minion的grains然后导入到数据库中，每当有新的minion加入时只要在此点击<code>Collet</code> Salt就会马不停蹄的到新minion端拉取相关信息,然后写入数据库, <code>删除</code>按钮的作用是从数据库当中删除此条记录.<figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2016/12/14818081121387.jpg" alt="" title="">
+                </div>
+                <div class="image-caption"></div>
+            </figure>￼</h5><h5 id="点击上图的详细就可以看到关于这台主机的详细状态了-Status这个是实时抓取的当前这台主机的当前状态-而下面的两张监控图形则是调用了Grafana"><a href="#点击上图的详细就可以看到关于这台主机的详细状态了-Status这个是实时抓取的当前这台主机的当前状态-而下面的两张监控图形则是调用了Grafana" class="headerlink" title="点击上图的详细就可以看到关于这台主机的详细状态了,Status这个是实时抓取的当前这台主机的当前状态,而下面的两张监控图形则是调用了Grafana."></a>点击上图的<code>详细</code>就可以看到关于这台主机的详细状态了,Status这个是实时抓取的当前这台主机的当前状态,而下面的两张监控图形则是调用了Grafana.</h5><h5 id="本想自己画图的-但是没太多的时间去研究前端方面的东西-况且图形化的东西也蛮多了-就比如zabbix里面的监控图不美观的话加上grafana渲染；再次就是ELK里面的图形-本想去调用ELK-API的-发现结合到这里也没啥卵用-要看图直接访问Kibana就行了；"><a href="#本想自己画图的-但是没太多的时间去研究前端方面的东西-况且图形化的东西也蛮多了-就比如zabbix里面的监控图不美观的话加上grafana渲染；再次就是ELK里面的图形-本想去调用ELK-API的-发现结合到这里也没啥卵用-要看图直接访问Kibana就行了；" class="headerlink" title="本想自己画图的,但是没太多的时间去研究前端方面的东西,况且图形化的东西也蛮多了,就比如zabbix里面的监控图不美观的话加上grafana渲染；再次就是ELK里面的图形,本想去调用ELK API的,发现结合到这里也没啥卵用,要看图直接访问Kibana就行了；"></a>本想自己画图的,但是没太多的时间去研究前端方面的东西,况且图形化的东西也蛮多了,就比如zabbix里面的监控图不美观的话加上grafana渲染；再次就是ELK里面的图形,本想去调用ELK API的,发现结合到这里也没啥卵用,要看图直接访问Kibana就行了；</h5><p><figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2016/12/14818082338278.jpg" alt="" title="">
+                </div>
+                <div class="image-caption"></div>
+            </figure>￼</p>
+<h5 id="下面两张是关于ZabbixAPI的操作-添加服务器是通过上传一个固定格式的-xls格式文件-然后台去解析文件内容-调用API进行主机的添加-删除主机也同样调用API操作实现-￼"><a href="#下面两张是关于ZabbixAPI的操作-添加服务器是通过上传一个固定格式的-xls格式文件-然后台去解析文件内容-调用API进行主机的添加-删除主机也同样调用API操作实现-￼" class="headerlink" title="下面两张是关于ZabbixAPI的操作,添加服务器是通过上传一个固定格式的.xls格式文件,然后台去解析文件内容,调用API进行主机的添加,删除主机也同样调用API操作实现.￼"></a>下面两张是关于ZabbixAPI的操作,添加服务器是通过上传一个固定格式的.xls格式文件,然后台去解析文件内容,调用API进行主机的添加,删除主机也同样调用API操作实现.<figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2016/12/14818090897130.jpg" alt="" title="">
+                </div>
+                <div class="image-caption"></div>
+            </figure>￼</h5><p><figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2016/12/14818092530495.jpg" alt="" title="">
+                </div>
+                <div class="image-caption"></div>
+            </figure>￼</p>
+<h5 id="差不多实现的就是上面这些-其他功能还在继续学习、研究中…"><a href="#差不多实现的就是上面这些-其他功能还在继续学习、研究中…" class="headerlink" title="差不多实现的就是上面这些,其他功能还在继续学习、研究中…"></a>差不多实现的就是上面这些,其他功能还在继续学习、研究中…</h5><h5 id="望各路大神勿喷-希望能得到各位大神的建议-谢谢。"><a href="#望各路大神勿喷-希望能得到各位大神的建议-谢谢。" class="headerlink" title="望各路大神勿喷,希望能得到各位大神的建议,谢谢。"></a>望各路大神勿喷,希望能得到各位大神的建议,谢谢。</h5><p><figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2016/12/14818127314229.jpg" alt="" title="">
+                </div>
+                <div class="image-caption"></div>
+            </figure>￼</p>
+
+        </div>
+
+        <blockquote class="post-copyright">
+    
+    <div class="content">
+        
+<span class="post-time">
+    最后更新时间：<time datetime="2018-12-19T14:39:54.000Z" itemprop="dateUpdated">2018-12-19 22:39:54</time>
+</span><br>
+
+
+        
+        该文链接：<a href="/2016/12/16/devops-demo/" target="_blank" rel="external">https://blog.sctux.com/2016/12/16/devops-demo/</a>
+        
+    </div>
+    
+    <footer>
+        <a href="https://blog.sctux.com">
+            <img src="/img/avatar.jpg" alt="OutMan">
+            OutMan
+        </a>
+    </footer>
+</blockquote>
+
+        
+<div class="page-reward">
+    <a id="rewardBtn" href="javascript:;" class="page-reward-btn waves-effect waves-circle waves-light">赏</a>
+</div>
+
+
+
+        <div class="post-footer">
+            
+	<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/自动化运维/">自动化运维</a></li></ul>
+
+
+            
+<div class="page-share-wrap">
+    
+
+<div class="page-share" id="pageShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://blog.sctux.com/2016/12/16/devops-demo/&title=《" devops"="" demo(如果文中图片显示不完整，请多次刷新)》="" —="" 运维人&pic="https://blog.sctux.com/img/avatar.jpg" "="" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://blog.sctux.com/2016/12/16/devops-demo/&title=《" devops"="" demo(如果文中图片显示不完整，请多次刷新)》="" —="" 运维人&source="😊" "="" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.sctux.com/2016/12/16/devops-demo/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《" devops"="" demo(如果文中图片显示不完整，请多次刷新)》="" —="" 运维人&url="https://blog.sctux.com/2016/12/16/devops-demo/&via=https://blog.sctux.com" "="" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=https://blog.sctux.com/2016/12/16/devops-demo/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+
+    <a href="javascript:;" id="shareFab" class="page-share-fab waves-effect waves-circle">
+        <i class="icon icon-share-alt icon-lg"></i>
+    </a>
+</div>
+
+
+
+        </div>
+    </div>
+
+    
+<nav class="post-nav flex-row flex-justify-between">
+  
+    <div class="waves-block waves-effect prev">
+      <a href="/2017/02/21/how-to-install-gateonewebssh/" id="post-prev" class="post-nav-link">
+        <div class="tips"><i class="icon icon-angle-left icon-lg icon-pr"></i> Prev</div>
+        <h4 class="title">How to Install Gateone(WebSSH)</h4>
+      </a>
+    </div>
+  
+
+  
+    <div class="waves-block waves-effect next">
+      <a href="/2016/08/05/docker-zhigitlabce/" id="post-next" class="post-nav-link">
+        <div class="tips">Next <i class="icon icon-angle-right icon-lg icon-pl"></i></div>
+        <h4 class="title">Docker之gitlab-Ce</h4>
+      </a>
+    </div>
+  
+</nav>
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Valine Comments -->
+    <div class="comments vcomment" id="comments"></div>
+    <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+    <script src="//unpkg.com/valine@latest/dist/Valine.min.js"></script>
+    <!-- Valine Comments script -->
+    <script>
+        var GUEST_INFO = ['nick','mail','link'];
+        var guest_info = 'nick,mail,link'.split(',').filter(function(item){
+          return GUEST_INFO.indexOf(item) > -1
+        });
+        new Valine({
+            el: '#comments',
+            notify: 'true' == 'true',
+            verify: 'true' == 'true',
+            appId: "lHxnnDHJXDgMoFpCbdx8A4q7-gzGzoHsz",
+            appKey: "W8H2NuO8chyDlCEQzionLuuV",
+            avatar: "monsterid",
+            placeholder: "来都来了，说点啥子吧~🌹 (友情提醒，留下正确的邮箱地址可以第一时间获取评论反馈)",
+            guest_info: guest_info.length == 0 ? GUEST_INFO : guest_info,
+            pageSize: "10"
+        })
+    </script>
+    <!-- Valine Comments end -->
+
+
+
+
+
+
+
+</article>
+
+<div id="reward" class="page-modal reward-lay">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <h3 class="reward-title">
+        <i class="icon icon-quote-left"></i>
+        谢谢大爷~
+        <i class="icon icon-quote-right"></i>
+    </h3>
+    <div class="reward-content">
+        
+        <div class="reward-code">
+            <img id="rewardCode" src="/img/wechat.jpg" alt="打赏二维码">
+        </div>
+        
+        <label class="reward-toggle">
+            <input id="rewardToggle" type="checkbox" class="reward-toggle-check" data-wechat="/img/wechat.jpg" data-alipay="/img/alipay.jpg">
+            <div class="reward-toggle-ctrol">
+                <span class="reward-toggle-item wechat">微信</span>
+                <span class="reward-toggle-label"></span>
+                <span class="reward-toggle-item alipay">支付宝</span>
+            </div>
+        </label>
+        
+    </div>
+</div>
+
+
+
+</div>
+
+        <footer class="footer">
+    <div class="top">
+        
+
+        <p>
+            
+            <span>博客内容遵循 <a rel="license" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh">知识共享 署名 - 非商业性 - 相同方式共享 4.0 国际协议</a></span>
+        </p>
+    </div>
+    <div class="bottom">
+        <p><span>OutMan &copy; 2013 - 2019</span>
+            <span>
+                
+                <a href="http://www.miitbeian.gov.cn/" target="_blank">蜀ICP备007号-1</a><br>
+                
+                Power by <a href="http://hexo.io/" target="_blank">Hexo</a> Theme <a href="https://github.com/yscoder/hexo-theme-indigo" target="_blank">indigo</a>
+            </span>
+        </p>
+    </div>
+</footer>
+
+    </main>
+    <div class="mask" id="mask"></div>
+<a href="javascript:;" id="gotop" class="waves-effect waves-circle waves-light"><span class="icon icon-lg icon-chevron-up"></span></a>
+
+
+
+<div class="global-share" id="globalShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://blog.sctux.com/2016/12/16/devops-demo/&title=《" devops"="" demo(如果文中图片显示不完整，请多次刷新)》="" —="" 运维人&pic="https://blog.sctux.com/img/avatar.jpg" "="" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://blog.sctux.com/2016/12/16/devops-demo/&title=《" devops"="" demo(如果文中图片显示不完整，请多次刷新)》="" —="" 运维人&source="😊" "="" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.sctux.com/2016/12/16/devops-demo/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《" devops"="" demo(如果文中图片显示不完整，请多次刷新)》="" —="" 运维人&url="https://blog.sctux.com/2016/12/16/devops-demo/&via=https://blog.sctux.com" "="" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=https://blog.sctux.com/2016/12/16/devops-demo/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+<div class="page-modal wx-share" id="wxShare">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <img src="//api.qrserver.com/v1/create-qr-code/?data=https://blog.sctux.com/2016/12/16/devops-demo/" alt="微信分享二维码">
+</div>
+
+
+
+
+    <script src="//cdn.bootcss.com/node-waves/0.7.4/waves.min.js"></script>
+<script>
+var BLOG = { ROOT: '/', SHARE: true, REWARD: true };
+
+
+</script>
+
+<script src="/js/main.min.js?v=1.7.2"></script>
+
+
+<div class="search-panel" id="search-panel">
+    <ul class="search-result" id="search-result"></ul>
+</div>
+<template id="search-tpl">
+<li class="item">
+    <a href="{path}" class="waves-block waves-effect">
+        <div class="title ellipsis" title="{title}">{title}</div>
+        <div class="flex-row flex-middle">
+            <div class="tags ellipsis">
+                {tags}
+            </div>
+            <time class="flex-col time">{date}</time>
+        </div>
+    </a>
+</li>
+</template>
+
+<script src="/js/search.min.js?v=1.7.2" async></script>
+
+
+
+
+
+
+
+
+<script>
+(function() {
+    var OriginTitile = document.title, titleTime;
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            document.title = '老弟，死哪儿去啦~！';
+            clearTimeout(titleTime);
+        } else {
+            document.title = '(つェ⊂)咦!老弟来啦!';
+            titleTime = setTimeout(function() {
+                document.title = OriginTitile;
+            },2000);
+        }
+    });
+})();
+</script>
+
+
+
+</body>
+</html>

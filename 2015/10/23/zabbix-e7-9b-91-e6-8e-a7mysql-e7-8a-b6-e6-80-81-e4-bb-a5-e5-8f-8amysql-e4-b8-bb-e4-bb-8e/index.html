@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.8.0">
+    
+
+    
+
+    
+
+
+
+    <meta charset="utf-8">
+    
+    
+    
+    
+    <title>Zabbix 监控Mysql状态以及mysql主从 | 运维人 | Devops、Linux、Kubernetes、Docker、Flask、Python、Shell</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    
+    <meta name="theme-color" content="#3F51B5">
+    
+    
+    <meta name="keywords" content="zabbix,grafana">
+    <meta name="description" content="一，利用zabbix自带模板监控mysql状态： 1，在从的mysql服务器上面创建一个用于zabbix监控的用户 grant replication client on . to zabbix@’localhost’  IDENTIFIED BY ‘PASSWORD’; 2，根据zabbix监控mysql的key改写脚本 #/bin/bashDEF=”–defaults-file=/etc/za">
+<meta name="keywords" content="zabbix,grafana">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Zabbix 监控Mysql状态以及mysql主从">
+<meta property="og:url" content="https://blog.sctux.com/2015/10/23/zabbix-e7-9b-91-e6-8e-a7mysql-e7-8a-b6-e6-80-81-e4-bb-a5-e5-8f-8amysql-e4-b8-bb-e4-bb-8e/index.html">
+<meta property="og:site_name" content="运维人">
+<meta property="og:description" content="一，利用zabbix自带模板监控mysql状态： 1，在从的mysql服务器上面创建一个用于zabbix监控的用户 grant replication client on . to zabbix@’localhost’  IDENTIFIED BY ‘PASSWORD’; 2，根据zabbix监控mysql的key改写脚本 #/bin/bashDEF=”–defaults-file=/etc/za">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/10/Screenshot-from-2015-10-23-131457.png">
+<meta property="og:image" content="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/10/Screenshot-from-2015-10-23-133031.png">
+<meta property="og:image" content="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/10/Screenshot-from-2015-10-23-134737.png">
+<meta property="og:image" content="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/10/Screenshot-from-2015-10-23-141621.png">
+<meta property="og:image" content="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/10/Screenshot-from-2015-10-23-141935.png">
+<meta property="og:image" content="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/10/Screenshot-from-2015-10-23-144008.png">
+<meta property="og:updated_time" content="2018-12-19T14:39:54.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Zabbix 监控Mysql状态以及mysql主从">
+<meta name="twitter:description" content="一，利用zabbix自带模板监控mysql状态： 1，在从的mysql服务器上面创建一个用于zabbix监控的用户 grant replication client on . to zabbix@’localhost’  IDENTIFIED BY ‘PASSWORD’; 2，根据zabbix监控mysql的key改写脚本 #/bin/bashDEF=”–defaults-file=/etc/za">
+<meta name="twitter:image" content="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/10/Screenshot-from-2015-10-23-131457.png">
+    
+    <link rel="shortcut icon" href="/favicon.ico">
+    <link rel="stylesheet" href="/css/style.css?v=1.7.2">
+    <script>window.lazyScripts=[]</script>
+
+    <!-- custom head -->
+    
+
+</head>
+
+<body>
+    <div id="loading" class="active"></div>
+
+    <aside id="menu">
+  <div class="inner flex-row-vertical">
+    <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menu-off">
+        <i class="icon icon-lg icon-close"></i>
+    </a>
+    <div class="brand-wrap" style="background-image:url(/img/brand.jpg)">
+      <div class="brand">
+        <a href="/" class="avatar waves-effect waves-circle waves-light">
+          <img src="/img/avatar.jpg">
+        </a>
+        <hgroup class="introduce">
+          <h5 class="nickname">OutMan</h5>
+          <a href="mailto:2399447849@qq.com" title="2399447849@qq.com" class="mail">2399447849@qq.com</a>
+        </hgroup>
+      </div>
+    </div>
+    <div class="scroll-wrap flex-col">
+      <ul class="nav">
+        
+            <li class="waves-block waves-effect">
+              <a href="/">
+                <i class="icon icon-lg icon-home"></i>
+                主页
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/archives">
+                <i class="icon icon-lg icon-archives"></i>
+                归档
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/tags">
+                <i class="icon icon-lg icon-tags"></i>
+                标签
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/categories">
+                <i class="icon icon-lg icon-th-list"></i>
+                分类
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://github.com/guomaoqiu" target="_blank">
+                <i class="icon icon-lg icon-github"></i>
+                Github
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/works">
+                <i class="icon icon-lg icon-hand-peace-o"></i>
+                作品
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="http://demo.sctux.com" target="_blank">
+                <i class="icon icon-lg icon-link"></i>
+                DevOpsPlatform
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="http://resume.sctux.com/" target="_blank">
+                <i class="icon icon-lg icon-heart"></i>
+                我的简历
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/about">
+                <i class="icon icon-lg icon-user"></i>
+                关于我
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://blog.sctux.com/2019/02/27/skilltree/Skilltree.jpg" target="_blank">
+                <i class="icon icon-lg icon-tree"></i>
+                我的技能树
+              </a>
+            </li>
+        
+      </ul>
+    </div>
+  </div>
+</aside>
+
+    <main id="main">
+        <header class="top-header" id="header">
+    <div class="flex-row">
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light on" id="menu-toggle">
+          <i class="icon icon-lg icon-navicon"></i>
+        </a>
+        <div class="flex-col header-title ellipsis">Zabbix 监控Mysql状态以及mysql主从</div>
+        
+        <div class="search-wrap" id="search-wrap">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="back">
+                <i class="icon icon-lg icon-chevron-left"></i>
+            </a>
+            <input type="text" id="key" class="search-input" autocomplete="off" placeholder="输入感兴趣的关键字">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="search">
+                <i class="icon icon-lg icon-search"></i>
+            </a>
+        </div>
+        
+        
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menuShare">
+            <i class="icon icon-lg icon-share-alt"></i>
+        </a>
+        
+    </div>
+</header>
+<header class="content-header post-header">
+
+    <div class="container fade-scale">
+        <h1 class="title">Zabbix 监控Mysql状态以及mysql主从</h1>
+        <h5 class="subtitle">
+            
+                <time datetime="2015-10-23T06:48:07.000Z" itemprop="datePublished" class="page-time">
+  2015-10-23
+</time>
+
+
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/Monitor/">Monitor</a></li></ul>
+
+            
+        </h5>
+    </div>
+
+    
+
+
+</header>
+
+
+<div class="container body-wrap">
+    
+
+<article id="post-zabbix-e7-9b-91-e6-8e-a7mysql-e7-8a-b6-e6-80-81-e4-bb-a5-e5-8f-8amysql-e4-b8-bb-e4-bb-8e" class="post-article article-type-post fade" itemprop="blogPost">
+
+    <div class="post-card">
+        <h1 class="post-card-title">Zabbix 监控Mysql状态以及mysql主从</h1>
+        <div class="post-meta">
+            <time class="post-time" title="2015-10-23 14:48:07" datetime="2015-10-23T06:48:07.000Z" itemprop="datePublished">2015-10-23</time>
+
+            
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/Monitor/">Monitor</a></li></ul>
+
+
+
+            
+
+        </div>
+        <div class="post-content" id="post-content" itemprop="postContent">
+            <p>一，利用zabbix自带模板监控mysql状态： 1，在从的mysql服务器上面创建一个用于zabbix监控的用户 grant replication client on <em>.</em> to zabbix@’localhost’  IDENTIFIED BY ‘PASSWORD’; 2，根据zabbix监控mysql的key改写脚本</p>
+<p>#/bin/bash<br>DEF=”–defaults-file=/etc/zabbix/my.conf”<br>MYSQL=’/usr/local/webservers/mysql-5.6.19/bin/mysqladmin’<br>ARGS=1<br>if [ $# -ne “$ARGS” ];then<br>    echo “Please input one arguement:”<br>fi<br>case $1 in<br>    Uptime)<br>        result=<code>${MYSQL} $DEF status|cut -f2 -d&quot;:&quot;|cut -f1 -d&quot;T&quot;</code><br>            echo $result<br>            ;;<br>        Com_update)<br>            result=<code>${MYSQL} $DEF extended-status |grep -w &quot;Com_update&quot;|cut -d&quot;|&quot; -f3</code><br>            echo $result<br>            ;;<br>        Slow_queries)<br>        result=<code>${MYSQL} $DEF status |cut -f5 -d&quot;:&quot;|cut -f1 -d&quot;O&quot;</code><br>                echo $result<br>                ;;<br>    Com_select)<br>        result=<code>${MYSQL} $DEF extended-status |grep -w &quot;Com_select&quot;|cut -d&quot;|&quot; -f3</code><br>                echo $result<br>                ;;<br>    Com_rollback)<br>        result=<code>${MYSQL} $DEF extended-status |grep -w &quot;Com_rollback&quot;|cut -d&quot;|&quot; -f3</code><br>                echo $result<br>                ;;<br>    Questions)<br>        result=<code>${MYSQL} $DEF status|cut -f4 -d&quot;:&quot;|cut -f1 -d&quot;S&quot;</code><br>                echo $result<br>                ;;<br>    Com_insert)<br>        result=<code>${MYSQL} $DEF extended-status |grep -w &quot;Com_insert&quot;|cut -d&quot;|&quot; -f3</code><br>                echo $result<br>                ;;<br>    Com_delete)<br>        result=<code>${MYSQL} $DEF extended-status |grep -w &quot;Com_delete&quot;|cut -d&quot;|&quot; -f3</code><br>                echo $result<br>                ;;<br>    Com_commit)<br>        result=<code>${MYSQL} $DEF extended-status |grep -w &quot;Com_commit&quot;|cut -d&quot;|&quot; -f3</code><br>                echo $result<br>                ;;<br>    Bytes_sent)<br>        result=<code>${MYSQL} $DEF extended-status |grep -w &quot;Bytes_sent&quot; |cut -d&quot;|&quot; -f3</code><br>                echo $result<br>                ;;<br>    Bytes_received)<br>        result=<code>${MYSQL} $DEF extended-status |grep -w &quot;Bytes_received&quot; |cut -d&quot;|&quot; -f3</code><br>                echo $result<br>                ;;<br>    Com_begin)<br>        result=<code>${MYSQL} $DEF extended-status |grep -w &quot;Com_begin&quot;|cut -d&quot;|&quot; -f3</code><br>                echo $result<br>                ;; </p>
+<pre><code>*) 
+echo &quot;Usage:$0(Uptime|Com\_update|Slow\_queries|Com\_select|Com\_rollback|Questions)&quot; 
+;; 
+</code></pre><p>esac</p>
+<p>上面的脚本中： /etc/zabbix/my.conf 这个文件定义的是zabbix这个mysql用户的信息，然后直接指定这个文件，如果我们在命令行直接输入zabbix的用户密码的话会一行提示，影响我们zabbix取值，例如： [<figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/10/Screenshot-from-2015-10-23-131457.png" alt="Screenshot from 2015-10-23 13:13:07](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/10/Screenshot-from-2015-10-23-131307.png)](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/10/Screenshot-from-2015-10-23-131307.png) 如果我们直接指定了这个文件，那么那行提示就不会出现 [![Screenshot from 2015-10-23 13:14:57](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/10/Screenshot-from-2015-10-23-131457.png)" title="">
+                </div>
+                <div class="image-caption">Screenshot from 2015-10-23 13:13:07](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/10/Screenshot-from-2015-10-23-131307.png)](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/10/Screenshot-from-2015-10-23-131307.png) 如果我们直接指定了这个文件，那么那行提示就不会出现 [![Screenshot from 2015-10-23 13:14:57](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/10/Screenshot-from-2015-10-23-131457.png)</div>
+            </figure> /etc/zabbix/my.conf的内容：</p>
+<p>[client]<br>host=localhost<br>user=zabbix<br>password=’PASSWORD’<br>socket = /data/mysql/mysql.sock</p>
+<p>3，设置zabbix_agent端 首先启用自定义的key 去掉zabbix_agent配置文件的259行: Include=/usr/local/etc/zabbix_agentd.conf.d/*.conf 然后自定义一个mysql-status.conf 在这个目录下，内容为：</p>
+<p>UserParameter=mysql.version,/usr/local/webservers/mysql-5.6.19/bin/mysql -V<br>UserParameter=mysql.ping,/usr/local/webservers/mysql-5.6.19/bin/mysqladmin –defaults-file=/etc/zabbix/my.conf ping | grep -c alive<br>UserParameter=mysql.status[*],/home/shell/mysql-status.sh $1</p>
+<p>#注意：这里自定义的key 建议使用命令的绝对路径</p>
+<p>ok 上面的内容定义好之后重启zabbix_agent服务，然后就可以在zabbix_server端看一下能不能获取到key值 [<figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/10/Screenshot-from-2015-10-23-133031.png" alt="Screenshot from 2015-10-23 13:27:02](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/10/Screenshot-from-2015-10-23-132702.png)](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/10/Screenshot-from-2015-10-23-132702.png) 好啦，以上内容中可以看到取值正常，我们在zabbix dashboard中查看一下吧； [![Screenshot from 2015-10-23 13:29:49](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/10/Screenshot-from-2015-10-23-132949.png)](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/10/Screenshot-from-2015-10-23-132949.png) [![Screenshot from 2015-10-23 13:30:31](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/10/Screenshot-from-2015-10-23-133031.png)" title="">
+                </div>
+                <div class="image-caption">Screenshot from 2015-10-23 13:27:02](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/10/Screenshot-from-2015-10-23-132702.png)](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/10/Screenshot-from-2015-10-23-132702.png) 好啦，以上内容中可以看到取值正常，我们在zabbix dashboard中查看一下吧； [![Screenshot from 2015-10-23 13:29:49](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/10/Screenshot-from-2015-10-23-132949.png)](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/10/Screenshot-from-2015-10-23-132949.png) [![Screenshot from 2015-10-23 13:30:31](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/10/Screenshot-from-2015-10-23-133031.png)</div>
+            </figure> 至此已经监控到mysql的状态啦；这里一定要注意mysql用户取获取mysql服务的状态时候的权限； 二、zabbix监控mysql主从状态 跟上面的步骤差不多，这里使用的mysql用户我还是使用的zabbix用户 那这里直接就自定义key 啦，大家都知道mysql主从状态我们一般通过在mysql slaves上面的show slave status 然后看</p>
+<p>Slave_IO_Running: Yes<br>Slave_SQL_Running: Yes</p>
+<p>这两个值，如果其中一个不为Yes那说明主从同步是有问题的，那我们用zabbix这个的身份来获取这个值 编写脚本：mysql_replication.sh</p>
+<p>#!/bin/bash<br>/usr/local/webservers/mysql-5.6.19/bin/mysql –defaults-file=/etc/zabbix/my.conf -e ‘show slave status\G’ | grep -E “Slave_IO_Running:|Slave_SQL_Running:”  | awk ‘{print $2}’ | grep -c Yes</p>
+<p>这个脚本的用途是，用zabbix用户身份执行”show slave status\G”这个命令，然后截取Yes这个关键字的行数是2 或者非 2 [<figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/10/Screenshot-from-2015-10-23-134737.png" alt="Screenshot from 2015-10-23 13:47:37](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/10/Screenshot-from-2015-10-23-134737.png)" title="">
+                </div>
+                <div class="image-caption">Screenshot from 2015-10-23 13:47:37](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/10/Screenshot-from-2015-10-23-134737.png)</div>
+            </figure> 在zabbix_server 端/usr/local/etc/zabbix_agentd.conf.d/目录下新建文件：mysql-replication.conf，内容为：</p>
+<p>UserParameter=mysql.replication,/home/shell/mysql-replication.sh</p>
+<p>写好之后，重启zabbix_agent 然后在zabbix_server端测试一下看能否获取到这个值 [<figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/10/Screenshot-from-2015-10-23-141621.png" alt="Screenshot from 2015-10-23 14:03:21](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/10/Screenshot-from-2015-10-23-140321.png)](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/10/Screenshot-from-2015-10-23-140321.png) zabbix_server端能获取，现在在zabbix dashboard添加这个item吧 Configuration-->Host-->database-node2-->Items-->Create item [![Screenshot from 2015-10-23 14:07:54](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/10/Screenshot-from-2015-10-23-140754.png)](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/10/Screenshot-from-2015-10-23-140754.png) 这里我们自定义的key 需要手动输入key名称。我这里定义过了，直接点击“Add”就行了 然后我们需要定义一个Triggers Triggers-->Create triggers [![Screenshot from 2015-10-23 14:13:13](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/10/Screenshot-from-2015-10-23-141313.png)](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/10/Screenshot-from-2015-10-23-141313.png) [![Screenshot from 2015-10-23 14:11:53](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/10/Screenshot-from-2015-10-23-141153.png)](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/10/Screenshot-from-2015-10-23-141153.png) 检测它最后一次的取值是不是小于2，定义N的值为2，如果取得的值小于2就说明有问题啦， 定义一下报警： Configuration-->Action-->Create action [![Screenshot from 2015-10-23 14:16:21](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/10/Screenshot-from-2015-10-23-141621.png)" title="">
+                </div>
+                <div class="image-caption">Screenshot from 2015-10-23 14:03:21](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/10/Screenshot-from-2015-10-23-140321.png)](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/10/Screenshot-from-2015-10-23-140321.png) zabbix_server端能获取，现在在zabbix dashboard添加这个item吧 Configuration-->Host-->database-node2-->Items-->Create item [![Screenshot from 2015-10-23 14:07:54](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/10/Screenshot-from-2015-10-23-140754.png)](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/10/Screenshot-from-2015-10-23-140754.png) 这里我们自定义的key 需要手动输入key名称。我这里定义过了，直接点击“Add”就行了 然后我们需要定义一个Triggers Triggers-->Create triggers [![Screenshot from 2015-10-23 14:13:13](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/10/Screenshot-from-2015-10-23-141313.png)](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/10/Screenshot-from-2015-10-23-141313.png) [![Screenshot from 2015-10-23 14:11:53](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/10/Screenshot-from-2015-10-23-141153.png)](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/10/Screenshot-from-2015-10-23-141153.png) 检测它最后一次的取值是不是小于2，定义N的值为2，如果取得的值小于2就说明有问题啦， 定义一下报警： Configuration-->Action-->Create action [![Screenshot from 2015-10-23 14:16:21](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/10/Screenshot-from-2015-10-23-141621.png)</div>
+            </figure></p>
+<p>邮件通知内容：<br>MySQL.Repliaction<br>ERROR—MySQL master-slave –&gt;{ITEM.VALUE1}<br>MySQL 主从出现问题，请检测主从状态！！！<br>告警主机 : {HOSTNAME1}<br>告警时间 : {EVENT.DATE} {EVENT.TIME}<br>告警等级 : {TRIGGER.SEVERITY}<br>告警信息 : {TRIGGER.NAME}<br>告警项目 : {TRIGGER.KEY1}<br>问题详情 : {ITEM.NAME}:{ITEM.VALUE}<br>当前状态 : {TRIGGER.STATUS}:{ITEM.VALUE1}<br>事件ID : {EVENT.ID}</p>
+<p>恢复后的回复:<br>OK—MySQL master-slave –&gt;{ITEM.VALUE1}<br>MySQL 主从问题恢复，请确认主从状态！！！<br>告警主机 : {HOSTNAME1}<br>告警时间 : {EVENT.DATE} {EVENT.TIME}<br>告警等级 : {TRIGGER.SEVERITY}<br>告警信息 : {TRIGGER.NAME}<br>告警项目 : {TRIGGER.KEY1}<br>问题详情 : {ITEM.NAME}:{ITEM.VALUE}<br>当前状态 : {TRIGGER.STATUS}:{ITEM.VALUE1}<br>事件ID   : {EVENT.ID}</p>
+<p>条件： [<figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/10/Screenshot-from-2015-10-23-141935.png" alt="Screenshot from 2015-10-23 14:19:03](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/10/Screenshot-from-2015-10-23-141903.png)](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/10/Screenshot-from-2015-10-23-141903.png) [![Screenshot from 2015-10-23 14:19:35](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/10/Screenshot-from-2015-10-23-141935.png)" title="">
+                </div>
+                <div class="image-caption">Screenshot from 2015-10-23 14:19:03](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/10/Screenshot-from-2015-10-23-141903.png)](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/10/Screenshot-from-2015-10-23-141903.png) [![Screenshot from 2015-10-23 14:19:35](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/10/Screenshot-from-2015-10-23-141935.png)</div>
+            </figure> zabbix自定义脚本发送邮件； 首先我们要在zabbix_server端启用自定义脚本发送邮件，在zabbix_server主配置文件中修改为 AlertScriptsPath=/usr/lib/zabbix/alertscripts  脚本存放的目录 然后我们自定义一个脚本mail.py</p>
+<p>#!/usr/bin/python</p>
+<p>#coding:utf-8 </p>
+<p>import smtplib<br>from email.mime.text import MIMEText<br>import sys </p>
+<p>#邮箱服务器地址<br>mail_host = ‘smtp.qq.com’</p>
+<p>#邮箱用户名<br>mail_user = ‘xxxxxxx’</p>
+<p>#邮箱密码<br>mail_pass = ‘xxxxxxxx’<br>mail_postfix = ‘qq.com’</p>
+<p>def send_mail(to_list,subject,content):<br>    me = mail_user+”&lt;”+mail_user+”@”+mail_postfix+”&gt;”<br>    msg = MIMEText(content,_charset=’utf-8’)<br>    msg[‘Subject’] = subject<br>    msg[‘From’] = me<br>    msg[‘to’] = to_list </p>
+<pre><code>try:
+    s = smtplib.SMTP()
+    s.connect(mail_host)
+    s.login(mail\_user,mail\_pass)
+    s.sendmail(me,to\_list,msg.as\_string())
+    s.close()
+    return True
+except Exception,e:
+    print str(e)
+    return False
+</code></pre><p>if __name__ == “__main__“:<br>    send_mail(sys.argv[1], sys.argv[2], sys.argv[3])</p>
+<p>记得加上执行权限； 然后在zabbix dashboard上面定义用户的media加上用户的邮箱即可 [<figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/10/Screenshot-from-2015-10-23-144008.png" alt="Screenshot from 2015-10-23 14:25:28](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/10/Screenshot-from-2015-10-23-142528.png)](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/10/Screenshot-from-2015-10-23-142528.png) 以上就可以实现报警啦 测试一下，将mysql-replication.sh这个脚本的值自定义一个输出值为0或者1 [![Screenshot from 2015-10-23 14:28:32](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/10/Screenshot-from-2015-10-23-142832.png)](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/10/Screenshot-from-2015-10-23-142832.png) 查看邮件： [![zabbix_1](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/10/zabbix_1.png)](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/10/zabbix_1.png) 如果恢复后的回复 [![zabbix_2](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/10/zabbix_2.png)](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/10/zabbix_2.png) ok 已经成功能看到这个监控没问题啦。 下面来看一下zabbix + grafana ,这个是作为页面展示比较华丽的效果 [![Screenshot from 2015-10-23 14:42:25](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/10/Screenshot-from-2015-10-23-144225.png)](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/10/Screenshot-from-2015-10-23-144225.png) [![Screenshot from 2015-10-23 14:40:08](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/10/Screenshot-from-2015-10-23-144008.png)" title="">
+                </div>
+                <div class="image-caption">Screenshot from 2015-10-23 14:25:28](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/10/Screenshot-from-2015-10-23-142528.png)](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/10/Screenshot-from-2015-10-23-142528.png) 以上就可以实现报警啦 测试一下，将mysql-replication.sh这个脚本的值自定义一个输出值为0或者1 [![Screenshot from 2015-10-23 14:28:32](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/10/Screenshot-from-2015-10-23-142832.png)](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/10/Screenshot-from-2015-10-23-142832.png) 查看邮件： [![zabbix_1](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/10/zabbix_1.png)](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/10/zabbix_1.png) 如果恢复后的回复 [![zabbix_2](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/10/zabbix_2.png)](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/10/zabbix_2.png) ok 已经成功能看到这个监控没问题啦。 下面来看一下zabbix + grafana ,这个是作为页面展示比较华丽的效果 [![Screenshot from 2015-10-23 14:42:25](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/10/Screenshot-from-2015-10-23-144225.png)](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/10/Screenshot-from-2015-10-23-144225.png) [![Screenshot from 2015-10-23 14:40:08](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/10/Screenshot-from-2015-10-23-144008.png)</div>
+            </figure> 只要是在zabbix 中有的 items都可以在grafana中展示。</p>
+
+        </div>
+
+        <blockquote class="post-copyright">
+    
+    <div class="content">
+        
+<span class="post-time">
+    最后更新时间：<time datetime="2018-12-19T14:39:54.000Z" itemprop="dateUpdated">2018-12-19 22:39:54</time>
+</span><br>
+
+
+        
+        该文链接：<a href="/2015/10/23/zabbix-e7-9b-91-e6-8e-a7mysql-e7-8a-b6-e6-80-81-e4-bb-a5-e5-8f-8amysql-e4-b8-bb-e4-bb-8e/" target="_blank" rel="external">https://blog.sctux.com/2015/10/23/zabbix-e7-9b-91-e6-8e-a7mysql-e7-8a-b6-e6-80-81-e4-bb-a5-e5-8f-8amysql-e4-b8-bb-e4-bb-8e/</a>
+        
+    </div>
+    
+    <footer>
+        <a href="https://blog.sctux.com">
+            <img src="/img/avatar.jpg" alt="OutMan">
+            OutMan
+        </a>
+    </footer>
+</blockquote>
+
+        
+<div class="page-reward">
+    <a id="rewardBtn" href="javascript:;" class="page-reward-btn waves-effect waves-circle waves-light">赏</a>
+</div>
+
+
+
+        <div class="post-footer">
+            
+	<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/grafana/">grafana</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/zabbix/">zabbix</a></li></ul>
+
+
+            
+<div class="page-share-wrap">
+    
+
+<div class="page-share" id="pageShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://blog.sctux.com/2015/10/23/zabbix-e7-9b-91-e6-8e-a7mysql-e7-8a-b6-e6-80-81-e4-bb-a5-e5-8f-8amysql-e4-b8-bb-e4-bb-8e/&title=《Zabbix 监控Mysql状态以及mysql主从》 — 运维人&pic=https://blog.sctux.com/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://blog.sctux.com/2015/10/23/zabbix-e7-9b-91-e6-8e-a7mysql-e7-8a-b6-e6-80-81-e4-bb-a5-e5-8f-8amysql-e4-b8-bb-e4-bb-8e/&title=《Zabbix 监控Mysql状态以及mysql主从》 — 运维人&source=😊" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.sctux.com/2015/10/23/zabbix-e7-9b-91-e6-8e-a7mysql-e7-8a-b6-e6-80-81-e4-bb-a5-e5-8f-8amysql-e4-b8-bb-e4-bb-8e/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《Zabbix 监控Mysql状态以及mysql主从》 — 运维人&url=https://blog.sctux.com/2015/10/23/zabbix-e7-9b-91-e6-8e-a7mysql-e7-8a-b6-e6-80-81-e4-bb-a5-e5-8f-8amysql-e4-b8-bb-e4-bb-8e/&via=https://blog.sctux.com" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=https://blog.sctux.com/2015/10/23/zabbix-e7-9b-91-e6-8e-a7mysql-e7-8a-b6-e6-80-81-e4-bb-a5-e5-8f-8amysql-e4-b8-bb-e4-bb-8e/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+
+    <a href="javascript:;" id="shareFab" class="page-share-fab waves-effect waves-circle">
+        <i class="icon icon-share-alt icon-lg"></i>
+    </a>
+</div>
+
+
+
+        </div>
+    </div>
+
+    
+<nav class="post-nav flex-row flex-justify-between">
+  
+    <div class="waves-block waves-effect prev">
+      <a href="/2015/10/23/e8-bf-90-e7-bb-b4-e4-ba-ba-e4-bd-a0-e5-ba-94-e8-af-a5-e4-ba-86-e8-a7-a3-e7-9a-84-e4-b8-89-e5-bc-a0-e6-ad-a6-e5-8a-9f-e5-bf-83-e6-b3-95-e5-9b-be-e8-bd-ac-e8-bd-bd/" id="post-prev" class="post-nav-link">
+        <div class="tips"><i class="icon icon-angle-left icon-lg icon-pr"></i> Prev</div>
+        <h4 class="title">运维人,你应该了解的三张武功心法图(转载)</h4>
+      </a>
+    </div>
+  
+
+  
+    <div class="waves-block waves-effect next">
+      <a href="/2015/10/16/e6-a3-80-e6-9f-a5-e6-96-87-e4-bb-b6-e6-97-b6-e9-97-b4-e6-88-b3-ef-bc-8c-e5-af-b9-e6-af-94-e6-97-b6-e9-97-b4-e7-9a-84shell-e8-84-9a-e6-9c-ac/" id="post-next" class="post-nav-link">
+        <div class="tips">Next <i class="icon icon-angle-right icon-lg icon-pl"></i></div>
+        <h4 class="title">检查文件时间戳，对比时间的Shell脚本</h4>
+      </a>
+    </div>
+  
+</nav>
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Valine Comments -->
+    <div class="comments vcomment" id="comments"></div>
+    <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+    <script src="//unpkg.com/valine@latest/dist/Valine.min.js"></script>
+    <!-- Valine Comments script -->
+    <script>
+        var GUEST_INFO = ['nick','mail','link'];
+        var guest_info = 'nick,mail,link'.split(',').filter(function(item){
+          return GUEST_INFO.indexOf(item) > -1
+        });
+        new Valine({
+            el: '#comments',
+            notify: 'true' == 'true',
+            verify: 'true' == 'true',
+            appId: "lHxnnDHJXDgMoFpCbdx8A4q7-gzGzoHsz",
+            appKey: "W8H2NuO8chyDlCEQzionLuuV",
+            avatar: "monsterid",
+            placeholder: "来都来了，说点啥子吧~🌹 (友情提醒，留下正确的邮箱地址可以第一时间获取评论反馈)",
+            guest_info: guest_info.length == 0 ? GUEST_INFO : guest_info,
+            pageSize: "10"
+        })
+    </script>
+    <!-- Valine Comments end -->
+
+
+
+
+
+
+
+</article>
+
+<div id="reward" class="page-modal reward-lay">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <h3 class="reward-title">
+        <i class="icon icon-quote-left"></i>
+        谢谢大爷~
+        <i class="icon icon-quote-right"></i>
+    </h3>
+    <div class="reward-content">
+        
+        <div class="reward-code">
+            <img id="rewardCode" src="/img/wechat.jpg" alt="打赏二维码">
+        </div>
+        
+        <label class="reward-toggle">
+            <input id="rewardToggle" type="checkbox" class="reward-toggle-check" data-wechat="/img/wechat.jpg" data-alipay="/img/alipay.jpg">
+            <div class="reward-toggle-ctrol">
+                <span class="reward-toggle-item wechat">微信</span>
+                <span class="reward-toggle-label"></span>
+                <span class="reward-toggle-item alipay">支付宝</span>
+            </div>
+        </label>
+        
+    </div>
+</div>
+
+
+
+</div>
+
+        <footer class="footer">
+    <div class="top">
+        
+
+        <p>
+            
+            <span>博客内容遵循 <a rel="license" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh">知识共享 署名 - 非商业性 - 相同方式共享 4.0 国际协议</a></span>
+        </p>
+    </div>
+    <div class="bottom">
+        <p><span>OutMan &copy; 2013 - 2019</span>
+            <span>
+                
+                <a href="http://www.miitbeian.gov.cn/" target="_blank">蜀ICP备007号-1</a><br>
+                
+                Power by <a href="http://hexo.io/" target="_blank">Hexo</a> Theme <a href="https://github.com/yscoder/hexo-theme-indigo" target="_blank">indigo</a>
+            </span>
+        </p>
+    </div>
+</footer>
+
+    </main>
+    <div class="mask" id="mask"></div>
+<a href="javascript:;" id="gotop" class="waves-effect waves-circle waves-light"><span class="icon icon-lg icon-chevron-up"></span></a>
+
+
+
+<div class="global-share" id="globalShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://blog.sctux.com/2015/10/23/zabbix-e7-9b-91-e6-8e-a7mysql-e7-8a-b6-e6-80-81-e4-bb-a5-e5-8f-8amysql-e4-b8-bb-e4-bb-8e/&title=《Zabbix 监控Mysql状态以及mysql主从》 — 运维人&pic=https://blog.sctux.com/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://blog.sctux.com/2015/10/23/zabbix-e7-9b-91-e6-8e-a7mysql-e7-8a-b6-e6-80-81-e4-bb-a5-e5-8f-8amysql-e4-b8-bb-e4-bb-8e/&title=《Zabbix 监控Mysql状态以及mysql主从》 — 运维人&source=😊" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.sctux.com/2015/10/23/zabbix-e7-9b-91-e6-8e-a7mysql-e7-8a-b6-e6-80-81-e4-bb-a5-e5-8f-8amysql-e4-b8-bb-e4-bb-8e/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《Zabbix 监控Mysql状态以及mysql主从》 — 运维人&url=https://blog.sctux.com/2015/10/23/zabbix-e7-9b-91-e6-8e-a7mysql-e7-8a-b6-e6-80-81-e4-bb-a5-e5-8f-8amysql-e4-b8-bb-e4-bb-8e/&via=https://blog.sctux.com" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=https://blog.sctux.com/2015/10/23/zabbix-e7-9b-91-e6-8e-a7mysql-e7-8a-b6-e6-80-81-e4-bb-a5-e5-8f-8amysql-e4-b8-bb-e4-bb-8e/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+<div class="page-modal wx-share" id="wxShare">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <img src="//api.qrserver.com/v1/create-qr-code/?data=https://blog.sctux.com/2015/10/23/zabbix-e7-9b-91-e6-8e-a7mysql-e7-8a-b6-e6-80-81-e4-bb-a5-e5-8f-8amysql-e4-b8-bb-e4-bb-8e/" alt="微信分享二维码">
+</div>
+
+
+
+
+    <script src="//cdn.bootcss.com/node-waves/0.7.4/waves.min.js"></script>
+<script>
+var BLOG = { ROOT: '/', SHARE: true, REWARD: true };
+
+
+</script>
+
+<script src="/js/main.min.js?v=1.7.2"></script>
+
+
+<div class="search-panel" id="search-panel">
+    <ul class="search-result" id="search-result"></ul>
+</div>
+<template id="search-tpl">
+<li class="item">
+    <a href="{path}" class="waves-block waves-effect">
+        <div class="title ellipsis" title="{title}">{title}</div>
+        <div class="flex-row flex-middle">
+            <div class="tags ellipsis">
+                {tags}
+            </div>
+            <time class="flex-col time">{date}</time>
+        </div>
+    </a>
+</li>
+</template>
+
+<script src="/js/search.min.js?v=1.7.2" async></script>
+
+
+
+
+
+
+
+
+<script>
+(function() {
+    var OriginTitile = document.title, titleTime;
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            document.title = '老弟，死哪儿去啦~！';
+            clearTimeout(titleTime);
+        } else {
+            document.title = '(つェ⊂)咦!老弟来啦!';
+            titleTime = setTimeout(function() {
+                document.title = OriginTitile;
+            },2000);
+        }
+    });
+})();
+</script>
+
+
+
+</body>
+</html>
