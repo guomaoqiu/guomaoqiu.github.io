@@ -42,19 +42,19 @@ daovoice('update');
 <meta property="og:site_name" content="运维人">
 <meta property="og:description" content="序、为何需要存储卷容器部署过程中一般有以下三种数据:  启动时需要的初始数据，可以是配置文件 启动过程中产生的临时数据，该临时数据需要多个容器间共享 启动过程中产生的持久化数据  以上三种数据都不希望在容器重启时就消失，存储卷由此而来，它可以根据不同场景提供不同类型的存储能力。各类卷:">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:image" content="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/2018/12/15/kubernetes-storage/volume.png">
-<meta property="og:image" content="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/2018/12/15/kubernetes-storage/k8s-pvc.png">
-<meta property="og:image" content="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/2018/12/15/kubernetes-storage/create_pv.png">
-<meta property="og:image" content="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/2018/12/15/kubernetes-storage/create_pvc.png">
-<meta property="og:image" content="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/2018/12/15/kubernetes-storage/create_pod.png">
-<meta property="og:image" content="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/2018/12/15/kubernetes-storage/create_result.png">
-<meta property="og:image" content="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/2018/12/15/kubernetes-storage/pvc_delete_status.png">
-<meta property="og:image" content="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/2018/12/15/kubernetes-storage/SUCCESS.png">
-<meta property="og:updated_time" content="2018-12-20T02:06:49.000Z">
+<meta property="og:image" content="https://blog.sctux.com/2018/12/15/kubernetes-storage/volume.png">
+<meta property="og:image" content="https://blog.sctux.com/2018/12/15/kubernetes-storage/k8s-pvc.png">
+<meta property="og:image" content="https://blog.sctux.com/2018/12/15/kubernetes-storage/create_pv.png">
+<meta property="og:image" content="https://blog.sctux.com/2018/12/15/kubernetes-storage/create_pvc.png">
+<meta property="og:image" content="https://blog.sctux.com/2018/12/15/kubernetes-storage/create_pod.png">
+<meta property="og:image" content="https://blog.sctux.com/2018/12/15/kubernetes-storage/create_result.png">
+<meta property="og:image" content="https://blog.sctux.com/2018/12/15/kubernetes-storage/pvc_delete_status.png">
+<meta property="og:image" content="https://blog.sctux.com/2018/12/15/kubernetes-storage/SUCCESS.png">
+<meta property="og:updated_time" content="2020-04-07T03:16:44.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="理解kubernetes中的Storage">
 <meta name="twitter:description" content="序、为何需要存储卷容器部署过程中一般有以下三种数据:  启动时需要的初始数据，可以是配置文件 启动过程中产生的临时数据，该临时数据需要多个容器间共享 启动过程中产生的持久化数据  以上三种数据都不希望在容器重启时就消失，存储卷由此而来，它可以根据不同场景提供不同类型的存储能力。各类卷:">
-<meta name="twitter:image" content="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/2018/12/15/kubernetes-storage/volume.png">
+<meta name="twitter:image" content="https://blog.sctux.com/2018/12/15/kubernetes-storage/volume.png">
     
     <link rel="shortcut icon" href="/favicon.ico">
     <link rel="stylesheet" href="/css/style.css?v=1.7.2">
@@ -242,7 +242,7 @@ daovoice('update');
 <div style="width: 50%; margin: auto"><figure class="image-bubble">
                 <div class="img-lightbox">
                     <div class="overlay"></div>
-                    <img src="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/2018/12/15/kubernetes-storage/volume.png" alt="截图来源华为云cce课堂" title="">
+                    <img src="/2018/12/15/kubernetes-storage/volume.png" alt="截图来源华为云cce课堂" title="">
                 </div>
                 <div class="image-caption">截图来源华为云cce课堂</div>
             </figure></div>
@@ -327,7 +327,7 @@ daovoice('update');
 <p>动态供给是通过 StorageClass 实现的，StorageClass 定义了如何创建 PV。<br><figure class="image-bubble">
                 <div class="img-lightbox">
                     <div class="overlay"></div>
-                    <img src="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/2018/12/15/kubernetes-storage/k8s-pvc.png" alt="k8s-pv" title="">
+                    <img src="/2018/12/15/kubernetes-storage/k8s-pvc.png" alt="k8s-pv" title="">
                 </div>
                 <div class="image-caption">k8s-pv</div>
             </figure></p>
@@ -337,7 +337,7 @@ daovoice('update');
 <figure class="image-bubble">
                 <div class="img-lightbox">
                     <div class="overlay"></div>
-                    <img src="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/2018/12/15/kubernetes-storage/create_pv.png" alt="create_pv" title="">
+                    <img src="/2018/12/15/kubernetes-storage/create_pv.png" alt="create_pv" title="">
                 </div>
                 <div class="image-caption">create_pv</div>
             </figure>
@@ -346,7 +346,7 @@ daovoice('update');
 <figure class="image-bubble">
                 <div class="img-lightbox">
                     <div class="overlay"></div>
-                    <img src="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/2018/12/15/kubernetes-storage/create_pvc.png" alt="create_pvc" title="">
+                    <img src="/2018/12/15/kubernetes-storage/create_pvc.png" alt="create_pvc" title="">
                 </div>
                 <div class="image-caption">create_pvc</div>
             </figure>
@@ -355,14 +355,14 @@ daovoice('update');
 <p>与使用普通 Volume 的格式类似，在 volumes 中通过 persistentVolumeClaim 指定使用 nfs-test-pv-claim 申请的 Volume。<br><figure class="image-bubble">
                 <div class="img-lightbox">
                     <div class="overlay"></div>
-                    <img src="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/2018/12/15/kubernetes-storage/create_pod.png" alt="create_pod" title="">
+                    <img src="/2018/12/15/kubernetes-storage/create_pod.png" alt="create_pod" title="">
                 </div>
                 <div class="image-caption">create_pod</div>
             </figure><br>验证 PV 是否可用：<br><figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl exec nfs-test-pod touch /nfs-<span class="class"><span class="keyword">data</span>/<span class="type">SUCCESS</span></span></span><br></pre></td></tr></table></figure></p>
 <div style="width: 50%; margin: auto"><figure class="image-bubble">
                 <div class="img-lightbox">
                     <div class="overlay"></div>
-                    <img src="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/2018/12/15/kubernetes-storage/create_result.png" alt="create_result" title="">
+                    <img src="/2018/12/15/kubernetes-storage/create_result.png" alt="create_result" title="">
                 </div>
                 <div class="image-caption">create_result</div>
             </figure></div>
@@ -373,7 +373,7 @@ daovoice('update');
 <figure class="image-bubble">
                 <div class="img-lightbox">
                     <div class="overlay"></div>
-                    <img src="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/2018/12/15/kubernetes-storage/pvc_delete_status.png" alt="pvc_delete_status" title="">
+                    <img src="/2018/12/15/kubernetes-storage/pvc_delete_status.png" alt="pvc_delete_status" title="">
                 </div>
                 <div class="image-caption">pvc_delete_status</div>
             </figure>
@@ -407,7 +407,7 @@ daovoice('update');
 <h6 id="在NFS服务器上的共享目录下的卷子目录中检查创建的NFS-PV卷下是否有”SUCCESS”-文件。"><a href="#在NFS服务器上的共享目录下的卷子目录中检查创建的NFS-PV卷下是否有”SUCCESS”-文件。" class="headerlink" title="在NFS服务器上的共享目录下的卷子目录中检查创建的NFS PV卷下是否有”SUCCESS” 文件。"></a>在NFS服务器上的共享目录下的卷子目录中检查创建的NFS PV卷下是否有”SUCCESS” 文件。</h6><figure class="image-bubble">
                 <div class="img-lightbox">
                     <div class="overlay"></div>
-                    <img src="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/2018/12/15/kubernetes-storage/SUCCESS.png" alt="SUCCESS" title="">
+                    <img src="/2018/12/15/kubernetes-storage/SUCCESS.png" alt="SUCCESS" title="">
                 </div>
                 <div class="image-caption">SUCCESS</div>
             </figure>
@@ -421,7 +421,7 @@ daovoice('update');
     <div class="content">
         
 <span class="post-time">
-    最后更新时间：<time datetime="2018-12-20T02:06:49.000Z" itemprop="dateUpdated">2018-12-20 10:06:49</time>
+    最后更新时间：<time datetime="2020-04-07T03:16:44.000Z" itemprop="dateUpdated">2020-04-07 11:16:44</time>
 </span><br>
 
 
