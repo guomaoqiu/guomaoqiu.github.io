@@ -732,8 +732,8 @@
         <category>Monitor</category>
       </categories>
       <tags>
-        <tag>grafana</tag>
         <tag>zabbix</tag>
+        <tag>grafana</tag>
       </tags>
   </entry>
   <entry>
