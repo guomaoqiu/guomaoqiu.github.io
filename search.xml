@@ -1,6 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
+    <title><![CDATA[手把手带你学会K8s/jenkins/cicd流水线]]></title>
+    <url>%2F2020%2F10%2F29%2Fk8s-jenkins-cicd%2F</url>
+    <content type="text"><![CDATA[娃哈哈]]></content>
+      <tags>
+        <tag>kubernets,jenkins</tag>
+      </tags>
+  </entry>
+  <entry>
     <title><![CDATA[容器化撸羊毛？]]></title>
     <url>%2F2020%2F04%2F11%2Fxmrig%2F</url>
     <content type="text"><![CDATA[GCD 惹不起… 已删。]]></content>
@@ -143,8 +151,8 @@
         <category>kubernetes</category>
       </categories>
       <tags>
-        <tag>持久化存储</tag>
         <tag>kubernets</tag>
+        <tag>持久化存储</tag>
         <tag>Storage</tag>
         <tag>NFS PV静态供给</tag>
         <tag>NFS PV动态供给</tag>
@@ -724,8 +732,8 @@
         <category>Monitor</category>
       </categories>
       <tags>
-        <tag>zabbix</tag>
         <tag>grafana</tag>
+        <tag>zabbix</tag>
       </tags>
   </entry>
   <entry>
