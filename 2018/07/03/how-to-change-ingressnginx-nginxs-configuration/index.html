@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.8.0">
+<script>(function(i,s,o,g,r,a,m){i["DaoVoiceObject"]=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;a.charset="utf-8";m.parentNode.insertBefore(a,m)})(window,document,"script",('https:' == document.location.protocol ? 'https:' : 'http:') + "//widget.daovoice.io/widget/9f77122a.js","daovoice")
+
+
+daovoice('init', {
+  app_id: "9f77122a",
+  user_id: "NO_89757", // 必填: 该用户在您系统上的唯一ID
+  email: "daovoice@example.com", // 选填:  该用户在您系统上的主邮箱
+  name: "道客船长", // 选填: 用户名
+  signed_up: 1449821660 // 选填: 用户的注册时间，用Unix时间戳表示
+});
+daovoice('update');
+
+</script>
+    
+
+    
+
+    
+
+
+
+    <meta charset="utf-8">
+    
+    
+    
+    
+    <title>How to Change Ingress-Nginx Nginx&#39;s Configuration？ | 运维人 | Devops、Linux、Kubernetes、Docker、Flask、Python、Shell、SRE</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    
+    <meta name="theme-color" content="#3F51B5">
+    
+    
+    <meta name="keywords" content="k8s集群搭建">
+    <meta name="description" content="序- 今天访问了一下之前搭建的那套k8s应用，当我客户端通过域名访问(ingress-nginx通过域名转发请求到后端)时，出现了504的情况；第一想到的就是当后端一直没返回时；proxy超时了； 192.168.56.1 - [192.168.56.1] - - [03/Jul/2018:09:16:54 +0000] &amp;quot;GET / HTTP/1.1&amp;quot; 504 586 &amp;qu">
+<meta name="keywords" content="k8s集群搭建">
+<meta property="og:type" content="article">
+<meta property="og:title" content="How to Change Ingress-Nginx Nginx&#39;s Configuration？">
+<meta property="og:url" content="https://blog.sctux.cc/2018/07/03/how-to-change-ingressnginx-nginxs-configuration/index.html">
+<meta property="og:site_name" content="运维人">
+<meta property="og:description" content="序- 今天访问了一下之前搭建的那套k8s应用，当我客户端通过域名访问(ingress-nginx通过域名转发请求到后端)时，出现了504的情况；第一想到的就是当后端一直没返回时；proxy超时了； 192.168.56.1 - [192.168.56.1] - - [03/Jul/2018:09:16:54 +0000] &amp;quot;GET / HTTP/1.1&amp;quot; 504 586 &amp;qu">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2018/07/15306117528798.jpg">
+<meta property="og:image" content="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2018/07/15306121028954.jpg">
+<meta property="og:image" content="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2018/07/15306118758212.jpg">
+<meta property="og:image" content="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2018/07/15306159339443.jpg">
+<meta property="og:updated_time" content="2022-06-07T06:55:07.903Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="How to Change Ingress-Nginx Nginx&#39;s Configuration？">
+<meta name="twitter:description" content="序- 今天访问了一下之前搭建的那套k8s应用，当我客户端通过域名访问(ingress-nginx通过域名转发请求到后端)时，出现了504的情况；第一想到的就是当后端一直没返回时；proxy超时了； 192.168.56.1 - [192.168.56.1] - - [03/Jul/2018:09:16:54 +0000] &amp;quot;GET / HTTP/1.1&amp;quot; 504 586 &amp;qu">
+<meta name="twitter:image" content="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2018/07/15306117528798.jpg">
+    
+    <link rel="shortcut icon" href="/favicon.ico">
+    <link rel="stylesheet" href="/css/style.css?v=1.7.2">
+    <script>window.lazyScripts=[]</script>
+
+    <!-- custom head -->
+    
+
+</head>
+
+<body>
+    <div id="loading" class="active"></div>
+
+    <aside id="menu">
+  <div class="inner flex-row-vertical">
+    <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menu-off">
+        <i class="icon icon-lg icon-close"></i>
+    </a>
+    <div class="brand-wrap" style="background-image:url(/img/brand.jpg)">
+      <div class="brand">
+        <a href="/" class="avatar waves-effect waves-circle waves-light">
+          <img src="/img/avatar.jpg">
+        </a>
+        <hgroup class="introduce">
+          <h5 class="nickname">maoqiu.guo</h5>
+          <a href="mailto:guomaoqiu@gmail.com" title="guomaoqiu@gmail.com" class="mail">guomaoqiu@gmail.com</a>
+        </hgroup>
+      </div>
+    </div>
+    <div class="scroll-wrap flex-col">
+      <ul class="nav">
+        
+            <li class="waves-block waves-effect">
+              <a href="/">
+                <i class="icon icon-lg icon-home"></i>
+                主页
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/archives">
+                <i class="icon icon-lg icon-archives"></i>
+                归档
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/tags">
+                <i class="icon icon-lg icon-tags"></i>
+                标签
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/categories">
+                <i class="icon icon-lg icon-th-list"></i>
+                分类
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://github.com/guomaoqiu" target="_blank">
+                <i class="icon icon-lg icon-github"></i>
+                Github
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/works">
+                <i class="icon icon-lg icon-hand-peace-o"></i>
+                作品
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="http://demo.sctux.cc" target="_blank">
+                <i class="icon icon-lg icon-link"></i>
+                DevOpsPlatform
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="http://resume.sctux.cc/" target="_blank">
+                <i class="icon icon-lg icon-heart"></i>
+                我的简历
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/about">
+                <i class="icon icon-lg icon-user"></i>
+                关于我
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://blog.sctux.cc/Skilltree.jpg" target="_blank">
+                <i class="icon icon-lg icon-tree"></i>
+                我的技能树
+              </a>
+            </li>
+        
+      </ul>
+    </div>
+  </div>
+</aside>
+
+    <main id="main">
+        <header class="top-header" id="header">
+    <div class="flex-row">
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light on" id="menu-toggle">
+          <i class="icon icon-lg icon-navicon"></i>
+        </a>
+        <div class="flex-col header-title ellipsis">How to Change Ingress-Nginx Nginx&#39;s Configuration？</div>
+        
+        <div class="search-wrap" id="search-wrap">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="back">
+                <i class="icon icon-lg icon-chevron-left"></i>
+            </a>
+            <input type="text" id="key" class="search-input" autocomplete="off" placeholder="输入感兴趣的关键字">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="search">
+                <i class="icon icon-lg icon-search"></i>
+            </a>
+        </div>
+        
+        
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menuShare">
+            <i class="icon icon-lg icon-share-alt"></i>
+        </a>
+        
+    </div>
+</header>
+<header class="content-header post-header">
+
+    <div class="container fade-scale">
+        <h1 class="title">How to Change Ingress-Nginx Nginx&#39;s Configuration？</h1>
+        <h5 class="subtitle">
+            
+                <time datetime="2018-07-03T05:51:33.000Z" itemprop="datePublished" class="page-time">
+  2018-07-03
+</time>
+
+
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/Docker/">Docker</a><ul class="article-category-list-child"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/Docker/虚拟化-amp-云计算-amp-大数据/">虚拟化&amp;云计算&amp;大数据</a></li></ul></li></ul>
+
+            
+        </h5>
+    </div>
+
+    
+
+
+</header>
+
+
+<div class="container body-wrap">
+    
+
+<article id="post-how-to-change-ingressnginx-nginxs-configuration" class="post-article article-type-post fade" itemprop="blogPost">
+
+    <div class="post-card">
+        <h1 class="post-card-title">How to Change Ingress-Nginx Nginx's Configuration？</h1>
+        <div class="post-meta">
+            <time class="post-time" title="2018-07-03 13:51:33" datetime="2018-07-03T05:51:33.000Z" itemprop="datePublished">2018-07-03</time>
+
+            
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/Docker/">Docker</a><ul class="article-category-list-child"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/Docker/虚拟化-amp-云计算-amp-大数据/">虚拟化&amp;云计算&amp;大数据</a></li></ul></li></ul>
+
+
+
+            
+
+        </div>
+        <div class="post-content" id="post-content" itemprop="postContent">
+            <p>序<br>-</p>
+<p>今天访问了一下之前搭建的那套k8s应用，当我客户端通过域名访问(ingress-nginx通过域名转发请求到后端)时，出现了504的情况；第一想到的就是当后端一直没返回时；proxy超时了；</p>
+<pre><code>192.168.56.1 - [192.168.56.1] - - [03/Jul/2018:09:16:54 +0000] &quot;GET / HTTP/1.1&quot; 504 586 &quot;-&quot; &quot;Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.99 Safari/537.36&quot; 412 10.002 [flask-app-extions-stage-flask-app-nginx-80] 10.2.17.5:80 0 10.003 504 497fe6db73abcd3ed749fdc646870432
+
+# 响应10.003秒就报504😢
+</code></pre><p><img src="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2018/07/15306117528798.jpg" alt="">￼<br>问题就出在这里,ingress-nginx代理用户请求到flask-app-nginx SVC<br><img src="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2018/07/15306121028954.jpg" alt="">￼</p>
+<p>而且后端在集群内部直接访问应用的ClusterIP是没有问题；<br><img src="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2018/07/15306118758212.jpg" alt="">￼</p>
+<p>那解决办法就是修改ingress-nginx 的nginx配置；前面实验中我使用了configmap来挂nginx配置，ingerss-nginx的配置也是通过这种方式，只是说实现的方式不一样；他是在创建了ingress之后根据规则生成的nginx配置；<br>进入pod容器中发现默认的nginx配置参数为:</p>
+<pre><code>proxy_connect_timeout                   5s;
+proxy_send_timeout                      60s;
+proxy_read_timeout                      60s;
+</code></pre><p>这个时间还是蛮短的，所以我需要修改它，那咋个修改嘛？不可能vi nginx.conf 然后保存，再从新reload pod？ 这样能解决，但是不合理，于是官网提供给了这种方式:<br><a href="https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/configmap/" target="_blank" rel="noopener">https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/configmap/</a><br>也就是在官方提供的configmap.yaml中 添加覆盖原有默认值</p>
+<pre><code>[root@linux-node1 ingress-nginx]# more configmap.yaml
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: nginx-configuration
+  namespace: ingress-nginx
+  labels:
+    app: ingress-nginx
+data:
+  proxy-connect-timeout: &quot;30&quot;
+  proxy-read-timeout: &quot;120&quot;
+  proxy-send-timeout: &quot;120&quot;
+</code></pre><p>然后apply一下</p>
+<pre><code>kubectl apply -f configmap.yaml 
+</code></pre><p>在执行这个命令的时候pod会去重新加载配置configmap的信息<br>通过pod的日志可以看到:</p>
+<pre><code>[root@linux-node1 ~]# kubectl logs -f pod/nginx-ingress-controller-t9jh9 -n ingress-nginx
+I0703 10:21:24.014062       5 event.go:218] Event(v1.ObjectReference{Kind:&quot;ConfigMap&quot;, Namespace:&quot;ingress-nginx&quot;, Name:&quot;nginx-configuration&quot;, UID:&quot;df01bd6b-79f4-11e8-95a2-000c29c6d12b&quot;, APIVersion:&quot;v1&quot;, ResourceVersion:&quot;1013650&quot;, FieldPath:&quot;&quot;}): type: &apos;Normal&apos; reason: &apos;UPDATE&apos; ConfigMap ingress-nginx/nginx-configuration
+I0703 10:21:24.015721       5 controller.go:169] Configuration changes detected, backend reload required.
+I0703 10:21:24.539971       5 controller.go:179] Backend successfully reloaded.
+</code></pre><p>再一次进入容器查看nginx的配置参数是否改变:</p>
+<pre><code>proxy_connect_timeout                   30s;
+proxy_send_timeout                      120s;
+proxy_read_timeout                      120s;
+</code></pre><p>可以看到原来默认的配置参数值已经修改成功；<br>客户端再次访问就不会出现这种问题了：<br><img src="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2018/07/15306159339443.jpg" alt="">￼</p>
+
+        </div>
+
+        <blockquote class="post-copyright">
+    
+    <div class="content">
+        
+<span class="post-time">
+    最后更新时间：<time datetime="2022-06-07T06:55:07.903Z" itemprop="dateUpdated">2022-06-07 14:55:07</time>
+</span><br>
+
+
+        
+        该文链接：<a href="/2018/07/03/how-to-change-ingressnginx-nginxs-configuration/" target="_blank" rel="external">https://blog.sctux.cc/2018/07/03/how-to-change-ingressnginx-nginxs-configuration/</a>
+        
+    </div>
+    
+    <footer>
+        <a href="https://blog.sctux.cc">
+            <img src="/img/avatar.jpg" alt="maoqiu.guo">
+            maoqiu.guo
+        </a>
+    </footer>
+</blockquote>
+
+        
+<div class="page-reward">
+    <a id="rewardBtn" href="javascript:;" class="page-reward-btn waves-effect waves-circle waves-light">赏</a>
+</div>
+
+
+
+        <div class="post-footer">
+            
+	<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/k8s集群搭建/">k8s集群搭建</a></li></ul>
+
+
+            
+<div class="page-share-wrap">
+    
+
+<div class="page-share" id="pageShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://blog.sctux.cc/2018/07/03/how-to-change-ingressnginx-nginxs-configuration/&title=《How to Change Ingress-Nginx Nginx's Configuration？》 — 运维人&pic=https://blog.sctux.cc/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://blog.sctux.cc/2018/07/03/how-to-change-ingressnginx-nginxs-configuration/&title=《How to Change Ingress-Nginx Nginx's Configuration？》 — 运维人&source=😊" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.sctux.cc/2018/07/03/how-to-change-ingressnginx-nginxs-configuration/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《How to Change Ingress-Nginx Nginx's Configuration？》 — 运维人&url=https://blog.sctux.cc/2018/07/03/how-to-change-ingressnginx-nginxs-configuration/&via=https://blog.sctux.cc" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=https://blog.sctux.cc/2018/07/03/how-to-change-ingressnginx-nginxs-configuration/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+
+    <a href="javascript:;" id="shareFab" class="page-share-fab waves-effect waves-circle">
+        <i class="icon icon-share-alt icon-lg"></i>
+    </a>
+</div>
+
+
+
+        </div>
+    </div>
+
+    
+<nav class="post-nav flex-row flex-justify-between">
+  
+    <div class="waves-block waves-effect prev">
+      <a href="/2018/07/14/ru-he-jiangpod-zhong-decontainer-shi-qu-geng-gai-w/" id="post-prev" class="post-nav-link">
+        <div class="tips"><i class="icon icon-angle-left icon-lg icon-pr"></i> Prev</div>
+        <h4 class="title">如何将pod中的container时区更改为同一时区的城市或UTC时区偏移</h4>
+      </a>
+    </div>
+  
+
+  
+    <div class="waves-block waves-effect next">
+      <a href="/2018/07/02/e5-8a-9d-e5-90-9b-e8-8e-ab-e6-83-9c-e9-87-91-e7-bc-95-e8-a1-a3-ef-bc-8c-e5-8a-9d-e5-90-9b-e6-83-9c-e5-8f-96-e5-b0-91-e5-b9-b4-e6-97-b6-e3-80-82-trashed/" id="post-next" class="post-nav-link">
+        <div class="tips">Next <i class="icon icon-angle-right icon-lg icon-pl"></i></div>
+        <h4 class="title">劝君莫惜金缕衣，劝君惜取少年时。</h4>
+      </a>
+    </div>
+  
+</nav>
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Valine Comments -->
+    <div class="comments vcomment" id="comments"></div>
+    <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+    <script src="//unpkg.com/valine@latest/dist/Valine.min.js"></script>
+    <!-- Valine Comments script -->
+    <script>
+        var GUEST_INFO = ['nick','mail','link'];
+        var guest_info = 'nick,mail,link'.split(',').filter(function(item){
+          return GUEST_INFO.indexOf(item) > -1
+        });
+        new Valine({
+            el: '#comments',
+            notify: 'true' == 'true',
+            verify: 'true' == 'true',
+            appId: "lHxnnDHJXDgMoFpCbdx8A4q7-gzGzoHsz",
+            appKey: "W8H2NuO8chyDlCEQzionLuuV",
+            avatar: "monsterid",
+            placeholder: "来都来了，说点啥子吧~🌹 (友情提醒，留下正确的邮箱地址可以第一时间获取评论反馈)",
+            guest_info: guest_info.length == 0 ? GUEST_INFO : guest_info,
+            pageSize: "10"
+        })
+    </script>
+    <!-- Valine Comments end -->
+
+
+
+
+
+
+
+</article>
+
+<div id="reward" class="page-modal reward-lay">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <h3 class="reward-title">
+        <i class="icon icon-quote-left"></i>
+        谢谢大爷~
+        <i class="icon icon-quote-right"></i>
+    </h3>
+    <div class="reward-content">
+        
+        <div class="reward-code">
+            <img id="rewardCode" src="/img/wechat.jpg" alt="打赏二维码">
+        </div>
+        
+        <label class="reward-toggle">
+            <input id="rewardToggle" type="checkbox" class="reward-toggle-check" data-wechat="/img/wechat.jpg" data-alipay="/img/alipay.jpg">
+            <div class="reward-toggle-ctrol">
+                <span class="reward-toggle-item wechat">微信</span>
+                <span class="reward-toggle-label"></span>
+                <span class="reward-toggle-item alipay">支付宝</span>
+            </div>
+        </label>
+        
+    </div>
+</div>
+
+
+
+</div>
+
+        <footer class="footer">
+    <div class="top">
+        
+
+        <p>
+            
+            <span>博客内容遵循 <a rel="license" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh">知识共享 署名 - 非商业性 - 相同方式共享 4.0 国际协议</a></span>
+        </p>
+    </div>
+    <div class="bottom">
+        <p><span>maoqiu.guo &copy; 2013 - 2024</span>
+            <span>
+                
+                <a href="http://www.miitbeian.gov.cn/" target="_blank">蜀ICP备007号-1</a><br>
+                
+                Power by <a href="http://hexo.io/" target="_blank">Hexo</a> Theme <a href="https://github.com/yscoder/hexo-theme-indigo" target="_blank">indigo</a>
+            </span>
+        </p>
+    </div>
+</footer>
+
+    </main>
+    <div class="mask" id="mask"></div>
+<a href="javascript:;" id="gotop" class="waves-effect waves-circle waves-light"><span class="icon icon-lg icon-chevron-up"></span></a>
+
+
+
+<div class="global-share" id="globalShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://blog.sctux.cc/2018/07/03/how-to-change-ingressnginx-nginxs-configuration/&title=《How to Change Ingress-Nginx Nginx's Configuration？》 — 运维人&pic=https://blog.sctux.cc/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://blog.sctux.cc/2018/07/03/how-to-change-ingressnginx-nginxs-configuration/&title=《How to Change Ingress-Nginx Nginx's Configuration？》 — 运维人&source=😊" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.sctux.cc/2018/07/03/how-to-change-ingressnginx-nginxs-configuration/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《How to Change Ingress-Nginx Nginx's Configuration？》 — 运维人&url=https://blog.sctux.cc/2018/07/03/how-to-change-ingressnginx-nginxs-configuration/&via=https://blog.sctux.cc" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=https://blog.sctux.cc/2018/07/03/how-to-change-ingressnginx-nginxs-configuration/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+<div class="page-modal wx-share" id="wxShare">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <img src="//api.qrserver.com/v1/create-qr-code/?data=https://blog.sctux.cc/2018/07/03/how-to-change-ingressnginx-nginxs-configuration/" alt="微信分享二维码">
+</div>
+
+
+
+
+    <script src="//cdn.bootcss.com/node-waves/0.7.4/waves.min.js"></script>
+<script>
+var BLOG = { ROOT: '/', SHARE: true, REWARD: true };
+
+
+</script>
+
+<script src="/js/main.min.js?v=1.7.2"></script>
+
+
+<div class="search-panel" id="search-panel">
+    <ul class="search-result" id="search-result"></ul>
+</div>
+<template id="search-tpl">
+<li class="item">
+    <a href="{path}" class="waves-block waves-effect">
+        <div class="title ellipsis" title="{title}">{title}</div>
+        <div class="flex-row flex-middle">
+            <div class="tags ellipsis">
+                {tags}
+            </div>
+            <time class="flex-col time">{date}</time>
+        </div>
+    </a>
+</li>
+</template>
+
+<script src="/js/search.min.js?v=1.7.2" async></script>
+
+
+
+
+
+
+
+
+<script>
+(function() {
+    var OriginTitile = document.title, titleTime;
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            document.title = '老弟，哪儿去啦😊?！';
+            clearTimeout(titleTime);
+        } else {
+            document.title = '(つェ⊂)咦!老弟来啦!';
+            titleTime = setTimeout(function() {
+                document.title = OriginTitile;
+            },2000);
+        }
+    });
+})();
+</script>
+
+
+
+</body>
+</html>

@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.8.0">
+<script>(function(i,s,o,g,r,a,m){i["DaoVoiceObject"]=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;a.charset="utf-8";m.parentNode.insertBefore(a,m)})(window,document,"script",('https:' == document.location.protocol ? 'https:' : 'http:') + "//widget.daovoice.io/widget/9f77122a.js","daovoice")
+
+
+daovoice('init', {
+  app_id: "9f77122a",
+  user_id: "NO_89757", // 必填: 该用户在您系统上的唯一ID
+  email: "daovoice@example.com", // 选填:  该用户在您系统上的主邮箱
+  name: "道客船长", // 选填: 用户名
+  signed_up: 1449821660 // 选填: 用户的注册时间，用Unix时间戳表示
+});
+daovoice('update');
+
+</script>
+    
+
+    
+
+    
+
+
+
+    <meta charset="utf-8">
+    
+    
+    
+    
+    <title>理解kubernetes中的有状态服务StatefulSet | 运维人 | Devops、Linux、Kubernetes、Docker、Flask、Python、Shell、SRE</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    
+    <meta name="theme-color" content="#3F51B5">
+    
+    
+    <meta name="keywords" content="StatefulSet,有状态,持久化存储">
+    <meta name="description" content="概述概念StatefulSet 是为了解决有状态服务的问题（对应 Deployments 和 ReplicaSets 是为无状态服务而设计），其应用场景包括  稳定的持久化存储，即 Pod 重新调度后还是能访问到相同的持久化数据，基于 PVC 来实现 稳定的网络标志，即 Pod 重新调度后其 PodName 和 HostName 不变，基于 Headless Service（即没有 Cluster">
+<meta name="keywords" content="StatefulSet,有状态,持久化存储">
+<meta property="og:type" content="article">
+<meta property="og:title" content="理解kubernetes中的有状态服务StatefulSet">
+<meta property="og:url" content="https://blog.sctux.cc/2018/12/14/kubernetes-statefulset/index.html">
+<meta property="og:site_name" content="运维人">
+<meta property="og:description" content="概述概念StatefulSet 是为了解决有状态服务的问题（对应 Deployments 和 ReplicaSets 是为无状态服务而设计），其应用场景包括  稳定的持久化存储，即 Pod 重新调度后还是能访问到相同的持久化数据，基于 PVC 来实现 稳定的网络标志，即 Pod 重新调度后其 PodName 和 HostName 不变，基于 Headless Service（即没有 Cluster">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://blog.sctux.cc/2018/12/14/kubernetes-statefulset/nfs.png">
+<meta property="og:updated_time" content="2022-06-07T06:55:07.977Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="理解kubernetes中的有状态服务StatefulSet">
+<meta name="twitter:description" content="概述概念StatefulSet 是为了解决有状态服务的问题（对应 Deployments 和 ReplicaSets 是为无状态服务而设计），其应用场景包括  稳定的持久化存储，即 Pod 重新调度后还是能访问到相同的持久化数据，基于 PVC 来实现 稳定的网络标志，即 Pod 重新调度后其 PodName 和 HostName 不变，基于 Headless Service（即没有 Cluster">
+<meta name="twitter:image" content="https://blog.sctux.cc/2018/12/14/kubernetes-statefulset/nfs.png">
+    
+    <link rel="shortcut icon" href="/favicon.ico">
+    <link rel="stylesheet" href="/css/style.css?v=1.7.2">
+    <script>window.lazyScripts=[]</script>
+
+    <!-- custom head -->
+    
+
+</head>
+
+<body>
+    <div id="loading" class="active"></div>
+
+    <aside id="menu">
+  <div class="inner flex-row-vertical">
+    <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menu-off">
+        <i class="icon icon-lg icon-close"></i>
+    </a>
+    <div class="brand-wrap" style="background-image:url(/img/brand.jpg)">
+      <div class="brand">
+        <a href="/" class="avatar waves-effect waves-circle waves-light">
+          <img src="/img/avatar.jpg">
+        </a>
+        <hgroup class="introduce">
+          <h5 class="nickname">maoqiu.guo</h5>
+          <a href="mailto:guomaoqiu@gmail.com" title="guomaoqiu@gmail.com" class="mail">guomaoqiu@gmail.com</a>
+        </hgroup>
+      </div>
+    </div>
+    <div class="scroll-wrap flex-col">
+      <ul class="nav">
+        
+            <li class="waves-block waves-effect">
+              <a href="/">
+                <i class="icon icon-lg icon-home"></i>
+                主页
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/archives">
+                <i class="icon icon-lg icon-archives"></i>
+                归档
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/tags">
+                <i class="icon icon-lg icon-tags"></i>
+                标签
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/categories">
+                <i class="icon icon-lg icon-th-list"></i>
+                分类
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://github.com/guomaoqiu" target="_blank">
+                <i class="icon icon-lg icon-github"></i>
+                Github
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/works">
+                <i class="icon icon-lg icon-hand-peace-o"></i>
+                作品
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="http://demo.sctux.cc" target="_blank">
+                <i class="icon icon-lg icon-link"></i>
+                DevOpsPlatform
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="http://resume.sctux.cc/" target="_blank">
+                <i class="icon icon-lg icon-heart"></i>
+                我的简历
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/about">
+                <i class="icon icon-lg icon-user"></i>
+                关于我
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://blog.sctux.cc/Skilltree.jpg" target="_blank">
+                <i class="icon icon-lg icon-tree"></i>
+                我的技能树
+              </a>
+            </li>
+        
+      </ul>
+    </div>
+  </div>
+</aside>
+
+    <main id="main">
+        <header class="top-header" id="header">
+    <div class="flex-row">
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light on" id="menu-toggle">
+          <i class="icon icon-lg icon-navicon"></i>
+        </a>
+        <div class="flex-col header-title ellipsis">理解kubernetes中的有状态服务StatefulSet</div>
+        
+        <div class="search-wrap" id="search-wrap">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="back">
+                <i class="icon icon-lg icon-chevron-left"></i>
+            </a>
+            <input type="text" id="key" class="search-input" autocomplete="off" placeholder="输入感兴趣的关键字">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="search">
+                <i class="icon icon-lg icon-search"></i>
+            </a>
+        </div>
+        
+        
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menuShare">
+            <i class="icon icon-lg icon-share-alt"></i>
+        </a>
+        
+    </div>
+</header>
+<header class="content-header post-header">
+
+    <div class="container fade-scale">
+        <h1 class="title">理解kubernetes中的有状态服务StatefulSet</h1>
+        <h5 class="subtitle">
+            
+                <time datetime="2018-12-14T07:10:56.000Z" itemprop="datePublished" class="page-time">
+  2018-12-14
+</time>
+
+
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/kubernetes/">kubernetes</a></li></ul>
+
+            
+        </h5>
+    </div>
+
+    
+
+
+</header>
+
+
+<div class="container body-wrap">
+    
+    <aside class="post-widget">
+        <nav class="post-toc-wrap post-toc-shrink" id="post-toc">
+            <h4>TOC</h4>
+            <ol class="post-toc"><li class="post-toc-item post-toc-level-1"><a class="post-toc-link" href="#概述"><span class="post-toc-number">1.</span> <span class="post-toc-text">概述</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#概念"><span class="post-toc-number">1.1.</span> <span class="post-toc-text">概念</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#限制"><span class="post-toc-number">1.2.</span> <span class="post-toc-text">限制</span></a></li></ol></li><li class="post-toc-item post-toc-level-1"><a class="post-toc-link" href="#部署Statefulset服务"><span class="post-toc-number">2.</span> <span class="post-toc-text">部署Statefulset服务</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#获取动态卷信息"><span class="post-toc-number">2.1.</span> <span class="post-toc-text">获取动态卷信息</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#编写service"><span class="post-toc-number">2.2.</span> <span class="post-toc-text">编写service</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#编写statefulset-yaml"><span class="post-toc-number">2.3.</span> <span class="post-toc-text">编写statefulset yaml</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#验证服务伸缩性"><span class="post-toc-number">2.4.</span> <span class="post-toc-text">验证服务伸缩性</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#创建Statefulset服务："><span class="post-toc-number">2.4.1.</span> <span class="post-toc-text">创建Statefulset服务：</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#扩容服务到3个Pod，显示会创建新的云盘卷："><span class="post-toc-number">2.4.2.</span> <span class="post-toc-text">扩容服务到3个Pod，显示会创建新的云盘卷：</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#缩容服务到1个Pod，显示pvc-pv并不会一同删除："><span class="post-toc-number">2.4.3.</span> <span class="post-toc-text">缩容服务到1个Pod，显示pvc/pv并不会一同删除：</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#再次扩容到3个Pod，新的pod会复用原来的PVC-PV："><span class="post-toc-number">2.4.4.</span> <span class="post-toc-text">再次扩容到3个Pod，新的pod会复用原来的PVC/PV：</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#删除一个pod-web0前，Pod引用PVC：www-disk-web-0"><span class="post-toc-number">2.4.5.</span> <span class="post-toc-text">删除一个pod/web0前，Pod引用PVC：www-disk-web-0</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#删除Pod后，重新创建的Pod名字与删除的一致，且使用同一个PVC："><span class="post-toc-number">2.4.6.</span> <span class="post-toc-text">删除Pod后，重新创建的Pod名字与删除的一致，且使用同一个PVC：</span></a></li></ol></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#验证服务高可用性"><span class="post-toc-number">2.5.</span> <span class="post-toc-text">验证服务高可用性</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#共享持久卷中新建文件"><span class="post-toc-number">2.5.1.</span> <span class="post-toc-text">共享持久卷中新建文件</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#删除Pod，验证数据持久性："><span class="post-toc-number">2.5.2.</span> <span class="post-toc-text">删除Pod，验证数据持久性：</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#数据保存"><span class="post-toc-number">2.5.3.</span> <span class="post-toc-text">数据保存:</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#附"><span class="post-toc-number">2.5.4.</span> <span class="post-toc-text">附:</span></a></li></ol></li></ol></li></ol>
+        </nav>
+    </aside>
+
+
+<article id="post-kubernetes-statefulset" class="post-article article-type-post fade" itemprop="blogPost">
+
+    <div class="post-card">
+        <h1 class="post-card-title">理解kubernetes中的有状态服务StatefulSet</h1>
+        <div class="post-meta">
+            <time class="post-time" title="2018-12-14 15:10:56" datetime="2018-12-14T07:10:56.000Z" itemprop="datePublished">2018-12-14</time>
+
+            
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/kubernetes/">kubernetes</a></li></ul>
+
+
+
+            
+
+        </div>
+        <div class="post-content" id="post-content" itemprop="postContent">
+            <h1 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h1><h2 id="概念"><a href="#概念" class="headerlink" title="概念"></a>概念</h2><p>StatefulSet 是为了解决有状态服务的问题（对应 Deployments 和 ReplicaSets 是为无状态服务而设计），其应用场景包括</p>
+<ul>
+<li>稳定的持久化存储，即 Pod 重新调度后还是能访问到相同的持久化数据，基于 PVC 来实现</li>
+<li>稳定的网络标志，即 Pod 重新调度后其 PodName 和 HostName 不变，基于 Headless Service（即没有 Cluster IP 的 Service）来实现</li>
+<li>有序部署，有序扩展，即 Pod 是有顺序的，在部署或者扩展的时候要依据定义的顺序依次依序进行（即从 0 到 N-1，在下一个 Pod 运行之前所有之前的 Pod 必须都是 Running 和 Ready 状态），基于 init containers 来实现</li>
+<li>有序收缩，有序删除（即从 N-1 到 0）</li>
+</ul>
+<p>从上面的应用场景可以发现，StatefulSet 由以下几个部分组成：</p>
+<ul>
+<li>用于定义网络标志（DNS domain）的 Headless Service</li>
+<li>用于创建 PersistentVolumes 的 volumeClaimTemplates</li>
+<li>定义具体应用的 StatefulSet</li>
+</ul>
+<p>StatefulSet 中每个 Pod 的 DNS 格式为 statefulSetName-{0..N-1}.serviceName.namespace.svc.cluster.local，其中</p>
+<ul>
+<li>serviceName 为 Headless Service 的名字</li>
+<li>0..N-1 为 Pod 所在的序号，从 0 开始到 N-1</li>
+<li>statefulSetName 为 StatefulSet 的名字</li>
+<li>namespace 为服务所在的 namespace，Headless Service 和 StatefulSet 必须在相同的 namespace</li>
+<li>.cluster.local 为 Cluster Domain</li>
+</ul>
+<h2 id="限制"><a href="#限制" class="headerlink" title="限制"></a>限制</h2><ul>
+<li>给定 Pod 的存储必须由 PersistentVolume Provisioner 根据请求的 storage class 进行配置，或由管理员预先配置。</li>
+<li>删除或 scale StatefulSet 将不会删除与 StatefulSet 相关联的 volume。 这样做是为了确保数据安全性，这通常比自动清除所有相关 StatefulSet 资源更有价值。</li>
+<li>StatefulSets 目前要求 Headless Service 负责 Pod 的网络身份。 您有责任创建此服务。</li>
+</ul>
+<h1 id="部署Statefulset服务"><a href="#部署Statefulset服务" class="headerlink" title="部署Statefulset服务"></a>部署Statefulset服务</h1><p>首先我们下面使用的是用前面<a href="https://blog.sctux.com/2018/12/15/kubernetes-storage/#NFS%E4%BD%9C%E4%B8%BA%E5%8A%A8%E6%80%81%E6%8C%81%E4%B9%85%E5%8C%96%E5%AD%98%E5%82%A8%E5%8D%B7" target="_blank" rel="noopener">博文</a>中使用到的NFS做动态供给PVC作为持久化存储。那么他的创建步骤这里不在赘述，我们在编排yaml文件中申请即可。</p>
+<h2 id="获取动态卷信息"><a href="#获取动态卷信息" class="headerlink" title="获取动态卷信息"></a>获取动态卷信息</h2><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl <span class="keyword">describe</span> storageclass <span class="keyword">managed</span>-nfs-<span class="keyword">storage</span></span><br><span class="line"><span class="keyword">Name</span>:                  <span class="keyword">managed</span>-nfs-<span class="keyword">storage</span></span><br><span class="line">IsDefaultClass:        <span class="keyword">No</span></span><br><span class="line">Annotations:           &lt;<span class="keyword">none</span>&gt;</span><br><span class="line">Provisioner:           fuseim.pri/ifs</span><br><span class="line"><span class="keyword">Parameters</span>:            archiveOnDelete=<span class="literal">false</span></span><br><span class="line">AllowVolumeExpansion:  &lt;unset&gt;</span><br><span class="line">MountOptions:          &lt;<span class="keyword">none</span>&gt;</span><br><span class="line">ReclaimPolicy:         <span class="keyword">Delete</span></span><br><span class="line">VolumeBindingMode:     <span class="keyword">Immediate</span></span><br><span class="line"><span class="keyword">Events</span>:                &lt;<span class="keyword">none</span>&gt;</span><br></pre></td></tr></table></figure>
+<h2 id="编写service"><a href="#编写service" class="headerlink" title="编写service"></a>编写service</h2><p>一个名为 nginx 的 headless service，用于控制网络域。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">$</span> <span class="string">cat</span> <span class="string">&gt;&gt;</span> <span class="string">statefulset_service.yaml</span> <span class="string">&lt;&lt;</span> <span class="string">EOF</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Service</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line"><span class="attr">  name:</span> <span class="string">nginx</span></span><br><span class="line"><span class="attr">  labels:</span></span><br><span class="line"><span class="attr">    app:</span> <span class="string">nginx</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line"><span class="attr">  ports:</span></span><br><span class="line"><span class="attr">  - port:</span> <span class="number">80</span></span><br><span class="line"><span class="attr">    name:</span> <span class="string">web</span></span><br><span class="line"><span class="attr">  clusterIP:</span> <span class="string">None</span></span><br><span class="line"><span class="attr">  selector:</span></span><br><span class="line"><span class="attr">    app:</span> <span class="string">nginx</span></span><br><span class="line"><span class="string">EOF</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 执行创建</span></span><br><span class="line"><span class="string">$</span> <span class="string">kubectl</span> <span class="string">create</span> <span class="bullet">-f</span> <span class="string">statefulset_service.yaml</span></span><br><span class="line"><span class="string">service/nginx</span> <span class="string">created</span></span><br></pre></td></tr></table></figure>
+<h2 id="编写statefulset-yaml"><a href="#编写statefulset-yaml" class="headerlink" title="编写statefulset yaml"></a>编写statefulset yaml</h2><ul>
+<li>一个名为 web 的 StatefulSet，它的 Spec 中指定在有 2 个运行 nginx 容器的 Pod。</li>
+<li><code>volumeClaimTemplates</code> 使用 PersistentVolume Provisioner 提供的 <code>PersistentVolumes</code> 作为稳定存储。</li>
+</ul>
+<p>volumeClaimTemplates: 表示一类PVC的模板，系统会根据Statefulset配置的replicas数量，创建相应数量的PVC。这些PVC除了名字不一样之外其他配置都是一样的。</p>
+<p>下面storageClassName配置为我之前通过NFS创建的。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">$</span> <span class="string">cat</span> <span class="string">&gt;&gt;</span> <span class="string">statefulset.yaml</span> <span class="string">&lt;&lt;</span> <span class="string">EOF</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">apps/v1beta1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">StatefulSet</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line"><span class="attr">  name:</span> <span class="string">web</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line"><span class="attr">  serviceName:</span> <span class="string">"nginx"</span></span><br><span class="line"><span class="attr">  replicas:</span> <span class="number">2</span></span><br><span class="line"><span class="attr">  template:</span></span><br><span class="line"><span class="attr">    metadata:</span></span><br><span class="line"><span class="attr">      labels:</span></span><br><span class="line"><span class="attr">        app:</span> <span class="string">nginx</span></span><br><span class="line"><span class="attr">    spec:</span></span><br><span class="line"><span class="attr">      containers:</span></span><br><span class="line"><span class="attr">      - name:</span> <span class="string">nginx</span></span><br><span class="line"><span class="attr">        image:</span> <span class="string">nginx</span></span><br><span class="line"><span class="attr">        ports:</span></span><br><span class="line"><span class="attr">        - containerPort:</span> <span class="number">80</span></span><br><span class="line"><span class="attr">          name:</span> <span class="string">web</span></span><br><span class="line"><span class="attr">        volumeMounts:</span></span><br><span class="line"><span class="attr">        - name:</span> <span class="string">www-disk</span></span><br><span class="line"><span class="attr">          mountPath:</span> <span class="string">/usr/share/nginx/html</span></span><br><span class="line"><span class="attr">  volumeClaimTemplates:</span></span><br><span class="line"><span class="attr">  - metadata:</span></span><br><span class="line"><span class="attr">      name:</span> <span class="string">www-disk</span></span><br><span class="line"><span class="attr">      annotations:</span></span><br><span class="line">        <span class="string">volume.beta.kubernetes.io/storage-class:</span> <span class="string">"managed-nfs-storage"</span></span><br><span class="line"><span class="attr">    spec:</span></span><br><span class="line"><span class="attr">      accessModes:</span> <span class="string">[</span> <span class="string">"ReadWriteOnce"</span> <span class="string">]</span></span><br><span class="line"><span class="attr">      storageClassName:</span> <span class="string">"managed-nfs-storage"</span></span><br><span class="line"><span class="attr">      resources:</span></span><br><span class="line"><span class="attr">        requests:</span></span><br><span class="line"><span class="attr">          storage:</span> <span class="number">1</span><span class="string">Gi</span></span><br><span class="line"><span class="string">EOF</span></span><br></pre></td></tr></table></figure>
+<h2 id="验证服务伸缩性"><a href="#验证服务伸缩性" class="headerlink" title="验证服务伸缩性"></a>验证服务伸缩性</h2><h3 id="创建Statefulset服务："><a href="#创建Statefulset服务：" class="headerlink" title="创建Statefulset服务："></a>创建Statefulset服务：</h3><figure class="highlight lsl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"># 执行创建</span><br><span class="line">$ kubectl create -f statefulset.yaml</span><br><span class="line">statefulset.apps/web created</span><br><span class="line"></span><br><span class="line">$ kubectl get pod</span><br><span class="line">NAME                                          READY     STATUS    RESTARTS   AGE</span><br><span class="line">pod/nfs-client-provisioner<span class="number">-6</span>c6997c674-z7m9r   <span class="number">1</span>/<span class="number">1</span>       Running   <span class="number">0</span>          <span class="number">18</span>m</span><br><span class="line">pod/web<span class="number">-0</span>                                     <span class="number">1</span>/<span class="number">1</span>       Running   <span class="number">0</span>          <span class="number">13</span>m</span><br><span class="line">pod/web<span class="number">-1</span>                                     <span class="number">1</span>/<span class="number">1</span>       Running   <span class="number">0</span>          <span class="number">12</span>m</span><br><span class="line"></span><br><span class="line">$ kubectl get pvc</span><br><span class="line">NAME                                   STATUS    VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS          AGE</span><br><span class="line">persistentvolumeclaim/www-disk-web<span class="number">-0</span>   Bound     pvc-a440540e<span class="number">-01</span>dd<span class="number">-11e9</span>-b006<span class="number">-00505621</span>dd5b   <span class="number">1</span>Gi        RWO            managed-nfs-storage   <span class="number">13</span>m</span><br><span class="line">persistentvolumeclaim/www-disk-web<span class="number">-1</span>   Bound     pvc-af5c7006<span class="number">-01</span>dd<span class="number">-11e9</span>-b006<span class="number">-00505621</span>dd5b   <span class="number">1</span>Gi        RWO            managed-nfs-storage   <span class="number">12</span>m</span><br></pre></td></tr></table></figure>
+<h3 id="扩容服务到3个Pod，显示会创建新的云盘卷："><a href="#扩容服务到3个Pod，显示会创建新的云盘卷：" class="headerlink" title="扩容服务到3个Pod，显示会创建新的云盘卷："></a>扩容服务到3个Pod，显示会创建新的云盘卷：</h3><figure class="highlight lsl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl scale sts web --replicas=<span class="number">3</span></span><br><span class="line">statefulset.apps/web scaled</span><br><span class="line"></span><br><span class="line">$ kubectl get pod</span><br><span class="line">NAME                                      READY     STATUS    RESTARTS   AGE</span><br><span class="line">nfs-client-provisioner<span class="number">-6</span>c6997c674-z7m9r   <span class="number">1</span>/<span class="number">1</span>       Running   <span class="number">0</span>          <span class="number">19</span>m</span><br><span class="line">web<span class="number">-0</span>                                     <span class="number">1</span>/<span class="number">1</span>       Running   <span class="number">0</span>          <span class="number">14</span>m</span><br><span class="line">web<span class="number">-1</span>                                     <span class="number">1</span>/<span class="number">1</span>       Running   <span class="number">0</span>          <span class="number">14</span>m</span><br><span class="line">web<span class="number">-2</span>                                     <span class="number">1</span>/<span class="number">1</span>       Running   <span class="number">0</span>          <span class="number">40</span>s</span><br><span class="line"></span><br><span class="line">$ kubectl get pvc</span><br><span class="line">NAME             STATUS    VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS          AGE</span><br><span class="line">www-disk-web<span class="number">-0</span>   Bound     pvc-a440540e<span class="number">-01</span>dd<span class="number">-11e9</span>-b006<span class="number">-00505621</span>dd5b   <span class="number">1</span>Gi        RWO            managed-nfs-storage   <span class="number">14</span>m</span><br><span class="line">www-disk-web<span class="number">-1</span>   Bound     pvc-af5c7006<span class="number">-01</span>dd<span class="number">-11e9</span>-b006<span class="number">-00505621</span>dd5b   <span class="number">1</span>Gi        RWO            managed-nfs-storage   <span class="number">14</span>m</span><br><span class="line">www-disk-web<span class="number">-2</span>   Bound     pvc<span class="number">-97</span>afce59<span class="number">-01</span>df<span class="number">-11e9</span>-b006<span class="number">-00505621</span>dd5b   <span class="number">1</span>Gi        RWO            managed-nfs-storage   <span class="number">38</span>s</span><br></pre></td></tr></table></figure>
+<h3 id="缩容服务到1个Pod，显示pvc-pv并不会一同删除："><a href="#缩容服务到1个Pod，显示pvc-pv并不会一同删除：" class="headerlink" title="缩容服务到1个Pod，显示pvc/pv并不会一同删除："></a>缩容服务到1个Pod，显示pvc/pv并不会一同删除：</h3><figure class="highlight lsl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl scale sts web --replicas=<span class="number">1</span></span><br><span class="line">statefulset.apps/web scaled</span><br><span class="line"></span><br><span class="line">$ kubectl get pod</span><br><span class="line">NAME                                      READY     STATUS    RESTARTS   AGE</span><br><span class="line">nfs-client-provisioner<span class="number">-6</span>c6997c674-z7m9r   <span class="number">1</span>/<span class="number">1</span>       Running   <span class="number">0</span>          <span class="number">21</span>m</span><br><span class="line">web<span class="number">-0</span>                                     <span class="number">1</span>/<span class="number">1</span>       Running   <span class="number">0</span>          <span class="number">16</span>m</span><br><span class="line"></span><br><span class="line">$ kubectl get pvc</span><br><span class="line">NAME             STATUS    VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS          AGE</span><br><span class="line">www-disk-web<span class="number">-0</span>   Bound     pvc-a440540e<span class="number">-01</span>dd<span class="number">-11e9</span>-b006<span class="number">-00505621</span>dd5b   <span class="number">1</span>Gi        RWO            managed-nfs-storage   <span class="number">16</span>m</span><br><span class="line">www-disk-web<span class="number">-1</span>   Bound     pvc-af5c7006<span class="number">-01</span>dd<span class="number">-11e9</span>-b006<span class="number">-00505621</span>dd5b   <span class="number">1</span>Gi        RWO            managed-nfs-storage   <span class="number">16</span>m</span><br><span class="line">www-disk-web<span class="number">-2</span>   Bound     pvc<span class="number">-97</span>afce59<span class="number">-01</span>df<span class="number">-11e9</span>-b006<span class="number">-00505621</span>dd5b   <span class="number">1</span>Gi        RWO            managed-nfs-storage   <span class="number">2</span>m</span><br></pre></td></tr></table></figure>
+<h3 id="再次扩容到3个Pod，新的pod会复用原来的PVC-PV："><a href="#再次扩容到3个Pod，新的pod会复用原来的PVC-PV：" class="headerlink" title="再次扩容到3个Pod，新的pod会复用原来的PVC/PV："></a>再次扩容到3个Pod，新的pod会复用原来的PVC/PV：</h3><figure class="highlight lsl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl scale sts web --replicas=<span class="number">3</span></span><br><span class="line">statefulset.apps/web scaled</span><br><span class="line"></span><br><span class="line">$ kubectl get pod</span><br><span class="line">NAME                                          READY     STATUS    RESTARTS   AGE</span><br><span class="line">pod/nfs-client-provisioner<span class="number">-6</span>c6997c674-z7m9r   <span class="number">1</span>/<span class="number">1</span>       Running   <span class="number">1</span>          <span class="number">46</span>m</span><br><span class="line">pod/web<span class="number">-0</span>                                     <span class="number">1</span>/<span class="number">1</span>       Running   <span class="number">0</span>          <span class="number">3</span>m</span><br><span class="line">pod/web<span class="number">-1</span>                                     <span class="number">1</span>/<span class="number">1</span>       Running   <span class="number">0</span>          <span class="number">1</span>m</span><br><span class="line">pod/web<span class="number">-2</span>                                     <span class="number">1</span>/<span class="number">1</span>       Running   <span class="number">0</span>          <span class="number">18</span>s</span><br><span class="line"></span><br><span class="line">$ kubectl get pvc</span><br><span class="line">NAME                                   STATUS    VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS          AGE</span><br><span class="line">persistentvolumeclaim/www-disk-web<span class="number">-0</span>   Bound     pvc-a440540e<span class="number">-01</span>dd<span class="number">-11e9</span>-b006<span class="number">-00505621</span>dd5b   <span class="number">1</span>Gi        RWO            managed-nfs-storage   <span class="number">41</span>m</span><br><span class="line">persistentvolumeclaim/www-disk-web<span class="number">-1</span>   Bound     pvc-af5c7006<span class="number">-01</span>dd<span class="number">-11e9</span>-b006<span class="number">-00505621</span>dd5b   <span class="number">1</span>Gi        RWO            managed-nfs-storage   <span class="number">40</span>m</span><br><span class="line">persistentvolumeclaim/www-disk-web<span class="number">-2</span>   Bound     pvc<span class="number">-97</span>afce59<span class="number">-01</span>df<span class="number">-11e9</span>-b006<span class="number">-00505621</span>dd5b   <span class="number">1</span>Gi        RWO            managed-nfs-storage   <span class="number">27</span>m</span><br></pre></td></tr></table></figure>
+<h3 id="删除一个pod-web0前，Pod引用PVC：www-disk-web-0"><a href="#删除一个pod-web0前，Pod引用PVC：www-disk-web-0" class="headerlink" title="删除一个pod/web0前，Pod引用PVC：www-disk-web-0"></a>删除一个pod/web0前，Pod引用PVC：www-disk-web-0</h3><figure class="highlight subunit"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">kubectl describe pod/web<span class="string">-0</span> | grep ClaimName</span><br><span class="line">    ClaimName:  www-disk-web<span class="string">-0</span></span><br></pre></td></tr></table></figure>
+<h3 id="删除Pod后，重新创建的Pod名字与删除的一致，且使用同一个PVC："><a href="#删除Pod后，重新创建的Pod名字与删除的一致，且使用同一个PVC：" class="headerlink" title="删除Pod后，重新创建的Pod名字与删除的一致，且使用同一个PVC："></a>删除Pod后，重新创建的Pod名字与删除的一致，且使用同一个PVC：</h3><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl <span class="keyword">delete</span> pod/web<span class="number">-0</span></span><br><span class="line">pod <span class="string">"web-0"</span> deleted</span><br><span class="line"></span><br><span class="line">$ kubectl <span class="keyword">get</span> pod</span><br><span class="line"><span class="keyword">NAME</span>                                          READY     <span class="keyword">STATUS</span>    RESTARTS   AGE</span><br><span class="line">pod/nfs-<span class="keyword">client</span>-provisioner<span class="number">-6</span>c6997c674-z7m9r   <span class="number">1</span>/<span class="number">1</span>       Running   <span class="number">1</span>          <span class="number">49</span>m</span><br><span class="line">pod/web<span class="number">-0</span>                                     <span class="number">1</span>/<span class="number">1</span>       Running   <span class="number">0</span>          <span class="number">10</span>s</span><br><span class="line">pod/web<span class="number">-1</span>                                     <span class="number">1</span>/<span class="number">1</span>       Running   <span class="number">0</span>          <span class="number">4</span>m</span><br><span class="line">pod/web<span class="number">-2</span>                                     <span class="number">1</span>/<span class="number">1</span>       Running   <span class="number">0</span>          <span class="number">3</span>m</span><br><span class="line"></span><br><span class="line">$ kubectl <span class="keyword">describe</span> pod/web<span class="number">-0</span> | grep ClaimName</span><br><span class="line">    ClaimName:  www-disk-web<span class="number">-0</span></span><br><span class="line"></span><br><span class="line">$ kubectl <span class="keyword">get</span> pvc</span><br><span class="line"><span class="keyword">NAME</span>                                   <span class="keyword">STATUS</span>    VOLUME                                     <span class="keyword">CAPACITY</span>   <span class="keyword">ACCESS</span> MODES   STORAGECLASS          AGE</span><br><span class="line">persistentvolumeclaim/www-disk-web<span class="number">-0</span>   <span class="keyword">Bound</span>     pvc-a440540e<span class="number">-01</span>dd<span class="number">-11e9</span>-b006<span class="number">-00505621</span>dd5b   <span class="number">1</span>Gi        RWO            <span class="keyword">managed</span>-nfs-<span class="keyword">storage</span>   <span class="number">44</span>m</span><br><span class="line">persistentvolumeclaim/www-disk-web<span class="number">-1</span>   <span class="keyword">Bound</span>     pvc-af5c7006<span class="number">-01</span>dd<span class="number">-11e9</span>-b006<span class="number">-00505621</span>dd5b   <span class="number">1</span>Gi        RWO            <span class="keyword">managed</span>-nfs-<span class="keyword">storage</span>   <span class="number">43</span>m</span><br><span class="line">persistentvolumeclaim/www-disk-web<span class="number">-2</span>   <span class="keyword">Bound</span>     pvc<span class="number">-97</span>afce59<span class="number">-01</span>df<span class="number">-11e9</span>-b006<span class="number">-00505621</span>dd5b   <span class="number">1</span>Gi        RWO            <span class="keyword">managed</span>-nfs-<span class="keyword">storage</span>   <span class="number">30</span>m</span><br></pre></td></tr></table></figure>
+<h2 id="验证服务高可用性"><a href="#验证服务高可用性" class="headerlink" title="验证服务高可用性"></a>验证服务高可用性</h2><h3 id="共享持久卷中新建文件"><a href="#共享持久卷中新建文件" class="headerlink" title="共享持久卷中新建文件"></a>共享持久卷中新建文件</h3><figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl exec web-<span class="number">1</span> ls <span class="regexp">/usr/</span>share<span class="regexp">/nginx/</span>html</span><br><span class="line">statefulset</span><br></pre></td></tr></table></figure>
+<h3 id="删除Pod，验证数据持久性："><a href="#删除Pod，验证数据持久性：" class="headerlink" title="删除Pod，验证数据持久性："></a>删除Pod，验证数据持久性：</h3><figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl <span class="keyword">delete</span> pod web-<span class="number">1</span></span><br><span class="line">pod <span class="string">"web-1"</span> deleted</span><br><span class="line"></span><br><span class="line"><span class="comment"># 待新的pod创建之后再次检查文件是否还在</span></span><br><span class="line">$ kubectl exec web-<span class="number">1</span> ls <span class="regexp">/usr/</span>share<span class="regexp">/nginx/</span>html</span><br><span class="line">statefulset</span><br><span class="line"></span><br><span class="line"><span class="comment"># 以上说明删除pod对pvc没有任何的影响，我们的数据还是保存着的。</span></span><br></pre></td></tr></table></figure>
+<h3 id="数据保存"><a href="#数据保存" class="headerlink" title="数据保存:"></a>数据保存:</h3><p>上面也说啦, 删除或 scale StatefulSet 将不会删除与 StatefulSet 相关联的 volume。 这样做是为了确保数据安全性，这通常比自动清除所有相关 StatefulSet 资源更有价值。</p>
+<p>所以我到NFS Server上面check一下:<br><figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="/2018/12/14/kubernetes-statefulset/nfs.png" alt="" title="">
+                </div>
+                <div class="image-caption"></div>
+            </figure></p>
+<p>可见 我们在pod/web-1上创建的文件还是保存着的。</p>
+<h3 id="附"><a href="#附" class="headerlink" title="附:"></a>附:</h3><p>该yaml为华为云那边的PV申请，以及StatefulSet应用的创建<br><figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="comment"># PVC存储申请</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">PersistentVolumeClaim</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line"><span class="attr">  name:</span> <span class="string">pvc-evs-auto-example</span></span><br><span class="line"><span class="attr">  namespace:</span> <span class="string">default</span></span><br><span class="line"><span class="attr">  annotations:</span></span><br><span class="line">    <span class="string">volume.beta.kubernetes.io/storage-class:</span> <span class="string">sata</span></span><br><span class="line">    <span class="string">volume.beta.kubernetes.io/storage-provisioner:</span> <span class="string">flexvolume-huawei.com/fuxivol</span></span><br><span class="line"><span class="attr">  labels:</span></span><br><span class="line">    <span class="string">failure-domain.beta.kubernetes.io/region:</span> <span class="string">cn-north-1</span></span><br><span class="line">    <span class="string">failure-domain.beta.kubernetes.io/zone:</span> <span class="string">cn-north-1a</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line"><span class="attr">  accessModes:</span></span><br><span class="line"><span class="bullet">  -</span> <span class="string">ReadWriteMany</span></span><br><span class="line"><span class="attr">  resources:</span></span><br><span class="line"><span class="attr">    requests:</span></span><br><span class="line"><span class="attr">      storage:</span> <span class="number">10</span><span class="string">Gi</span></span><br><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="comment"># StatefulSet应用创建</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">apps/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">StatefulSet</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line"><span class="attr">  name:</span> <span class="string">cce21days-app11-guomaoqiu</span></span><br><span class="line"><span class="attr">  namespace:</span> <span class="string">default</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line"><span class="attr">  podManagementPolicy:</span> <span class="string">OrderedReady</span></span><br><span class="line"><span class="attr">  serviceName:</span> <span class="string">cce21days-app11-guomaoqiu</span></span><br><span class="line"><span class="attr">  replicas:</span> <span class="number">3</span></span><br><span class="line"><span class="attr">  revisionHistoryLimit:</span> <span class="number">10</span>  </span><br><span class="line"><span class="attr">  selector:</span></span><br><span class="line"><span class="attr">    matchLabels:</span></span><br><span class="line"><span class="attr">      app:</span> <span class="string">cce21days-app11-guomaoqiu</span></span><br><span class="line">      <span class="string">failure-domain.beta.kubernetes.io/region:</span> <span class="string">cn-north-1</span></span><br><span class="line">      <span class="string">failure-domain.beta.kubernetes.io/zone:</span> <span class="string">cn-north-1a</span></span><br><span class="line"><span class="attr">  template:</span></span><br><span class="line"><span class="attr">    metadata:</span></span><br><span class="line"><span class="attr">      labels:</span></span><br><span class="line"><span class="attr">        app:</span> <span class="string">cce21days-app11-guomaoqiu</span></span><br><span class="line">        <span class="string">failure-domain.beta.kubernetes.io/region:</span> <span class="string">cn-north-1</span></span><br><span class="line">        <span class="string">failure-domain.beta.kubernetes.io/zone:</span> <span class="string">cn-north-1a</span></span><br><span class="line"><span class="attr">    spec:</span></span><br><span class="line"><span class="attr">      affinity:</span> <span class="string">&#123;&#125;</span></span><br><span class="line"><span class="attr">      containers:</span></span><br><span class="line"><span class="attr">      - image:</span> <span class="number">100.125</span><span class="number">.0</span><span class="number">.198</span><span class="string">:20202/guomaoqiu/tank:1.0.1</span></span><br><span class="line"><span class="attr">        imagePullPolicy:</span> <span class="string">IfNotPresent</span></span><br><span class="line"><span class="attr">        name:</span> <span class="string">container-0</span></span><br><span class="line"><span class="attr">        resources:</span> <span class="string">&#123;&#125;</span></span><br><span class="line"><span class="attr">        volumeMounts:</span></span><br><span class="line"><span class="attr">        - mountPath:</span> <span class="string">/tmp</span></span><br><span class="line"><span class="attr">          name:</span> <span class="string">pvc-evs-example</span></span><br><span class="line"><span class="attr">      dnsPolicy:</span> <span class="string">ClusterFirst</span></span><br><span class="line"><span class="attr">      imagePullSecrets:</span></span><br><span class="line"><span class="attr">      - name:</span> <span class="string">default-secret</span></span><br><span class="line"><span class="attr">      restartPolicy:</span> <span class="string">Always</span></span><br><span class="line"><span class="attr">      schedulerName:</span> <span class="string">default-scheduler</span></span><br><span class="line"><span class="attr">      securityContext:</span> <span class="string">&#123;&#125;</span></span><br><span class="line"><span class="attr">      terminationGracePeriodSeconds:</span> <span class="number">30</span></span><br><span class="line"><span class="attr">      volumes:</span></span><br><span class="line"><span class="attr">        - name:</span> <span class="string">pvc-evs-example</span></span><br><span class="line"><span class="attr">          persistentVolumeClaim:</span></span><br><span class="line"><span class="attr">            claimName:</span> <span class="string">pvc-evs-auto-example</span></span><br><span class="line"><span class="attr">  updateStrategy:</span></span><br><span class="line"><span class="attr">    type:</span> <span class="string">RollingUpdate</span></span><br></pre></td></tr></table></figure></p>
+
+        </div>
+
+        <blockquote class="post-copyright">
+    
+    <div class="content">
+        
+<span class="post-time">
+    最后更新时间：<time datetime="2022-06-07T06:55:07.977Z" itemprop="dateUpdated">2022-06-07 14:55:07</time>
+</span><br>
+
+
+        
+        该文链接：<a href="/2018/12/14/kubernetes-statefulset/" target="_blank" rel="external">https://blog.sctux.cc/2018/12/14/kubernetes-statefulset/</a>
+        
+    </div>
+    
+    <footer>
+        <a href="https://blog.sctux.cc">
+            <img src="/img/avatar.jpg" alt="maoqiu.guo">
+            maoqiu.guo
+        </a>
+    </footer>
+</blockquote>
+
+        
+<div class="page-reward">
+    <a id="rewardBtn" href="javascript:;" class="page-reward-btn waves-effect waves-circle waves-light">赏</a>
+</div>
+
+
+
+        <div class="post-footer">
+            
+	<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/StatefulSet/">StatefulSet</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/持久化存储/">持久化存储</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/有状态/">有状态</a></li></ul>
+
+
+            
+<div class="page-share-wrap">
+    
+
+<div class="page-share" id="pageShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://blog.sctux.cc/2018/12/14/kubernetes-statefulset/&title=《理解kubernetes中的有状态服务StatefulSet》 — 运维人&pic=https://blog.sctux.cc/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://blog.sctux.cc/2018/12/14/kubernetes-statefulset/&title=《理解kubernetes中的有状态服务StatefulSet》 — 运维人&source=😊" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.sctux.cc/2018/12/14/kubernetes-statefulset/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《理解kubernetes中的有状态服务StatefulSet》 — 运维人&url=https://blog.sctux.cc/2018/12/14/kubernetes-statefulset/&via=https://blog.sctux.cc" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=https://blog.sctux.cc/2018/12/14/kubernetes-statefulset/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+
+    <a href="javascript:;" id="shareFab" class="page-share-fab waves-effect waves-circle">
+        <i class="icon icon-share-alt icon-lg"></i>
+    </a>
+</div>
+
+
+
+        </div>
+    </div>
+
+    
+<nav class="post-nav flex-row flex-justify-between">
+  
+    <div class="waves-block waves-effect prev">
+      <a href="/2018/12/15/kubernetes-storage/" id="post-prev" class="post-nav-link">
+        <div class="tips"><i class="icon icon-angle-left icon-lg icon-pr"></i> Prev</div>
+        <h4 class="title">理解kubernetes中的Storage</h4>
+      </a>
+    </div>
+  
+
+  
+    <div class="waves-block waves-effect next">
+      <a href="/2018/12/13/kubernetes-logs/" id="post-next" class="post-nav-link">
+        <div class="tips">Next <i class="icon icon-angle-right icon-lg icon-pl"></i></div>
+        <h4 class="title">管理Kubernetes日志</h4>
+      </a>
+    </div>
+  
+</nav>
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Valine Comments -->
+    <div class="comments vcomment" id="comments"></div>
+    <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+    <script src="//unpkg.com/valine@latest/dist/Valine.min.js"></script>
+    <!-- Valine Comments script -->
+    <script>
+        var GUEST_INFO = ['nick','mail','link'];
+        var guest_info = 'nick,mail,link'.split(',').filter(function(item){
+          return GUEST_INFO.indexOf(item) > -1
+        });
+        new Valine({
+            el: '#comments',
+            notify: 'true' == 'true',
+            verify: 'true' == 'true',
+            appId: "lHxnnDHJXDgMoFpCbdx8A4q7-gzGzoHsz",
+            appKey: "W8H2NuO8chyDlCEQzionLuuV",
+            avatar: "monsterid",
+            placeholder: "来都来了，说点啥子吧~🌹 (友情提醒，留下正确的邮箱地址可以第一时间获取评论反馈)",
+            guest_info: guest_info.length == 0 ? GUEST_INFO : guest_info,
+            pageSize: "10"
+        })
+    </script>
+    <!-- Valine Comments end -->
+
+
+
+
+
+
+
+</article>
+
+<div id="reward" class="page-modal reward-lay">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <h3 class="reward-title">
+        <i class="icon icon-quote-left"></i>
+        谢谢大爷~
+        <i class="icon icon-quote-right"></i>
+    </h3>
+    <div class="reward-content">
+        
+        <div class="reward-code">
+            <img id="rewardCode" src="/img/wechat.jpg" alt="打赏二维码">
+        </div>
+        
+        <label class="reward-toggle">
+            <input id="rewardToggle" type="checkbox" class="reward-toggle-check" data-wechat="/img/wechat.jpg" data-alipay="/img/alipay.jpg">
+            <div class="reward-toggle-ctrol">
+                <span class="reward-toggle-item wechat">微信</span>
+                <span class="reward-toggle-label"></span>
+                <span class="reward-toggle-item alipay">支付宝</span>
+            </div>
+        </label>
+        
+    </div>
+</div>
+
+
+
+</div>
+
+        <footer class="footer">
+    <div class="top">
+        
+
+        <p>
+            
+            <span>博客内容遵循 <a rel="license" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh">知识共享 署名 - 非商业性 - 相同方式共享 4.0 国际协议</a></span>
+        </p>
+    </div>
+    <div class="bottom">
+        <p><span>maoqiu.guo &copy; 2013 - 2024</span>
+            <span>
+                
+                <a href="http://www.miitbeian.gov.cn/" target="_blank">蜀ICP备007号-1</a><br>
+                
+                Power by <a href="http://hexo.io/" target="_blank">Hexo</a> Theme <a href="https://github.com/yscoder/hexo-theme-indigo" target="_blank">indigo</a>
+            </span>
+        </p>
+    </div>
+</footer>
+
+    </main>
+    <div class="mask" id="mask"></div>
+<a href="javascript:;" id="gotop" class="waves-effect waves-circle waves-light"><span class="icon icon-lg icon-chevron-up"></span></a>
+
+
+
+<div class="global-share" id="globalShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://blog.sctux.cc/2018/12/14/kubernetes-statefulset/&title=《理解kubernetes中的有状态服务StatefulSet》 — 运维人&pic=https://blog.sctux.cc/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://blog.sctux.cc/2018/12/14/kubernetes-statefulset/&title=《理解kubernetes中的有状态服务StatefulSet》 — 运维人&source=😊" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.sctux.cc/2018/12/14/kubernetes-statefulset/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《理解kubernetes中的有状态服务StatefulSet》 — 运维人&url=https://blog.sctux.cc/2018/12/14/kubernetes-statefulset/&via=https://blog.sctux.cc" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=https://blog.sctux.cc/2018/12/14/kubernetes-statefulset/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+<div class="page-modal wx-share" id="wxShare">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <img src="//api.qrserver.com/v1/create-qr-code/?data=https://blog.sctux.cc/2018/12/14/kubernetes-statefulset/" alt="微信分享二维码">
+</div>
+
+
+
+
+    <script src="//cdn.bootcss.com/node-waves/0.7.4/waves.min.js"></script>
+<script>
+var BLOG = { ROOT: '/', SHARE: true, REWARD: true };
+
+
+</script>
+
+<script src="/js/main.min.js?v=1.7.2"></script>
+
+
+<div class="search-panel" id="search-panel">
+    <ul class="search-result" id="search-result"></ul>
+</div>
+<template id="search-tpl">
+<li class="item">
+    <a href="{path}" class="waves-block waves-effect">
+        <div class="title ellipsis" title="{title}">{title}</div>
+        <div class="flex-row flex-middle">
+            <div class="tags ellipsis">
+                {tags}
+            </div>
+            <time class="flex-col time">{date}</time>
+        </div>
+    </a>
+</li>
+</template>
+
+<script src="/js/search.min.js?v=1.7.2" async></script>
+
+
+
+
+
+
+
+
+<script>
+(function() {
+    var OriginTitile = document.title, titleTime;
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            document.title = '老弟，哪儿去啦😊?！';
+            clearTimeout(titleTime);
+        } else {
+            document.title = '(つェ⊂)咦!老弟来啦!';
+            titleTime = setTimeout(function() {
+                document.title = OriginTitile;
+            },2000);
+        }
+    });
+})();
+</script>
+
+
+
+</body>
+</html>

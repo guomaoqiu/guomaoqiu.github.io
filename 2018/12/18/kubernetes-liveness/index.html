@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.8.0">
+<script>(function(i,s,o,g,r,a,m){i["DaoVoiceObject"]=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;a.charset="utf-8";m.parentNode.insertBefore(a,m)})(window,document,"script",('https:' == document.location.protocol ? 'https:' : 'http:') + "//widget.daovoice.io/widget/9f77122a.js","daovoice")
+
+
+daovoice('init', {
+  app_id: "9f77122a",
+  user_id: "NO_89757", // 必填: 该用户在您系统上的唯一ID
+  email: "daovoice@example.com", // 选填:  该用户在您系统上的主邮箱
+  name: "道客船长", // 选填: 用户名
+  signed_up: 1449821660 // 选填: 用户的注册时间，用Unix时间戳表示
+});
+daovoice('update');
+
+</script>
+    
+
+    
+
+    
+
+
+
+    <meta charset="utf-8">
+    
+    
+    
+    
+    <title>Kubernetes容器存活探测&amp;应用自恢复 | 运维人 | Devops、Linux、Kubernetes、Docker、Flask、Python、Shell、SRE</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    
+    <meta name="theme-color" content="#3F51B5">
+    
+    
+    <meta name="keywords" content="liveness probe,readiness probe,restartPolicy">
+    <meta name="description" content="概述当你使用kuberentes的时候，有没有遇到过Pod在启动后一会就挂掉然后又重新启动这样的恶性循环？你有没有想过kubernetes是如何检测pod是否还存活？虽然容器已经启动，但是kubernetes如何知道容器的进程是否准备好对外提供服务了呢？ 本博文主要记录实践如何配置容器的存活和就绪探针。 liveness probe（存活探针）用于判断容器是否存活，即Pod是否为running状态">
+<meta name="keywords" content="liveness probe,readiness probe,restartPolicy">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Kubernetes容器存活探测&amp;应用自恢复">
+<meta property="og:url" content="https://blog.sctux.cc/2018/12/18/kubernetes-liveness/index.html">
+<meta property="og:site_name" content="运维人">
+<meta property="og:description" content="概述当你使用kuberentes的时候，有没有遇到过Pod在启动后一会就挂掉然后又重新启动这样的恶性循环？你有没有想过kubernetes是如何检测pod是否还存活？虽然容器已经启动，但是kubernetes如何知道容器的进程是否准备好对外提供服务了呢？ 本博文主要记录实践如何配置容器的存活和就绪探针。 liveness probe（存活探针）用于判断容器是否存活，即Pod是否为running状态">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://blog.sctux.cc/2018/12/18/kubernetes-liveness/image1.png">
+<meta property="og:image" content="https://blog.sctux.cc/2018/12/18/kubernetes-liveness/image1.png">
+<meta property="og:updated_time" content="2022-06-07T06:55:07.972Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Kubernetes容器存活探测&amp;应用自恢复">
+<meta name="twitter:description" content="概述当你使用kuberentes的时候，有没有遇到过Pod在启动后一会就挂掉然后又重新启动这样的恶性循环？你有没有想过kubernetes是如何检测pod是否还存活？虽然容器已经启动，但是kubernetes如何知道容器的进程是否准备好对外提供服务了呢？ 本博文主要记录实践如何配置容器的存活和就绪探针。 liveness probe（存活探针）用于判断容器是否存活，即Pod是否为running状态">
+<meta name="twitter:image" content="https://blog.sctux.cc/2018/12/18/kubernetes-liveness/image1.png">
+    
+    <link rel="shortcut icon" href="/favicon.ico">
+    <link rel="stylesheet" href="/css/style.css?v=1.7.2">
+    <script>window.lazyScripts=[]</script>
+
+    <!-- custom head -->
+    
+
+</head>
+
+<body>
+    <div id="loading" class="active"></div>
+
+    <aside id="menu">
+  <div class="inner flex-row-vertical">
+    <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menu-off">
+        <i class="icon icon-lg icon-close"></i>
+    </a>
+    <div class="brand-wrap" style="background-image:url(/img/brand.jpg)">
+      <div class="brand">
+        <a href="/" class="avatar waves-effect waves-circle waves-light">
+          <img src="/img/avatar.jpg">
+        </a>
+        <hgroup class="introduce">
+          <h5 class="nickname">maoqiu.guo</h5>
+          <a href="mailto:guomaoqiu@gmail.com" title="guomaoqiu@gmail.com" class="mail">guomaoqiu@gmail.com</a>
+        </hgroup>
+      </div>
+    </div>
+    <div class="scroll-wrap flex-col">
+      <ul class="nav">
+        
+            <li class="waves-block waves-effect">
+              <a href="/">
+                <i class="icon icon-lg icon-home"></i>
+                主页
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/archives">
+                <i class="icon icon-lg icon-archives"></i>
+                归档
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/tags">
+                <i class="icon icon-lg icon-tags"></i>
+                标签
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/categories">
+                <i class="icon icon-lg icon-th-list"></i>
+                分类
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://github.com/guomaoqiu" target="_blank">
+                <i class="icon icon-lg icon-github"></i>
+                Github
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/works">
+                <i class="icon icon-lg icon-hand-peace-o"></i>
+                作品
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="http://demo.sctux.cc" target="_blank">
+                <i class="icon icon-lg icon-link"></i>
+                DevOpsPlatform
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="http://resume.sctux.cc/" target="_blank">
+                <i class="icon icon-lg icon-heart"></i>
+                我的简历
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/about">
+                <i class="icon icon-lg icon-user"></i>
+                关于我
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://blog.sctux.cc/Skilltree.jpg" target="_blank">
+                <i class="icon icon-lg icon-tree"></i>
+                我的技能树
+              </a>
+            </li>
+        
+      </ul>
+    </div>
+  </div>
+</aside>
+
+    <main id="main">
+        <header class="top-header" id="header">
+    <div class="flex-row">
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light on" id="menu-toggle">
+          <i class="icon icon-lg icon-navicon"></i>
+        </a>
+        <div class="flex-col header-title ellipsis">Kubernetes容器存活探测&amp;应用自恢复</div>
+        
+        <div class="search-wrap" id="search-wrap">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="back">
+                <i class="icon icon-lg icon-chevron-left"></i>
+            </a>
+            <input type="text" id="key" class="search-input" autocomplete="off" placeholder="输入感兴趣的关键字">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="search">
+                <i class="icon icon-lg icon-search"></i>
+            </a>
+        </div>
+        
+        
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menuShare">
+            <i class="icon icon-lg icon-share-alt"></i>
+        </a>
+        
+    </div>
+</header>
+<header class="content-header post-header">
+
+    <div class="container fade-scale">
+        <h1 class="title">Kubernetes容器存活探测&amp;应用自恢复</h1>
+        <h5 class="subtitle">
+            
+                <time datetime="2018-12-18T15:12:40.000Z" itemprop="datePublished" class="page-time">
+  2018-12-18
+</time>
+
+
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/kubernetes/">kubernetes</a></li></ul>
+
+            
+        </h5>
+    </div>
+
+    
+
+
+</header>
+
+
+<div class="container body-wrap">
+    
+    <aside class="post-widget">
+        <nav class="post-toc-wrap post-toc-shrink" id="post-toc">
+            <h4>TOC</h4>
+            <ol class="post-toc"><li class="post-toc-item post-toc-level-1"><a class="post-toc-link" href="#概述"><span class="post-toc-number">1.</span> <span class="post-toc-text">概述</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#LivenessProbe探针配置"><span class="post-toc-number">1.1.</span> <span class="post-toc-text">LivenessProbe探针配置</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#示例一-通过exec方式做健康探测"><span class="post-toc-number">1.1.1.</span> <span class="post-toc-text">示例一: 通过exec方式做健康探测</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#示例二-通过HTTP方式做健康探测"><span class="post-toc-number">1.1.2.</span> <span class="post-toc-text">示例二: 通过HTTP方式做健康探测</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#示例三：通过TCP方式做健康探测"><span class="post-toc-number">1.1.3.</span> <span class="post-toc-text">示例三：通过TCP方式做健康探测</span></a></li></ol></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#ReadinessProbe探针配置："><span class="post-toc-number">1.2.</span> <span class="post-toc-text">ReadinessProbe探针配置：</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#示例一-ReadinessProbe示例"><span class="post-toc-number">1.2.1.</span> <span class="post-toc-text">示例一: ReadinessProbe示例</span></a></li></ol></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#配置探针-Probe-相关属性"><span class="post-toc-number">1.3.</span> <span class="post-toc-text">配置探针(Probe)相关属性</span></a></li></ol></li></ol>
+        </nav>
+    </aside>
+
+
+<article id="post-kubernetes-liveness" class="post-article article-type-post fade" itemprop="blogPost">
+
+    <div class="post-card">
+        <h1 class="post-card-title">Kubernetes容器存活探测&应用自恢复</h1>
+        <div class="post-meta">
+            <time class="post-time" title="2018-12-18 23:12:40" datetime="2018-12-18T15:12:40.000Z" itemprop="datePublished">2018-12-18</time>
+
+            
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/kubernetes/">kubernetes</a></li></ul>
+
+
+
+            
+
+        </div>
+        <div class="post-content" id="post-content" itemprop="postContent">
+            <h1 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h1><p>当你使用kuberentes的时候，有没有遇到过Pod在启动后一会就挂掉然后又重新启动这样的恶性循环？<br>你有没有想过kubernetes是如何检测pod是否还存活？<br>虽然容器已经启动，但是kubernetes如何知道容器的进程是否准备好对外提供服务了呢？</p>
+<p>本博文主要记录实践如何配置容器的存活和就绪探针。</p>
+<p><strong>liveness probe（存活探针）</strong><br>用于判断容器是否存活，即Pod是否为running状态，如果LivenessProbe探针探测到容器不健康，则kubelet将kill掉容器，并根据容器的重启策略是否重启，如果一个容器不包含LivenessProbe探针，则Kubelet认为容器的LivenessProbe探针的返回值永远成功。</p>
+<p><strong>readiness probe（就绪探针）</strong><br>用于判断容器是否启动完成，即容器的Ready是否为True，可以接收请求，如果ReadinessProbe探测失败，则容器的Ready将为False，控制器将此Pod的Endpoint从对应的service的Endpoint列表中移除，从此不再将任何请求调度此Pod上，直到下次探测成功。</p>
+<p><strong>每类探针都支持三种探测方法</strong></p>
+<ul>
+<li>exec：通过执行命令来检查服务是否正常，针对复杂检测或无HTTP接口的服务，命令返回值为0则表示容器健康。</li>
+<li>httpGet：通过发送http请求检查服务是否正常，返回200-399状态码则表明容器健康。</li>
+<li>tcpSocket：通过容器的IP和Port执行TCP检查，如果能够建立TCP连接，则表明容器健康。</li>
+</ul>
+<p>每种方式都可以定义在readiness 或者liveness 中。比如定义readiness 中http get 就是意思说如果我定义的这个path的http get 请求返回200-400以外的http code 就把我从所有有我的服务里面删了吧，如果定义在liveness里面就是把我kill 了。<br>注意，liveness不会重启pod，pod是否会重启由你的restart policy 控制。</p>
+<p><strong>探针探测的结果有以下三者之一</strong></p>
+<ul>
+<li>Success：Container通过了检查。</li>
+<li>Failure：Container未通过检查。</li>
+<li>Unknown：未能执行检查，因此不采取任何措施。</li>
+</ul>
+<p><strong>重启策略</strong></p>
+<ul>
+<li>Always: 总是重启</li>
+<li>OnFailure: 如果失败就重启</li>
+<li>Never: 永远不重启</li>
+</ul>
+<h2 id="LivenessProbe探针配置"><a href="#LivenessProbe探针配置" class="headerlink" title="LivenessProbe探针配置"></a>LivenessProbe探针配置</h2><h3 id="示例一-通过exec方式做健康探测"><a href="#示例一-通过exec方式做健康探测" class="headerlink" title="示例一: 通过exec方式做健康探测"></a>示例一: 通过exec方式做健康探测</h3><figure class="highlight dts"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">exec-liveness.yaml  </span><br><span class="line"><span class="symbol">apiVersion:</span> v1</span><br><span class="line"><span class="symbol">kind:</span> Pod</span><br><span class="line"><span class="symbol">metadata:</span></span><br><span class="line"><span class="symbol">  labels:</span></span><br><span class="line"><span class="symbol">    test:</span> liveness</span><br><span class="line"><span class="symbol">  name:</span> liveness-exec</span><br><span class="line"><span class="symbol">spec:</span></span><br><span class="line"><span class="symbol">  containers:</span></span><br><span class="line">  - name: liveness</span><br><span class="line"><span class="symbol">    image:</span> k8s.gcr.io/busybox  </span><br><span class="line"><span class="symbol">    args:</span></span><br><span class="line">    - <span class="meta-keyword">/bin/</span>sh</span><br><span class="line">    - -c</span><br><span class="line">    - touch <span class="meta-keyword">/tmp/</span>healthy; sleep <span class="number">30</span>; rm -rf <span class="meta-keyword">/tmp/</span>healthy; sleep <span class="number">600</span></span><br><span class="line"><span class="symbol">    livenessProbe:</span></span><br><span class="line"><span class="symbol">      exec:</span></span><br><span class="line"><span class="symbol">        command:</span></span><br><span class="line">        - cat</span><br><span class="line">        - <span class="meta-keyword">/tmp/</span>healthy</span><br><span class="line"><span class="symbol">      initialDelaySeconds:</span> <span class="number">5</span></span><br><span class="line"><span class="symbol">      periodSeconds:</span> <span class="number">5</span></span><br></pre></td></tr></table></figure>
+<p>在该配置文件中，对容器执行livenessProbe检查，periodSeconds字段指定kubelet每5s执行一次检查，检查的命令为cat /tmp/healthy，initialDelaySeconds字段告诉kubelet应该在执行第一次检查之前等待5秒，<br>如果命令执行成功，则返回0，那么kubelet就认为容器是健康的，如果为非0，则Kubelet会Kill掉容器并根据重启策略来决定是否需要重启(kubernetes默认为POD配置的重启策略为Always)</p>
+<p>当容器启动时，它会执行以下命令：</p>
+<figure class="highlight armasm"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/<span class="keyword">bin/sh </span>-c <span class="string">"touch /tmp/healthy; sleep 30; rm -rf /tmp/healthy; sleep 600"</span></span><br></pre></td></tr></table></figure>
+<p>对于容器的前30秒，有一个/tmp/healthy文件。因此，在前30秒内，该命令cat /tmp/healthy返回成功代码。30秒后，cat /tmp/healthy返回失败代码。</p>
+<p>在30秒内，查看Pod事件：</p>
+<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl describe pod liveness-exec</span><br><span class="line"><span class="built_in">..</span><span class="built_in">..</span><span class="built_in">..</span></span><br><span class="line"><span class="built_in">..</span><span class="built_in">..</span><span class="built_in">..</span></span><br><span class="line">Events:</span><br><span class="line"> <span class="built_in"> Type </span>    Reason     Age               <span class="keyword">From</span>               Message</span><br><span class="line">  ----     ------     ----              ----               -------</span><br><span class="line">  Normal   Scheduled  15m               default-scheduler  Successfully assigned default/liveness-exec <span class="keyword">to</span> k8s-m3</span><br><span class="line">  Normal   Pulled     3m (x3 over 5m)   kubelet, k8s-m3    Successfully pulled image <span class="string">"k8s.gcr.io/busybox"</span></span><br><span class="line">  Normal   Created    3m (x3 over 5m)   kubelet, k8s-m3    Created container</span><br><span class="line">  Normal   Started    3m (x3 over 5m)   kubelet, k8s-m3    Started container</span><br></pre></td></tr></table></figure>
+<p>在30秒后，查看Pod事件：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl <span class="keyword">describe</span> pod liveness-exec</span><br><span class="line"><span class="keyword">Events</span>:</span><br><span class="line">  <span class="keyword">Type</span>     Reason     Age              <span class="keyword">From</span>               Message</span><br><span class="line">  <span class="comment">----     ------     ----             ----               -------</span></span><br><span class="line">  <span class="keyword">Normal</span>   Scheduled  <span class="number">16</span>m              <span class="keyword">default</span>-scheduler  Successfully assigned <span class="keyword">default</span>/liveness-exec <span class="keyword">to</span> k8s-m3</span><br><span class="line">  <span class="keyword">Normal</span>   Pulled     <span class="number">5</span>m (x3 <span class="keyword">over</span> <span class="number">7</span>m)  kubelet, k8s-m3    Successfully pulled image <span class="string">"k8s.gcr.io/busybox"</span></span><br><span class="line">  <span class="keyword">Normal</span>   Created    <span class="number">5</span>m (x3 <span class="keyword">over</span> <span class="number">7</span>m)  kubelet, k8s-m3    Created <span class="keyword">container</span></span><br><span class="line">  <span class="keyword">Normal</span>   Started    <span class="number">5</span>m (x3 <span class="keyword">over</span> <span class="number">7</span>m)  kubelet, k8s-m3    Started <span class="keyword">container</span></span><br><span class="line">  <span class="keyword">Warning</span>  Unhealthy  <span class="number">4</span>m (x9 <span class="keyword">over</span> <span class="number">7</span>m)  kubelet, k8s-m3    Liveness probe <span class="keyword">failed</span>: cat: can<span class="string">'t open '</span>/tmp/healthy<span class="string">': No such file or directory</span></span><br><span class="line"><span class="string">  Normal   Pulling    4m (x4 over 7m)  kubelet, k8s-m3    pulling image "k8s.gcr.io/busybox"</span></span><br><span class="line"><span class="string">  Normal   Killing    2m (x4 over 6m)  kubelet, k8s-m3    Killing container with id docker://liveness:Container failed liveness probe.. Container will be killed and recreated.</span></span><br></pre></td></tr></table></figure>
+<p>再等30秒，确认Container已重新启动, 下面输出中RESTARTS的次数已增加：</p>
+<figure class="highlight lsl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl get pod liveness-exec</span><br><span class="line">NAME            READY     STATUS    RESTARTS   AGE</span><br><span class="line">liveness-exec   <span class="number">1</span>/<span class="number">1</span>       Running   <span class="number">1</span>          <span class="number">1</span>m</span><br></pre></td></tr></table></figure>
+<h3 id="示例二-通过HTTP方式做健康探测"><a href="#示例二-通过HTTP方式做健康探测" class="headerlink" title="示例二: 通过HTTP方式做健康探测"></a>示例二: 通过HTTP方式做健康探测</h3><figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Pod</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line"><span class="attr">  labels:</span></span><br><span class="line"><span class="attr">    test:</span> <span class="string">liveness</span></span><br><span class="line"><span class="attr">  name:</span> <span class="string">liveness-http</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line"><span class="attr">  containers:</span></span><br><span class="line"><span class="attr">  - name:</span> <span class="string">liveness</span></span><br><span class="line"><span class="attr">    image:</span> <span class="string">k8s.gcr.io/liveness</span> <span class="comment"># 官方用户测试的demo镜像</span></span><br><span class="line"><span class="attr">    args:</span></span><br><span class="line"><span class="bullet">    -</span> <span class="string">/server</span></span><br><span class="line"><span class="attr">    livenessProbe:</span></span><br><span class="line"><span class="attr">      httpGet:</span></span><br><span class="line"><span class="attr">        path:</span> <span class="string">/healthz</span></span><br><span class="line"><span class="attr">        port:</span> <span class="number">8080</span></span><br><span class="line"><span class="attr">        httpHeaders:</span></span><br><span class="line"><span class="attr">        - name:</span> <span class="string">X-Custom-Header</span></span><br><span class="line"><span class="attr">          value:</span> <span class="string">Awesome</span></span><br><span class="line"><span class="attr">      initialDelaySeconds:</span> <span class="number">3</span> </span><br><span class="line"><span class="attr">      periodSeconds:</span> <span class="number">3</span></span><br></pre></td></tr></table></figure>
+<p>在配置文件中，使用k8s.gcr.io/liveness镜像，创建出一个Pod，其中periodSeconds字段指定kubelet每3秒执行一次探测，initialDelaySeconds字段告诉kubelet延迟等待3秒，探测方式为向容器中运行的服务发送HTTP GET请求，请求8080端口下的/healthz, 任何大于或等于200且小于400的代码表示成功。任何其他代码表示失败。</p>
+<p>10秒后，查看Pod事件以验证liveness探测失败并且Container已重新启动：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl <span class="keyword">describe</span> pod liveness-<span class="keyword">http</span></span><br><span class="line"><span class="keyword">NAME</span>            READY     <span class="keyword">STATUS</span>             RESTARTS   AGE</span><br><span class="line">liveness-<span class="keyword">http</span>   <span class="number">1</span>/<span class="number">1</span>       RUNNING            <span class="number">1</span>          <span class="number">1</span>m</span><br></pre></td></tr></table></figure>
+<p>httpGet探测方式有如下可选的控制字段</p>
+<ul>
+<li>host：要连接的主机名，默认为Pod IP，可以在http request head中设置host头部。</li>
+<li>scheme: 用于连接host的协议，默认为HTTP。</li>
+<li>path：http服务器上的访问URI。</li>
+<li>httpHeaders：自定义HTTP请求headers，HTTP允许重复headers。</li>
+<li>port： 容器上要访问端口号或名称。</li>
+</ul>
+<h3 id="示例三：通过TCP方式做健康探测"><a href="#示例三：通过TCP方式做健康探测" class="headerlink" title="示例三：通过TCP方式做健康探测"></a>示例三：通过TCP方式做健康探测</h3><p>Kubelet将尝试在指定的端口上打开容器上的套接字，如果能建立连接，则表明容器健康。</p>
+<figure class="highlight less"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">apiVersion</span>: v1</span><br><span class="line"><span class="attribute">kind</span>: Pod</span><br><span class="line"><span class="attribute">metadata</span>:</span><br><span class="line">  <span class="attribute">name</span>: goproxy</span><br><span class="line">  <span class="attribute">labels</span>:</span><br><span class="line">    <span class="attribute">app</span>: goproxy</span><br><span class="line"><span class="attribute">spec</span>:</span><br><span class="line">  <span class="attribute">containers</span>:</span><br><span class="line">  - <span class="attribute">name</span>: goproxy</span><br><span class="line">    <span class="attribute">image</span>: k8s.gcr.io/<span class="attribute">goproxy</span>:<span class="number">0.1</span></span><br><span class="line">    <span class="attribute">ports</span>:</span><br><span class="line">    - <span class="attribute">containerPort</span>: <span class="number">8080</span></span><br><span class="line">    <span class="attribute">readinessProbe</span>:</span><br><span class="line">      <span class="attribute">tcpSocket</span>:</span><br><span class="line">        <span class="attribute">port</span>: <span class="number">8080</span></span><br><span class="line">      <span class="attribute">initialDelaySeconds</span>: <span class="number">5</span></span><br><span class="line">      <span class="attribute">periodSeconds</span>: <span class="number">10</span></span><br><span class="line">    <span class="attribute">livenessProbe</span>:</span><br><span class="line">      <span class="attribute">tcpSocket</span>:</span><br><span class="line">        <span class="attribute">port</span>: <span class="number">8080</span></span><br><span class="line">      <span class="attribute">initialDelaySeconds</span>: <span class="number">15</span></span><br><span class="line">      <span class="attribute">periodSeconds</span>: <span class="number">20</span></span><br></pre></td></tr></table></figure>
+<p>TCP检查方式和HTTP检查方式非常相似，示例中两种探针都使用了，在容器启动5秒后，kubelet将发送第一个readinessProbe探针，这将连接到容器的8080端口，如果探测成功，则该Pod将被标识为ready，10秒后，kubelet将进行第二次连接。<br>除此之后，此配置还包含了livenessProbe探针，在容器启动15秒后，kubelet将发送第一个livenessProbe探针，仍然尝试连接容器的8080端口，如果连接失败则重启容器。</p>
+<figure class="highlight less"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">ports</span>:</span><br><span class="line">- <span class="attribute">name</span>: liveness-port</span><br><span class="line">  <span class="attribute">containerPort</span>: <span class="number">8080</span></span><br><span class="line">  <span class="attribute">hostPort</span>: <span class="number">8080</span></span><br><span class="line"><span class="attribute">livenessProbe</span>:</span><br><span class="line">  <span class="attribute">httpGet</span>:</span><br><span class="line">    <span class="attribute">path</span>: /healthz</span><br><span class="line">    <span class="attribute">port</span>: liveness-port</span><br></pre></td></tr></table></figure>
+<h2 id="ReadinessProbe探针配置："><a href="#ReadinessProbe探针配置：" class="headerlink" title="ReadinessProbe探针配置："></a>ReadinessProbe探针配置：</h2><p>ReadinessProbe探针的使用场景livenessProbe稍有不同，有的时候应用程序可能暂时无法接受请求，比如Pod已经Running了，但是容器内应用程序尚未启动成功，在这种情况下，如果没有ReadinessProbe，则Kubernetes认为它可以处理请求了，然而此时，我们知道程序还没启动成功是不能接收用户请求的，所以不希望kubernetes把请求调度给它，则使用ReadinessProbe探针。<br>ReadinessProbe和livenessProbe可以使用相同探测方式，只是对Pod的处置方式不同，ReadinessProbe是将Pod IP:Port从对应的EndPoint列表中删除，而livenessProbe则Kill容器并根据Pod的重启策略来决定作出对应的措施。</p>
+<p><strong>ReadinessProbe</strong>探针探测容器是否已准备就绪，如果未准备就绪则kubernetes不会将流量转发给此Pod。</p>
+<p>ReadinessProbe探针与livenessProbe一样也支持exec、httpGet、TCP的探测方式，配置方式相同，只不过是将livenessProbe字段修改为ReadinessProbe。<br><figure class="highlight dts"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="symbol">readinessProbe:</span></span><br><span class="line"><span class="symbol"> exec:</span></span><br><span class="line"><span class="symbol">   command:</span></span><br><span class="line">   - cat</span><br><span class="line">   - <span class="meta-keyword">/tmp/</span>healthy</span><br><span class="line"><span class="symbol"> initialDelaySeconds:</span> <span class="number">5</span></span><br><span class="line"><span class="symbol"> periodSeconds:</span> <span class="number">5</span></span><br></pre></td></tr></table></figure></p>
+<h3 id="示例一-ReadinessProbe示例"><a href="#示例一-ReadinessProbe示例" class="headerlink" title="示例一: ReadinessProbe示例"></a>示例一: ReadinessProbe示例</h3><p>现在来看一个加入ReadinessProbe探针和一个没有ReadinessProbe探针的示例：<br>该示例中，创建了一个deploy，名为gogs，启动的容器运行一个类似于gitlab的应用程序，程序监听端口为3000。<br>这里为了模拟效果我这里原镜像做了一下修改，主要是为了延迟他的启动时间为40s后再去启动gogs的应用程序，此时就会开启3000端口，</p>
+<p>(感兴趣的同学可以了解一下，非常爽的一个自助gitweb平台<a href="https://gogs.io/" target="_blank" rel="noopener">Gogs</a>)<br><figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">kind:</span> <span class="string">Service</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line"><span class="attr">  name:</span> <span class="string">gogs</span></span><br><span class="line"><span class="attr">  namespace:</span> <span class="string">default</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line"><span class="attr">  selector:</span></span><br><span class="line"><span class="attr">      test:</span> <span class="string">gogs</span></span><br><span class="line"><span class="attr">  ports:</span></span><br><span class="line"><span class="attr">    - protocol:</span> <span class="string">TCP</span></span><br><span class="line"><span class="attr">      port:</span> <span class="number">3000</span></span><br><span class="line"><span class="meta">---</span></span><br><span class="line"></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Deployment</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">apps/v1</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line"><span class="attr">  name:</span> <span class="string">gogs</span></span><br><span class="line"><span class="attr">  namespace:</span> <span class="string">default</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line"><span class="attr">  replicas:</span> <span class="number">1</span></span><br><span class="line"><span class="attr">  selector:</span></span><br><span class="line"><span class="attr">    matchLabels:</span></span><br><span class="line"><span class="attr">      test:</span> <span class="string">gogs</span></span><br><span class="line"><span class="attr">  template:</span></span><br><span class="line"><span class="attr">    metadata:</span></span><br><span class="line"><span class="attr">      labels:</span></span><br><span class="line"><span class="attr">         test:</span> <span class="string">gogs</span></span><br><span class="line"><span class="attr">    spec:</span></span><br><span class="line"><span class="attr">      containers:</span></span><br><span class="line"><span class="attr">      - image:</span> <span class="string">test</span></span><br><span class="line"><span class="attr">        imagePullPolicy:</span> <span class="string">IfNotPresent</span></span><br><span class="line"><span class="attr">        name:</span> <span class="string">gogs</span></span><br><span class="line"><span class="attr">        ports:</span></span><br><span class="line"><span class="attr">          - containerPort:</span> <span class="number">3000</span></span><br><span class="line"><span class="attr">      affinity:</span></span><br><span class="line"><span class="attr">        nodeAffinity:</span></span><br><span class="line"><span class="attr">          requiredDuringSchedulingIgnoredDuringExecution:</span></span><br><span class="line"><span class="attr">            nodeSelectorTerms:</span></span><br><span class="line"><span class="attr">              - matchExpressions:</span></span><br><span class="line"><span class="attr">                  - key:</span> <span class="string">kubernetes.io/hostname</span></span><br><span class="line"><span class="attr">                    operator:</span> <span class="string">In</span></span><br><span class="line"><span class="attr">                    values:</span></span><br><span class="line"><span class="bullet">                      -</span> <span class="string">k8s-m1</span></span><br></pre></td></tr></table></figure></p>
+<p><div style="width: 50%; margin: auto"><figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="/2018/12/18/kubernetes-liveness/image1.png" alt="Not add readinessProbe result" title="">
+                </div>
+                <div class="image-caption">Not add readinessProbe result</div>
+            </figure></div><br>从上图可以看出来，当我创建部署之后，Pod启动18s，自身状态已Running，其READ字段，1/1 表示1个容器状态已准备就绪了，此时，对于kubernetes而言，它已经可以接收请求了，而实际上我在去访问的时候服务还无法访问，因为Gogo程序还尚启动起来，40s之后方可正常访问，所以针对于服务启动慢或者其他原因的此类程序，必须配置ReadinessProbe。</p>
+<p>下面我加入readinessProbe<br><figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">kind:</span> <span class="string">Service</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line"><span class="attr">  name:</span> <span class="string">gogs</span></span><br><span class="line"><span class="attr">  namespace:</span> <span class="string">default</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line"><span class="attr">  selector:</span></span><br><span class="line"><span class="attr">      test:</span> <span class="string">gogs</span></span><br><span class="line"><span class="attr">  ports:</span></span><br><span class="line"><span class="attr">    - protocol:</span> <span class="string">TCP</span></span><br><span class="line"><span class="attr">      port:</span> <span class="number">3000</span></span><br><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Deployment</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">apps/v1</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line"><span class="attr">  name:</span> <span class="string">gogs</span></span><br><span class="line"><span class="attr">  namespace:</span> <span class="string">default</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line"><span class="attr">  replicas:</span> <span class="number">1</span></span><br><span class="line"><span class="attr">  selector:</span></span><br><span class="line"><span class="attr">    matchLabels:</span></span><br><span class="line"><span class="attr">      test:</span> <span class="string">gogs</span></span><br><span class="line"><span class="attr">  template:</span></span><br><span class="line"><span class="attr">    metadata:</span></span><br><span class="line"><span class="attr">      labels:</span></span><br><span class="line"><span class="attr">         test:</span> <span class="string">gogs</span></span><br><span class="line"><span class="attr">    spec:</span></span><br><span class="line"><span class="attr">      containers:</span></span><br><span class="line"><span class="attr">      - image:</span> <span class="string">test</span></span><br><span class="line"><span class="attr">        imagePullPolicy:</span> <span class="string">IfNotPresent</span></span><br><span class="line"><span class="attr">        name:</span> <span class="string">gogs</span></span><br><span class="line"><span class="attr">        ports:</span></span><br><span class="line"><span class="attr">          - containerPort:</span> <span class="number">3000</span></span><br><span class="line"><span class="attr">        readinessProbe:</span></span><br><span class="line"><span class="attr">          tcpSocket:</span></span><br><span class="line"><span class="attr">            port:</span> <span class="number">3000</span></span><br><span class="line"><span class="attr">          initialDelaySeconds:</span> <span class="number">10</span> <span class="comment"># 启动后10秒开始探测</span></span><br><span class="line"><span class="attr">          periodSeconds:</span> <span class="number">5</span>        <span class="comment"># 每5秒探测一次</span></span><br><span class="line"><span class="attr">      affinity:</span></span><br><span class="line"><span class="attr">        nodeAffinity:</span></span><br><span class="line"><span class="attr">          requiredDuringSchedulingIgnoredDuringExecution:</span></span><br><span class="line"><span class="attr">            nodeSelectorTerms:</span></span><br><span class="line"><span class="attr">              - matchExpressions:</span></span><br><span class="line"><span class="attr">                  - key:</span> <span class="string">kubernetes.io/hostname</span></span><br><span class="line"><span class="attr">                    operator:</span> <span class="string">In</span></span><br><span class="line"><span class="attr">                    values:</span></span><br><span class="line"><span class="bullet">                      -</span> <span class="string">k8s-m1</span></span><br></pre></td></tr></table></figure></p>
+<p><div style="width: 50%; margin: auto"><figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="/2018/12/18/kubernetes-liveness/image1.png" alt="Add readinessProbe result" title="">
+                </div>
+                <div class="image-caption">Add readinessProbe result</div>
+            </figure></div><br>上图可以看出Pod虽然已处于Runnig状态，但是由于第一次探测时间未到，所以READY字段为0/1，即容器的状态为未准备就绪，在未准备就绪的情况下，其Pod对应的Service下的Endpoint也为空，所以不会有任何请求被调度进来。<br>当通过第一次探测的检查通过后，容器的状态自然会转为READ状态。<br>此后根据指定的间隔时间10s后再次探测，如果不通过，则kubernetes就会将Pod IP从EndPoint列表中移除。</p>
+<h2 id="配置探针-Probe-相关属性"><a href="#配置探针-Probe-相关属性" class="headerlink" title="配置探针(Probe)相关属性"></a>配置探针(Probe)相关属性</h2><p>探针(Probe)有许多可选字段，可以用来更加精确的控制Liveness和Readiness两种探针的行为(Probe)：</p>
+<p><code>initialDelaySeconds</code>：Pod启动后延迟多久才进行检查，单位：秒。<br><code>periodSeconds</code>：检查的间隔时间，默认为10，单位：秒。<br><code>timeoutSeconds</code>：探测的超时时间，默认为1，单位：秒。<br><code>successThreshold</code>：探测失败后认为成功的最小连接成功次数，默认为1，在Liveness探针中必须为1，最小值为1。<br><code>failureThreshold</code>：探测失败的重试次数，重试一定次数后将认为失败，在readiness探针中，Pod会被标记为未就绪，默认为3，最小值为1。</p>
+<p>参考:<br><a href="https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/" target="_blank" rel="noopener">https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/</a></p>
+
+        </div>
+
+        <blockquote class="post-copyright">
+    
+    <div class="content">
+        
+<span class="post-time">
+    最后更新时间：<time datetime="2022-06-07T06:55:07.972Z" itemprop="dateUpdated">2022-06-07 14:55:07</time>
+</span><br>
+
+
+        
+        该文链接：<a href="/2018/12/18/kubernetes-liveness/" target="_blank" rel="external">https://blog.sctux.cc/2018/12/18/kubernetes-liveness/</a>
+        
+    </div>
+    
+    <footer>
+        <a href="https://blog.sctux.cc">
+            <img src="/img/avatar.jpg" alt="maoqiu.guo">
+            maoqiu.guo
+        </a>
+    </footer>
+</blockquote>
+
+        
+<div class="page-reward">
+    <a id="rewardBtn" href="javascript:;" class="page-reward-btn waves-effect waves-circle waves-light">赏</a>
+</div>
+
+
+
+        <div class="post-footer">
+            
+	<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/liveness-probe/">liveness probe</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/readiness-probe/">readiness probe</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/restartPolicy/">restartPolicy</a></li></ul>
+
+
+            
+<div class="page-share-wrap">
+    
+
+<div class="page-share" id="pageShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://blog.sctux.cc/2018/12/18/kubernetes-liveness/&title=《Kubernetes容器存活探测&应用自恢复》 — 运维人&pic=https://blog.sctux.cc/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://blog.sctux.cc/2018/12/18/kubernetes-liveness/&title=《Kubernetes容器存活探测&应用自恢复》 — 运维人&source=😊" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.sctux.cc/2018/12/18/kubernetes-liveness/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《Kubernetes容器存活探测&应用自恢复》 — 运维人&url=https://blog.sctux.cc/2018/12/18/kubernetes-liveness/&via=https://blog.sctux.cc" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=https://blog.sctux.cc/2018/12/18/kubernetes-liveness/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+
+    <a href="javascript:;" id="shareFab" class="page-share-fab waves-effect waves-circle">
+        <i class="icon icon-share-alt icon-lg"></i>
+    </a>
+</div>
+
+
+
+        </div>
+    </div>
+
+    
+<nav class="post-nav flex-row flex-justify-between">
+  
+    <div class="waves-block waves-effect prev">
+      <a href="/2018/12/20/kubernetes-secret/" id="post-prev" class="post-nav-link">
+        <div class="tips"><i class="icon icon-angle-left icon-lg icon-pr"></i> Prev</div>
+        <h4 class="title">理解kubernetes中的Secret</h4>
+      </a>
+    </div>
+  
+
+  
+    <div class="waves-block waves-effect next">
+      <a href="/2018/12/16/kubernetes-auth/" id="post-next" class="post-nav-link">
+        <div class="tips">Next <i class="icon icon-angle-right icon-lg icon-pl"></i></div>
+        <h4 class="title">理解Kubernetes中的认证&amp;授权&amp;准入机制</h4>
+      </a>
+    </div>
+  
+</nav>
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Valine Comments -->
+    <div class="comments vcomment" id="comments"></div>
+    <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+    <script src="//unpkg.com/valine@latest/dist/Valine.min.js"></script>
+    <!-- Valine Comments script -->
+    <script>
+        var GUEST_INFO = ['nick','mail','link'];
+        var guest_info = 'nick,mail,link'.split(',').filter(function(item){
+          return GUEST_INFO.indexOf(item) > -1
+        });
+        new Valine({
+            el: '#comments',
+            notify: 'true' == 'true',
+            verify: 'true' == 'true',
+            appId: "lHxnnDHJXDgMoFpCbdx8A4q7-gzGzoHsz",
+            appKey: "W8H2NuO8chyDlCEQzionLuuV",
+            avatar: "monsterid",
+            placeholder: "来都来了，说点啥子吧~🌹 (友情提醒，留下正确的邮箱地址可以第一时间获取评论反馈)",
+            guest_info: guest_info.length == 0 ? GUEST_INFO : guest_info,
+            pageSize: "10"
+        })
+    </script>
+    <!-- Valine Comments end -->
+
+
+
+
+
+
+
+</article>
+
+<div id="reward" class="page-modal reward-lay">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <h3 class="reward-title">
+        <i class="icon icon-quote-left"></i>
+        谢谢大爷~
+        <i class="icon icon-quote-right"></i>
+    </h3>
+    <div class="reward-content">
+        
+        <div class="reward-code">
+            <img id="rewardCode" src="/img/wechat.jpg" alt="打赏二维码">
+        </div>
+        
+        <label class="reward-toggle">
+            <input id="rewardToggle" type="checkbox" class="reward-toggle-check" data-wechat="/img/wechat.jpg" data-alipay="/img/alipay.jpg">
+            <div class="reward-toggle-ctrol">
+                <span class="reward-toggle-item wechat">微信</span>
+                <span class="reward-toggle-label"></span>
+                <span class="reward-toggle-item alipay">支付宝</span>
+            </div>
+        </label>
+        
+    </div>
+</div>
+
+
+
+</div>
+
+        <footer class="footer">
+    <div class="top">
+        
+
+        <p>
+            
+            <span>博客内容遵循 <a rel="license" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh">知识共享 署名 - 非商业性 - 相同方式共享 4.0 国际协议</a></span>
+        </p>
+    </div>
+    <div class="bottom">
+        <p><span>maoqiu.guo &copy; 2013 - 2024</span>
+            <span>
+                
+                <a href="http://www.miitbeian.gov.cn/" target="_blank">蜀ICP备007号-1</a><br>
+                
+                Power by <a href="http://hexo.io/" target="_blank">Hexo</a> Theme <a href="https://github.com/yscoder/hexo-theme-indigo" target="_blank">indigo</a>
+            </span>
+        </p>
+    </div>
+</footer>
+
+    </main>
+    <div class="mask" id="mask"></div>
+<a href="javascript:;" id="gotop" class="waves-effect waves-circle waves-light"><span class="icon icon-lg icon-chevron-up"></span></a>
+
+
+
+<div class="global-share" id="globalShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://blog.sctux.cc/2018/12/18/kubernetes-liveness/&title=《Kubernetes容器存活探测&应用自恢复》 — 运维人&pic=https://blog.sctux.cc/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://blog.sctux.cc/2018/12/18/kubernetes-liveness/&title=《Kubernetes容器存活探测&应用自恢复》 — 运维人&source=😊" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.sctux.cc/2018/12/18/kubernetes-liveness/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《Kubernetes容器存活探测&应用自恢复》 — 运维人&url=https://blog.sctux.cc/2018/12/18/kubernetes-liveness/&via=https://blog.sctux.cc" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=https://blog.sctux.cc/2018/12/18/kubernetes-liveness/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+<div class="page-modal wx-share" id="wxShare">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <img src="//api.qrserver.com/v1/create-qr-code/?data=https://blog.sctux.cc/2018/12/18/kubernetes-liveness/" alt="微信分享二维码">
+</div>
+
+
+
+
+    <script src="//cdn.bootcss.com/node-waves/0.7.4/waves.min.js"></script>
+<script>
+var BLOG = { ROOT: '/', SHARE: true, REWARD: true };
+
+
+</script>
+
+<script src="/js/main.min.js?v=1.7.2"></script>
+
+
+<div class="search-panel" id="search-panel">
+    <ul class="search-result" id="search-result"></ul>
+</div>
+<template id="search-tpl">
+<li class="item">
+    <a href="{path}" class="waves-block waves-effect">
+        <div class="title ellipsis" title="{title}">{title}</div>
+        <div class="flex-row flex-middle">
+            <div class="tags ellipsis">
+                {tags}
+            </div>
+            <time class="flex-col time">{date}</time>
+        </div>
+    </a>
+</li>
+</template>
+
+<script src="/js/search.min.js?v=1.7.2" async></script>
+
+
+
+
+
+
+
+
+<script>
+(function() {
+    var OriginTitile = document.title, titleTime;
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            document.title = '老弟，哪儿去啦😊?！';
+            clearTimeout(titleTime);
+        } else {
+            document.title = '(つェ⊂)咦!老弟来啦!';
+            titleTime = setTimeout(function() {
+                document.title = OriginTitile;
+            },2000);
+        }
+    });
+})();
+</script>
+
+
+
+</body>
+</html>

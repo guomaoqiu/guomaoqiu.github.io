@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.8.0">
+<script>(function(i,s,o,g,r,a,m){i["DaoVoiceObject"]=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;a.charset="utf-8";m.parentNode.insertBefore(a,m)})(window,document,"script",('https:' == document.location.protocol ? 'https:' : 'http:') + "//widget.daovoice.io/widget/9f77122a.js","daovoice")
+
+
+daovoice('init', {
+  app_id: "9f77122a",
+  user_id: "NO_89757", // 必填: 该用户在您系统上的唯一ID
+  email: "daovoice@example.com", // 选填:  该用户在您系统上的主邮箱
+  name: "道客船长", // 选填: 用户名
+  signed_up: 1449821660 // 选填: 用户的注册时间，用Unix时间戳表示
+});
+daovoice('update');
+
+</script>
+    
+
+    
+
+    
+
+
+
+    <meta charset="utf-8">
+    
+    
+    
+    
+    <title>ELK+Kafka 企业日志收集平台(二) | 运维人 | Devops、Linux、Kubernetes、Docker、Flask、Python、Shell、SRE</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    
+    <meta name="theme-color" content="#3F51B5">
+    
+    
+    <meta name="keywords" content="ELK,kafka,zookeeper">
+    <meta name="description" content="上篇博文主要总结了一下elk、基于kafka的zookeeper集群搭建，以及系统日志通过zookeeper集群达到我们集群的整个过程。下面我们接着下面这个未完成的几个主题 4.Kibana部署; 5.Nginx负载均衡Kibana请求; 6.案例：nginx日志收集以及MySQL慢日志收集; 7.Kibana报表基本使用;   Kibana的部署;Kibana的作用，想必大家都知道了就是一个展示">
+<meta name="keywords" content="ELK,kafka,zookeeper">
+<meta property="og:type" content="article">
+<meta property="og:title" content="ELK+Kafka 企业日志收集平台(二)">
+<meta property="og:url" content="https://blog.sctux.cc/2015/11/14/elkkafka-e4-bc-81-e4-b8-9a-e6-97-a5-e5-bf-97-e6-94-b6-e9-9b-86-e5-b9-b3-e5-8f-b0-e4-ba-8c/index.html">
+<meta property="og:site_name" content="运维人">
+<meta property="og:description" content="上篇博文主要总结了一下elk、基于kafka的zookeeper集群搭建，以及系统日志通过zookeeper集群达到我们集群的整个过程。下面我们接着下面这个未完成的几个主题 4.Kibana部署; 5.Nginx负载均衡Kibana请求; 6.案例：nginx日志收集以及MySQL慢日志收集; 7.Kibana报表基本使用;   Kibana的部署;Kibana的作用，想必大家都知道了就是一个展示">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/11/11.png">
+<meta property="og:image" content="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/11/22.png">
+<meta property="og:image" content="https://taoistwar.gitbooks.io/spark-operationand-maintenance-management/content/spark_relate_software/zookeeper_install.html">
+<meta property="og:updated_time" content="2022-06-07T06:55:07.851Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="ELK+Kafka 企业日志收集平台(二)">
+<meta name="twitter:description" content="上篇博文主要总结了一下elk、基于kafka的zookeeper集群搭建，以及系统日志通过zookeeper集群达到我们集群的整个过程。下面我们接着下面这个未完成的几个主题 4.Kibana部署; 5.Nginx负载均衡Kibana请求; 6.案例：nginx日志收集以及MySQL慢日志收集; 7.Kibana报表基本使用;   Kibana的部署;Kibana的作用，想必大家都知道了就是一个展示">
+<meta name="twitter:image" content="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/11/11.png">
+    
+    <link rel="shortcut icon" href="/favicon.ico">
+    <link rel="stylesheet" href="/css/style.css?v=1.7.2">
+    <script>window.lazyScripts=[]</script>
+
+    <!-- custom head -->
+    
+
+</head>
+
+<body>
+    <div id="loading" class="active"></div>
+
+    <aside id="menu">
+  <div class="inner flex-row-vertical">
+    <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menu-off">
+        <i class="icon icon-lg icon-close"></i>
+    </a>
+    <div class="brand-wrap" style="background-image:url(/img/brand.jpg)">
+      <div class="brand">
+        <a href="/" class="avatar waves-effect waves-circle waves-light">
+          <img src="/img/avatar.jpg">
+        </a>
+        <hgroup class="introduce">
+          <h5 class="nickname">maoqiu.guo</h5>
+          <a href="mailto:guomaoqiu@gmail.com" title="guomaoqiu@gmail.com" class="mail">guomaoqiu@gmail.com</a>
+        </hgroup>
+      </div>
+    </div>
+    <div class="scroll-wrap flex-col">
+      <ul class="nav">
+        
+            <li class="waves-block waves-effect">
+              <a href="/">
+                <i class="icon icon-lg icon-home"></i>
+                主页
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/archives">
+                <i class="icon icon-lg icon-archives"></i>
+                归档
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/tags">
+                <i class="icon icon-lg icon-tags"></i>
+                标签
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/categories">
+                <i class="icon icon-lg icon-th-list"></i>
+                分类
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://github.com/guomaoqiu" target="_blank">
+                <i class="icon icon-lg icon-github"></i>
+                Github
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/works">
+                <i class="icon icon-lg icon-hand-peace-o"></i>
+                作品
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="http://demo.sctux.cc" target="_blank">
+                <i class="icon icon-lg icon-link"></i>
+                DevOpsPlatform
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="http://resume.sctux.cc/" target="_blank">
+                <i class="icon icon-lg icon-heart"></i>
+                我的简历
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/about">
+                <i class="icon icon-lg icon-user"></i>
+                关于我
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://blog.sctux.cc/Skilltree.jpg" target="_blank">
+                <i class="icon icon-lg icon-tree"></i>
+                我的技能树
+              </a>
+            </li>
+        
+      </ul>
+    </div>
+  </div>
+</aside>
+
+    <main id="main">
+        <header class="top-header" id="header">
+    <div class="flex-row">
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light on" id="menu-toggle">
+          <i class="icon icon-lg icon-navicon"></i>
+        </a>
+        <div class="flex-col header-title ellipsis">ELK+Kafka 企业日志收集平台(二)</div>
+        
+        <div class="search-wrap" id="search-wrap">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="back">
+                <i class="icon icon-lg icon-chevron-left"></i>
+            </a>
+            <input type="text" id="key" class="search-input" autocomplete="off" placeholder="输入感兴趣的关键字">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="search">
+                <i class="icon icon-lg icon-search"></i>
+            </a>
+        </div>
+        
+        
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menuShare">
+            <i class="icon icon-lg icon-share-alt"></i>
+        </a>
+        
+    </div>
+</header>
+<header class="content-header post-header">
+
+    <div class="container fade-scale">
+        <h1 class="title">ELK+Kafka 企业日志收集平台(二)</h1>
+        <h5 class="subtitle">
+            
+                <time datetime="2015-11-14T08:49:57.000Z" itemprop="datePublished" class="page-time">
+  2015-11-14
+</time>
+
+
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/Monitor/">Monitor</a><ul class="article-category-list-child"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/Monitor/Other/">Other</a><ul class="article-category-list-child"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/Monitor/Other/自动化运维/">自动化运维</a></li></ul></li></ul></li></ul>
+
+            
+        </h5>
+    </div>
+
+    
+
+
+</header>
+
+
+<div class="container body-wrap">
+    
+    <aside class="post-widget">
+        <nav class="post-toc-wrap post-toc-shrink" id="post-toc">
+            <h4>TOC</h4>
+            <ol class="post-toc"><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#Kibana的部署"><span class="post-toc-number">1.</span> <span class="post-toc-text">Kibana的部署;</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#Nginx负载均衡kibana的请求"><span class="post-toc-number">2.</span> <span class="post-toc-text">Nginx负载均衡kibana的请求</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#Nginx及MySQL慢日志收集"><span class="post-toc-number">3.</span> <span class="post-toc-text">Nginx及MySQL慢日志收集</span></a></li></ol>
+        </nav>
+    </aside>
+
+
+<article id="post-elkkafka-e4-bc-81-e4-b8-9a-e6-97-a5-e5-bf-97-e6-94-b6-e9-9b-86-e5-b9-b3-e5-8f-b0-e4-ba-8c" class="post-article article-type-post fade" itemprop="blogPost">
+
+    <div class="post-card">
+        <h1 class="post-card-title">ELK+Kafka 企业日志收集平台(二)</h1>
+        <div class="post-meta">
+            <time class="post-time" title="2015-11-14 16:49:57" datetime="2015-11-14T08:49:57.000Z" itemprop="datePublished">2015-11-14</time>
+
+            
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/Monitor/">Monitor</a><ul class="article-category-list-child"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/Monitor/Other/">Other</a><ul class="article-category-list-child"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/Monitor/Other/自动化运维/">自动化运维</a></li></ul></li></ul></li></ul>
+
+
+
+            
+
+        </div>
+        <div class="post-content" id="post-content" itemprop="postContent">
+            <p>上篇博文主要总结了一下elk、基于kafka的zookeeper集群搭建，以及系统日志通过zookeeper集群达到我们集群的整个过程。下面我们接着下面这个未完成的几个主题 4.Kibana部署; 5.Nginx负载均衡Kibana请求; 6.案例：nginx日志收集以及MySQL慢日志收集; 7.Kibana报表基本使用;  </p>
+<h3 id="Kibana的部署"><a href="#Kibana的部署" class="headerlink" title="Kibana的部署;"></a>Kibana的部署;</h3><p>Kibana的作用，想必大家都知道了就是一个展示工具，报表内容非常的丰富； 下面我们在两台es上面搭建两套kibana 1.获取kibana软件包</p>
+<p>[root@es1 ~]# wget <a href="https://download.elastic.co/kibana/kibana/kibana-4.1.2-linux-x64.tar.gz" target="_blank" rel="noopener">https://download.elastic.co/kibana/kibana/kibana-4.1.2-linux-x64.tar.gz</a><br>[root@es1 ~]# tar -xf kibana-4.2.0-linux-x64.tar.gz -C /usr/local/</p>
+<p>2.修改配置文件</p>
+<p>[root@es1 ~]# cd /usr/local/<br>[root@es1 local]# ln -sv kibana-4.1.2-linux-x64 kibana<br>`kibana’ -&gt; `kibana-4.2.0-linux-x64’<br>[root@es1 local]# cd kibana</p>
+<p>[root@es1 kibana]# vim config/kibana.yml<br>server.port: 5601      #默认端口可以修改的<br>server.host: “0.0.0.0” #kibana监听的ip<br>elasticsearch.url: “<a href="http://localhost:9200&quot;" target="_blank" rel="noopener">http://localhost:9200&quot;</a> #由于es在本地主机上面，所以这个选项打开注释即可</p>
+<p>3.提供kibana服务管理脚本，我这里写了个相对简单的脚本</p>
+<p>[root@es1 config]# cat /etc/init.d/kibana</p>
+<p>#!/bin/bash</p>
+<p>#chkconfig: 2345 55 24</p>
+<p>#description: kibana service manager</p>
+<p>KIBBIN=’/usr/local/kibana/bin/kibana’<br>LOCK=’/usr/local/kibana/locks’</p>
+<p>START() {<br>    if [ -f $LOCK ];then<br>        echo -e “kibana is already \033[32mrunning\033[0m, do nothing.”<br>    else<br>        echo -e “Start kibana service.\033[32mdone\033[m”<br>        cd  /usr/local/kibana/bin<br>        nohup ./kibana &amp; &gt;/dev/null<br>         touch $LOCK<br>    fi<br>}</p>
+<p>STOP() {<br>    if [ ! -f $LOCK ];then<br>        echo -e “kibana is already stop, do nothing.”<br>    else<br>        echo -e “Stop kibana serivce \033[32mdone\033[m”<br>        rm -rf $LOCK<br>        ps -ef | grep kibana | grep -v “grep” | awk ‘{print $2}’ | xargs kill -s 9 &gt;/dev/null<br>    fi<br>}</p>
+<p>STATUS() {<br>        Port=$(netstat -tunl | grep “:5602”)<br>    if [ “$Port” != “” ] &amp;&amp; [ -f $LOCK ];then<br>        echo -e “kibana is: \033[32mrunning\033[0m…”<br>    else<br>        echo -e “kibana is: \033[31mstopped\033[0m…”<br>    fi<br>}</p>
+<p>case “$1” in<br>  start)<br>    START<br>    ;;<br>  stop)<br>    STOP<br>    ;;<br>  status)<br>    STATUS<br>    ;;<br>  restart)<br>    STOP<br>    sleep 2<br>    START<br>    ;;<br>  *)<br>    echo “Usage: /etc/init.d/kibana (|start|stop|status|restart)”<br>    ;;<br>esac</p>
+<p>4.启动kibana服务</p>
+<p>[root@es1 config]# chkconfig –add kibana<br>[root@es1 config]# service kibana start<br>Start kibana service.done<br>[root@es1 config]#</p>
+<p>5.服务检查</p>
+<p>[root@es1 config]# ss -tunl | grep “5601”<br>tcp    LISTEN     0      511                    <em>:5601                  </em>:*<br>[root@es1 config]#</p>
+<p>ok，此时我直接访问es1这台主机的5601端口 [<figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/11/11.png" alt="11](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/11/11.png)" title="">
+                </div>
+                <div class="image-caption">11](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/11/11.png)</div>
+            </figure> ok，能成功的访问5601端口，那我把es1这台的配置放到es2上面去然后启动，效果跟访问es1一样</p>
+<h3 id="Nginx负载均衡kibana的请求"><a href="#Nginx负载均衡kibana的请求" class="headerlink" title="Nginx负载均衡kibana的请求"></a>Nginx负载均衡kibana的请求</h3><p>1.在nginx-proxy上面yum安装nginx</p>
+<p>yum install -y nignx</p>
+<p>2.编写配置文件es.conf</p>
+<p>[root@saltstack-node1 conf.d]# pwd<br>/etc/nginx/conf.d<br>[root@saltstack-node1 conf.d]# cat es.conf<br>upstream es {<br>    server 192.168.2.18:5601 max_fails=3 fail_timeout=30s;<br>    server 192.168.2.19:5601 max_fails=3 fail_timeout=30s;<br>}</p>
+<p>server {<br>    listen       80;<br>    server_name  localhost;</p>
+<pre><code>location / {
+    proxy_pass http://es/;
+    index index.html index.htm;
+    #auth
+    auth_basic &quot;ELK Private&quot;;
+    auth\_basic\_user_file /etc/nginx/.htpasswd;
+}
+</code></pre><p> }</p>
+<p>3.创建认证</p>
+<p>[root@saltstack-node1 conf.d]# htpasswd -cm /etc/nginx/.htpasswd elk<br>New password:<br>Re-type new password:<br>Adding password for user elk-user<br>[root@saltstack-node1 conf.d]# /etc/init.d/nginx restart<br>Stopping nginx:                                            [  OK  ]<br>Starting nginx:                                            [  OK  ]<br>[root@saltstack-node1 conf.d]# </p>
+<p>4.直接输入认证用户及密码就可访问啦<a href="http://192.168.2.21/" target="_blank" rel="noopener">http://192.168.2.21/</a> [<figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/11/22.png" alt="22](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/11/22.png)" title="">
+                </div>
+                <div class="image-caption">22](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/11/22.png)</div>
+            </figure></p>
+<h3 id="Nginx及MySQL慢日志收集"><a href="#Nginx及MySQL慢日志收集" class="headerlink" title="Nginx及MySQL慢日志收集"></a>Nginx及MySQL慢日志收集</h3><p>首先我们在webserver1上面都分别安装了nginx 及mysql. 1.为了方便nginx日志的统计搜索，这里设置nginx访问日志格式为json (1)修改nginx主配置文件 说明：如果想实现日志的报表展示，最好将业务日志直接以json格式输出，这样可以极大减轻cpu负载，也省得运维需要写负载的filter过滤正则。</p>
+<p>[root@webserver1 nginx]# vim nginx.conf<br>log_format json ‘{“@timestamp”:”$time_iso8601”,’<br>                ‘“@version”:”1”,’<br>                ‘“client”:”$remote_addr”,’<br>                ‘“url”:”$uri”,’<br>                ‘“status”:”$status”,’<br>                ‘“domain”:”$host”,’<br>                ‘“host”:”$server_addr”,’<br>                ‘“size”:$body_bytes_sent,’<br>                ‘“responsetime”:$request_time,’<br>                ‘“referer”: “$http_referer”,’<br>                ‘“ua”: “$http_user_agent”‘<br>                ‘}’;<br>  access_log  /var/log/access_json.log  json;</p>
+<p>(2)收集nginx日志和MySQL日志到消息队列中；这个文件我们是定义在客户端，即生产服务器上面的Logstash文件哦. 注意：这里刚搭建完毕，没有什么数据，为了展示效果，我这里导入了线上的nginx和MySQL慢日志</p>
+<p>input {<br>  file {             #从nginx日志读入<br>    type =&gt; “nginx-access”<br>    path =&gt; “/var/log/nginx/access.log”<br>    start_position =&gt; “beginning”<br>    codec =&gt; “json”  #这里指定 codec格式为json<br>  }<br>  file {  #从MySQL慢日志读入<br>   type =&gt; “slow-mysql”<br>   path =&gt; “/var/log/mysql/slow-mysql.log”<br>   start_position =&gt; “beginning”<br>   codec =&gt; multiline {         #这里用到了logstash的插件功能，将本来属于一行的多行日志条目整合在一起，让他属于一条<br>     pattern =&gt; “^# User@Host”  #用到了正则去匹配<br>     negate =&gt; true<br>     what =&gt; “previous”<br>   }<br>  }<br>}</p>
+<p>output {<br>#  stdout { codec=&gt; rubydebug }<br>  if [type] == “nginx-access” {    #通过判断input中定义的type，来让它在kafka集群中生成的主题名称<br>    kafka {                        #输出到kafka集群<br>      bootstrap_servers =&gt; “192.168.2.22:9092,192.168.2.23:9092,192.168.2.24:9092”  #生产者们<br>      topic_id =&gt; “nginx-access”   #主题名称<br>      compression_type =&gt; “snappy” #压缩类型<br>    }<br> }<br>  if [type] == “slow-mysql” {<br>    kafka {<br>      bootstrap_servers =&gt; “192.168.2.22:9092,192.168.2.23:9092,192.168.2.24:9092”<br>      topic_id =&gt; “slow-mysql”<br>      compression_type =&gt; “snappy”<br>    }<br> }<br>}</p>
+<p>(3)Logstash 从kafka集群中读取日志存储到es中，这里的定义logstash文件是在三台kafka服务器上面的哦，并且要保持一致，你可以在一台上面修改测试好之后，拷贝至另外两台即可。</p>
+<p>input {<br>    kafka {<br>        zk_connect =&gt; “192.168.2.22:2181,192.168.2.23:2181,192.168.2.24:2181”<br>        type =&gt; “nginx-access”<br>        topic_id =&gt; “nginx-access”<br>        codec =&gt; plain<br>        reset_beginning =&gt; false<br>        consumer_threads =&gt; 5<br>        decorate_events =&gt; true<br>    }<br>    kafka {<br>        zk_connect =&gt; “192.168.2.22:2181,192.168.2.23:2181,192.168.2.24:2181”<br>        type =&gt; “slow-mysql”<br>        topic_id =&gt; “slow-mysql”<br>        codec =&gt; plain<br>        reset_beginning =&gt; false<br>        consumer_threads =&gt; 5<br>        decorate_events =&gt; true<br>    }<br>}</p>
+<p>output {<br>#  stdout { codec=&gt; rubydebug }<br>  if [type] == “nginx-access” {<br>    elasticsearch {<br>      hosts =&gt; [“192.168.2.18:9200”,”192.168.2.19:9200”]<br>      index =&gt; “nginx-access-%{+YYYY-MM}”<br>    }<br>  }<br>  if [type] == “slow-mysql” {<br>    elasticsearch {<br>      hosts =&gt; [“192.168.2.18:9200”,”192.168.2.19:9200”]<br>      index =&gt; “slow-mysql-%{+YYYY-MM}”<br>    }<br>  }<br>}</p>
+<p>[<figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="https://taoistwar.gitbooks.io/spark-operationand-maintenance-management/content/spark_relate_software/zookeeper_install.html" alt="13](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/11/13.png)](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/11/13.png) 通过上图可以看到，nginx日志以及MySQL慢日志已经成功抵达es集群 然后我们在kibana上面创建索引就可以啦 (4)创建nginx-access 日志索引 [![11](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/11/11.png)](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/11/11.png) 此时就可以看到索引啦 [![16](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/11/16.png)](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/11/16.png) (5)创建MySQL慢日志索引 p[![15](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/11/15.png)](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/11/15.png) MySQL的索引也出来啦 [![17](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/11/17.png)](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/11/17.png)Kibana报表展示 kibana报表功能非常的强大，也就是可视化；可以制作出下面不同类型的图形 [![18](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/11/18.png)](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/11/18.png) 下面就是我简单的一些图形展示 ![19](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/11/19.png) 由于篇幅问题，可以看官方介绍。 参考： [https://github.com/liquanzhou/ops_doc/tree/master/Service/kafka](https://github.com/liquanzhou/ops_doc/tree/master/Service/kafka) [http://www.lujinhong.com/kafka%E9%9B%86%E7%BE%A4%E6%93%8D%E4%BD%9C%E6%8C%87%E5%8D%97.html](http://www.lujinhong.com/kafka%E9%9B%86%E7%BE%A4%E6%93%8D%E4%BD%9C%E6%8C%87%E5%8D%97.html) [http://www.it165.net/admin/html/201405/3192.html](http://www.it165.net/admin/html/201405/3192.html) [http://blog.csdn.net/lizhitao/article/details/39499283](http://blog.csdn.net/lizhitao/article/details/39499283) [https://taoistwar.gitbooks.io/spark-operationand-maintenance-management/content/spark_relate_software/zookeeper_install.html" title="">
+                </div>
+                <div class="image-caption">13](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/11/13.png)](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/11/13.png) 通过上图可以看到，nginx日志以及MySQL慢日志已经成功抵达es集群 然后我们在kibana上面创建索引就可以啦 (4)创建nginx-access 日志索引 [![11](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/11/11.png)](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/11/11.png) 此时就可以看到索引啦 [![16](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/11/16.png)](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/11/16.png) (5)创建MySQL慢日志索引 p[![15](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/11/15.png)](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/11/15.png) MySQL的索引也出来啦 [![17](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/11/17.png)](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/11/17.png)Kibana报表展示 kibana报表功能非常的强大，也就是可视化；可以制作出下面不同类型的图形 [![18](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/11/18.png)](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/11/18.png) 下面就是我简单的一些图形展示 ![19](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/11/19.png) 由于篇幅问题，可以看官方介绍。 参考： [https://github.com/liquanzhou/ops_doc/tree/master/Service/kafka](https://github.com/liquanzhou/ops_doc/tree/master/Service/kafka) [http://www.lujinhong.com/kafka%E9%9B%86%E7%BE%A4%E6%93%8D%E4%BD%9C%E6%8C%87%E5%8D%97.html](http://www.lujinhong.com/kafka%E9%9B%86%E7%BE%A4%E6%93%8D%E4%BD%9C%E6%8C%87%E5%8D%97.html) [http://www.it165.net/admin/html/201405/3192.html](http://www.it165.net/admin/html/201405/3192.html) [http://blog.csdn.net/lizhitao/article/details/39499283](http://blog.csdn.net/lizhitao/article/details/39499283) [https://taoistwar.gitbooks.io/spark-operationand-maintenance-management/content/spark_relate_software/zookeeper_install.html</div>
+            </figure></p>
+
+        </div>
+
+        <blockquote class="post-copyright">
+    
+    <div class="content">
+        
+<span class="post-time">
+    最后更新时间：<time datetime="2022-06-07T06:55:07.851Z" itemprop="dateUpdated">2022-06-07 14:55:07</time>
+</span><br>
+
+
+        
+        该文链接：<a href="/2015/11/14/elkkafka-e4-bc-81-e4-b8-9a-e6-97-a5-e5-bf-97-e6-94-b6-e9-9b-86-e5-b9-b3-e5-8f-b0-e4-ba-8c/" target="_blank" rel="external">https://blog.sctux.cc/2015/11/14/elkkafka-e4-bc-81-e4-b8-9a-e6-97-a5-e5-bf-97-e6-94-b6-e9-9b-86-e5-b9-b3-e5-8f-b0-e4-ba-8c/</a>
+        
+    </div>
+    
+    <footer>
+        <a href="https://blog.sctux.cc">
+            <img src="/img/avatar.jpg" alt="maoqiu.guo">
+            maoqiu.guo
+        </a>
+    </footer>
+</blockquote>
+
+        
+<div class="page-reward">
+    <a id="rewardBtn" href="javascript:;" class="page-reward-btn waves-effect waves-circle waves-light">赏</a>
+</div>
+
+
+
+        <div class="post-footer">
+            
+	<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/ELK/">ELK</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/kafka/">kafka</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/zookeeper/">zookeeper</a></li></ul>
+
+
+            
+<div class="page-share-wrap">
+    
+
+<div class="page-share" id="pageShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://blog.sctux.cc/2015/11/14/elkkafka-e4-bc-81-e4-b8-9a-e6-97-a5-e5-bf-97-e6-94-b6-e9-9b-86-e5-b9-b3-e5-8f-b0-e4-ba-8c/&title=《ELK+Kafka 企业日志收集平台(二)》 — 运维人&pic=https://blog.sctux.cc/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://blog.sctux.cc/2015/11/14/elkkafka-e4-bc-81-e4-b8-9a-e6-97-a5-e5-bf-97-e6-94-b6-e9-9b-86-e5-b9-b3-e5-8f-b0-e4-ba-8c/&title=《ELK+Kafka 企业日志收集平台(二)》 — 运维人&source=😊" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.sctux.cc/2015/11/14/elkkafka-e4-bc-81-e4-b8-9a-e6-97-a5-e5-bf-97-e6-94-b6-e9-9b-86-e5-b9-b3-e5-8f-b0-e4-ba-8c/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《ELK+Kafka 企业日志收集平台(二)》 — 运维人&url=https://blog.sctux.cc/2015/11/14/elkkafka-e4-bc-81-e4-b8-9a-e6-97-a5-e5-bf-97-e6-94-b6-e9-9b-86-e5-b9-b3-e5-8f-b0-e4-ba-8c/&via=https://blog.sctux.cc" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=https://blog.sctux.cc/2015/11/14/elkkafka-e4-bc-81-e4-b8-9a-e6-97-a5-e5-bf-97-e6-94-b6-e9-9b-86-e5-b9-b3-e5-8f-b0-e4-ba-8c/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+
+    <a href="javascript:;" id="shareFab" class="page-share-fab waves-effect waves-circle">
+        <i class="icon icon-share-alt icon-lg"></i>
+    </a>
+</div>
+
+
+
+        </div>
+    </div>
+
+    
+<nav class="post-nav flex-row flex-justify-between">
+  
+    <div class="waves-block waves-effect prev">
+      <a href="/2015/11/19/saltstack-e5-88-a9-e7-94-a8returners-e7-a8-8b-e5-ba-8f-e4-bf-9d-e5-ad-98-e6-89-a7-e8-a1-8c-e7-bb-93-e6-9e-9c-e5-88-b0mysql/" id="post-prev" class="post-nav-link">
+        <div class="tips"><i class="icon icon-angle-left icon-lg icon-pr"></i> Prev</div>
+        <h4 class="title">Saltstack利用Returners程序保存执行结果到mysql</h4>
+      </a>
+    </div>
+  
+
+  
+    <div class="waves-block waves-effect next">
+      <a href="/2015/11/14/elkkafka-e4-bc-81-e4-b8-9a-e6-97-a5-e5-bf-97-e6-94-b6-e9-9b-86-e5-b9-b3-e5-8f-b0-e4-b8-80/" id="post-next" class="post-nav-link">
+        <div class="tips">Next <i class="icon icon-angle-right icon-lg icon-pl"></i></div>
+        <h4 class="title">ELK+Kafka 企业日志收集平台(一)</h4>
+      </a>
+    </div>
+  
+</nav>
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Valine Comments -->
+    <div class="comments vcomment" id="comments"></div>
+    <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+    <script src="//unpkg.com/valine@latest/dist/Valine.min.js"></script>
+    <!-- Valine Comments script -->
+    <script>
+        var GUEST_INFO = ['nick','mail','link'];
+        var guest_info = 'nick,mail,link'.split(',').filter(function(item){
+          return GUEST_INFO.indexOf(item) > -1
+        });
+        new Valine({
+            el: '#comments',
+            notify: 'true' == 'true',
+            verify: 'true' == 'true',
+            appId: "lHxnnDHJXDgMoFpCbdx8A4q7-gzGzoHsz",
+            appKey: "W8H2NuO8chyDlCEQzionLuuV",
+            avatar: "monsterid",
+            placeholder: "来都来了，说点啥子吧~🌹 (友情提醒，留下正确的邮箱地址可以第一时间获取评论反馈)",
+            guest_info: guest_info.length == 0 ? GUEST_INFO : guest_info,
+            pageSize: "10"
+        })
+    </script>
+    <!-- Valine Comments end -->
+
+
+
+
+
+
+
+</article>
+
+<div id="reward" class="page-modal reward-lay">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <h3 class="reward-title">
+        <i class="icon icon-quote-left"></i>
+        谢谢大爷~
+        <i class="icon icon-quote-right"></i>
+    </h3>
+    <div class="reward-content">
+        
+        <div class="reward-code">
+            <img id="rewardCode" src="/img/wechat.jpg" alt="打赏二维码">
+        </div>
+        
+        <label class="reward-toggle">
+            <input id="rewardToggle" type="checkbox" class="reward-toggle-check" data-wechat="/img/wechat.jpg" data-alipay="/img/alipay.jpg">
+            <div class="reward-toggle-ctrol">
+                <span class="reward-toggle-item wechat">微信</span>
+                <span class="reward-toggle-label"></span>
+                <span class="reward-toggle-item alipay">支付宝</span>
+            </div>
+        </label>
+        
+    </div>
+</div>
+
+
+
+</div>
+
+        <footer class="footer">
+    <div class="top">
+        
+
+        <p>
+            
+            <span>博客内容遵循 <a rel="license" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh">知识共享 署名 - 非商业性 - 相同方式共享 4.0 国际协议</a></span>
+        </p>
+    </div>
+    <div class="bottom">
+        <p><span>maoqiu.guo &copy; 2013 - 2024</span>
+            <span>
+                
+                <a href="http://www.miitbeian.gov.cn/" target="_blank">蜀ICP备007号-1</a><br>
+                
+                Power by <a href="http://hexo.io/" target="_blank">Hexo</a> Theme <a href="https://github.com/yscoder/hexo-theme-indigo" target="_blank">indigo</a>
+            </span>
+        </p>
+    </div>
+</footer>
+
+    </main>
+    <div class="mask" id="mask"></div>
+<a href="javascript:;" id="gotop" class="waves-effect waves-circle waves-light"><span class="icon icon-lg icon-chevron-up"></span></a>
+
+
+
+<div class="global-share" id="globalShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://blog.sctux.cc/2015/11/14/elkkafka-e4-bc-81-e4-b8-9a-e6-97-a5-e5-bf-97-e6-94-b6-e9-9b-86-e5-b9-b3-e5-8f-b0-e4-ba-8c/&title=《ELK+Kafka 企业日志收集平台(二)》 — 运维人&pic=https://blog.sctux.cc/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://blog.sctux.cc/2015/11/14/elkkafka-e4-bc-81-e4-b8-9a-e6-97-a5-e5-bf-97-e6-94-b6-e9-9b-86-e5-b9-b3-e5-8f-b0-e4-ba-8c/&title=《ELK+Kafka 企业日志收集平台(二)》 — 运维人&source=😊" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.sctux.cc/2015/11/14/elkkafka-e4-bc-81-e4-b8-9a-e6-97-a5-e5-bf-97-e6-94-b6-e9-9b-86-e5-b9-b3-e5-8f-b0-e4-ba-8c/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《ELK+Kafka 企业日志收集平台(二)》 — 运维人&url=https://blog.sctux.cc/2015/11/14/elkkafka-e4-bc-81-e4-b8-9a-e6-97-a5-e5-bf-97-e6-94-b6-e9-9b-86-e5-b9-b3-e5-8f-b0-e4-ba-8c/&via=https://blog.sctux.cc" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=https://blog.sctux.cc/2015/11/14/elkkafka-e4-bc-81-e4-b8-9a-e6-97-a5-e5-bf-97-e6-94-b6-e9-9b-86-e5-b9-b3-e5-8f-b0-e4-ba-8c/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+<div class="page-modal wx-share" id="wxShare">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <img src="//api.qrserver.com/v1/create-qr-code/?data=https://blog.sctux.cc/2015/11/14/elkkafka-e4-bc-81-e4-b8-9a-e6-97-a5-e5-bf-97-e6-94-b6-e9-9b-86-e5-b9-b3-e5-8f-b0-e4-ba-8c/" alt="微信分享二维码">
+</div>
+
+
+
+
+    <script src="//cdn.bootcss.com/node-waves/0.7.4/waves.min.js"></script>
+<script>
+var BLOG = { ROOT: '/', SHARE: true, REWARD: true };
+
+
+</script>
+
+<script src="/js/main.min.js?v=1.7.2"></script>
+
+
+<div class="search-panel" id="search-panel">
+    <ul class="search-result" id="search-result"></ul>
+</div>
+<template id="search-tpl">
+<li class="item">
+    <a href="{path}" class="waves-block waves-effect">
+        <div class="title ellipsis" title="{title}">{title}</div>
+        <div class="flex-row flex-middle">
+            <div class="tags ellipsis">
+                {tags}
+            </div>
+            <time class="flex-col time">{date}</time>
+        </div>
+    </a>
+</li>
+</template>
+
+<script src="/js/search.min.js?v=1.7.2" async></script>
+
+
+
+
+
+
+
+
+<script>
+(function() {
+    var OriginTitile = document.title, titleTime;
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            document.title = '老弟，哪儿去啦😊?！';
+            clearTimeout(titleTime);
+        } else {
+            document.title = '(つェ⊂)咦!老弟来啦!';
+            titleTime = setTimeout(function() {
+                document.title = OriginTitile;
+            },2000);
+        }
+    });
+})();
+</script>
+
+
+
+</body>
+</html>

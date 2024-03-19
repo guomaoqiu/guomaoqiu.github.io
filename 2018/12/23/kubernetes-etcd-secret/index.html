@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.8.0">
+<script>(function(i,s,o,g,r,a,m){i["DaoVoiceObject"]=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;a.charset="utf-8";m.parentNode.insertBefore(a,m)})(window,document,"script",('https:' == document.location.protocol ? 'https:' : 'http:') + "//widget.daovoice.io/widget/9f77122a.js","daovoice")
+
+
+daovoice('init', {
+  app_id: "9f77122a",
+  user_id: "NO_89757", // 必填: 该用户在您系统上的唯一ID
+  email: "daovoice@example.com", // 选填:  该用户在您系统上的主邮箱
+  name: "道客船长", // 选填: 用户名
+  signed_up: 1449821660 // 选填: 用户的注册时间，用Unix时间戳表示
+});
+daovoice('update');
+
+</script>
+    
+
+    
+
+    
+
+
+
+    <meta charset="utf-8">
+    
+    
+    
+    
+    <title>理解Kubernetes安全的持久化保存键值-Etcd | 运维人 | Devops、Linux、Kubernetes、Docker、Flask、Python、Shell、SRE</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    
+    <meta name="theme-color" content="#3F51B5">
+    
+    
+    <meta name="keywords" content="kubernetes,etcd cluster,etcd secret">
+    <meta name="description" content="概述etcd是CoreOS团队于2013年6月发起的开源项目，它的目标是构建一个高可用的分布式键值(key-value)数据库。etcd内部采用raft协议作为一致性算法，etcd基于Go语言实现。 etcd作为服务发现系统，有以下的特点： 简单：安装配置简单，而且提供了HTTP API进行交互，使用也很简单安全：支持SSL证书验证快速：根据官方提供的benchmark数据，单实例支持每秒2k+读">
+<meta name="keywords" content="kubernetes,etcd cluster,etcd secret">
+<meta property="og:type" content="article">
+<meta property="og:title" content="理解Kubernetes安全的持久化保存键值-Etcd">
+<meta property="og:url" content="https://blog.sctux.cc/2018/12/23/kubernetes-etcd-secret/index.html">
+<meta property="og:site_name" content="运维人">
+<meta property="og:description" content="概述etcd是CoreOS团队于2013年6月发起的开源项目，它的目标是构建一个高可用的分布式键值(key-value)数据库。etcd内部采用raft协议作为一致性算法，etcd基于Go语言实现。 etcd作为服务发现系统，有以下的特点： 简单：安装配置简单，而且提供了HTTP API进行交互，使用也很简单安全：支持SSL证书验证快速：根据官方提供的benchmark数据，单实例支持每秒2k+读">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://blog.sctux.cc/2018/12/23/kubernetes-etcd-secret/etcd.png">
+<meta property="og:updated_time" content="2022-06-07T06:55:07.966Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="理解Kubernetes安全的持久化保存键值-Etcd">
+<meta name="twitter:description" content="概述etcd是CoreOS团队于2013年6月发起的开源项目，它的目标是构建一个高可用的分布式键值(key-value)数据库。etcd内部采用raft协议作为一致性算法，etcd基于Go语言实现。 etcd作为服务发现系统，有以下的特点： 简单：安装配置简单，而且提供了HTTP API进行交互，使用也很简单安全：支持SSL证书验证快速：根据官方提供的benchmark数据，单实例支持每秒2k+读">
+<meta name="twitter:image" content="https://blog.sctux.cc/2018/12/23/kubernetes-etcd-secret/etcd.png">
+    
+    <link rel="shortcut icon" href="/favicon.ico">
+    <link rel="stylesheet" href="/css/style.css?v=1.7.2">
+    <script>window.lazyScripts=[]</script>
+
+    <!-- custom head -->
+    
+
+</head>
+
+<body>
+    <div id="loading" class="active"></div>
+
+    <aside id="menu">
+  <div class="inner flex-row-vertical">
+    <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menu-off">
+        <i class="icon icon-lg icon-close"></i>
+    </a>
+    <div class="brand-wrap" style="background-image:url(/img/brand.jpg)">
+      <div class="brand">
+        <a href="/" class="avatar waves-effect waves-circle waves-light">
+          <img src="/img/avatar.jpg">
+        </a>
+        <hgroup class="introduce">
+          <h5 class="nickname">maoqiu.guo</h5>
+          <a href="mailto:guomaoqiu@gmail.com" title="guomaoqiu@gmail.com" class="mail">guomaoqiu@gmail.com</a>
+        </hgroup>
+      </div>
+    </div>
+    <div class="scroll-wrap flex-col">
+      <ul class="nav">
+        
+            <li class="waves-block waves-effect">
+              <a href="/">
+                <i class="icon icon-lg icon-home"></i>
+                主页
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/archives">
+                <i class="icon icon-lg icon-archives"></i>
+                归档
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/tags">
+                <i class="icon icon-lg icon-tags"></i>
+                标签
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/categories">
+                <i class="icon icon-lg icon-th-list"></i>
+                分类
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://github.com/guomaoqiu" target="_blank">
+                <i class="icon icon-lg icon-github"></i>
+                Github
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/works">
+                <i class="icon icon-lg icon-hand-peace-o"></i>
+                作品
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="http://demo.sctux.cc" target="_blank">
+                <i class="icon icon-lg icon-link"></i>
+                DevOpsPlatform
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="http://resume.sctux.cc/" target="_blank">
+                <i class="icon icon-lg icon-heart"></i>
+                我的简历
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/about">
+                <i class="icon icon-lg icon-user"></i>
+                关于我
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://blog.sctux.cc/Skilltree.jpg" target="_blank">
+                <i class="icon icon-lg icon-tree"></i>
+                我的技能树
+              </a>
+            </li>
+        
+      </ul>
+    </div>
+  </div>
+</aside>
+
+    <main id="main">
+        <header class="top-header" id="header">
+    <div class="flex-row">
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light on" id="menu-toggle">
+          <i class="icon icon-lg icon-navicon"></i>
+        </a>
+        <div class="flex-col header-title ellipsis">理解Kubernetes安全的持久化保存键值-Etcd</div>
+        
+        <div class="search-wrap" id="search-wrap">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="back">
+                <i class="icon icon-lg icon-chevron-left"></i>
+            </a>
+            <input type="text" id="key" class="search-input" autocomplete="off" placeholder="输入感兴趣的关键字">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="search">
+                <i class="icon icon-lg icon-search"></i>
+            </a>
+        </div>
+        
+        
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menuShare">
+            <i class="icon icon-lg icon-share-alt"></i>
+        </a>
+        
+    </div>
+</header>
+<header class="content-header post-header">
+
+    <div class="container fade-scale">
+        <h1 class="title">理解Kubernetes安全的持久化保存键值-Etcd</h1>
+        <h5 class="subtitle">
+            
+                <time datetime="2018-12-23T06:47:38.000Z" itemprop="datePublished" class="page-time">
+  2018-12-23
+</time>
+
+
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/kubernetes/">kubernetes</a></li></ul>
+
+            
+        </h5>
+    </div>
+
+    
+
+
+</header>
+
+
+<div class="container body-wrap">
+    
+    <aside class="post-widget">
+        <nav class="post-toc-wrap post-toc-shrink" id="post-toc">
+            <h4>TOC</h4>
+            <ol class="post-toc"><li class="post-toc-item post-toc-level-1"><a class="post-toc-link" href="#概述"><span class="post-toc-number">1.</span> <span class="post-toc-text">概述</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#kubernetes中的使用"><span class="post-toc-number">1.1.</span> <span class="post-toc-text">kubernetes中的使用</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#Client-gt-Server"><span class="post-toc-number">1.1.1.</span> <span class="post-toc-text">Client -&gt; Server</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#Server-gt-Server"><span class="post-toc-number">1.1.2.</span> <span class="post-toc-text">Server -&gt; Server</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#etcd的备份"><span class="post-toc-number">1.1.3.</span> <span class="post-toc-text">etcd的备份</span></a></li></ol></li></ol></li></ol>
+        </nav>
+    </aside>
+
+
+<article id="post-kubernetes-etcd-secret" class="post-article article-type-post fade" itemprop="blogPost">
+
+    <div class="post-card">
+        <h1 class="post-card-title">理解Kubernetes安全的持久化保存键值-Etcd</h1>
+        <div class="post-meta">
+            <time class="post-time" title="2018-12-23 14:47:38" datetime="2018-12-23T06:47:38.000Z" itemprop="datePublished">2018-12-23</time>
+
+            
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/kubernetes/">kubernetes</a></li></ul>
+
+
+
+            
+
+        </div>
+        <div class="post-content" id="post-content" itemprop="postContent">
+            <h1 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h1><p>etcd是CoreOS团队于2013年6月发起的开源项目，它的目标是构建一个高可用的分布式键值(key-value)数据库。etcd内部采用raft协议作为一致性算法，etcd基于Go语言实现。</p>
+<p>etcd作为服务发现系统，有以下的特点：</p>
+<p>简单：安装配置简单，而且提供了HTTP API进行交互，使用也很简单<br>安全：支持SSL证书验证<br>快速：根据官方提供的benchmark数据，单实例支持每秒2k+读操作<br>可靠：采用raft算法，实现分布式系统数据的可用性和一致性</p>
+<p>etcd项目地址：<a href="https://github.com/coreos/etcd/" target="_blank" rel="noopener">https://github.com/coreos/etcd/</a></p>
+<h2 id="kubernetes中的使用"><a href="#kubernetes中的使用" class="headerlink" title="kubernetes中的使用"></a>kubernetes中的使用</h2><p>目前etcd是作为kubernetes集群当中的存储后端</p>
+<p>在kuernetes中etcd涉及到的安全相关的主要有:</p>
+<ul>
+<li>etcd支持备份恢复机制，防止数据被误删导致数据丢失</li>
+<li>用户的敏感信息建议放在secret类型的资源中，该类型资源是加密存储在etcd中的</li>
+<li>etcd支持https, kube-apiserver访问etcd使用https协议</li>
+</ul>
+<p><img src="/2018/12/23/kubernetes-etcd-secret/etcd.png" alt=""></p>
+<p>在kubernetes中的配置:</p>
+<h3 id="Client-gt-Server"><a href="#Client-gt-Server" class="headerlink" title="Client -&gt; Server"></a>Client -&gt; Server</h3><figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">client-transport-security:</span></span><br><span class="line">  <span class="comment"># 通道以TLS协议加密</span></span><br><span class="line"><span class="attr">  ca-file:</span> <span class="string">'/etc/etcd/ssl/etcd-ca.pem'</span></span><br><span class="line"><span class="attr">  cert-file:</span> <span class="string">'/etc/etcd/ssl/etcd.pem'</span> </span><br><span class="line"><span class="attr">  key-file:</span> <span class="string">'/etc/etcd/ssl/etcd-key.pem'</span></span><br><span class="line">  </span><br><span class="line">  <span class="comment"># 服务端会认证客户端证书是否受信任CA签发</span></span><br><span class="line"><span class="attr">  client-cert-auth:</span> <span class="literal">true</span></span><br><span class="line"><span class="attr">  trusted-ca-file:</span> <span class="string">'/etc/etcd/ssl/etcd-ca.pem'</span></span><br><span class="line">  </span><br><span class="line">  <span class="comment"># 是否系统自动生成证书</span></span><br><span class="line"><span class="attr">  auto-tls:</span> <span class="literal">true</span></span><br></pre></td></tr></table></figure>
+<h3 id="Server-gt-Server"><a href="#Server-gt-Server" class="headerlink" title="Server -&gt; Server"></a>Server -&gt; Server</h3><figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">peer-transport-security:</span></span><br><span class="line">  <span class="comment"># 通道以TLS协议加密</span></span><br><span class="line"><span class="attr">  ca-file:</span> <span class="string">'/etc/etcd/ssl/etcd-ca.pem'</span></span><br><span class="line"><span class="attr">  cert-file:</span> <span class="string">'/etc/etcd/ssl/etcd.pem'</span></span><br><span class="line"><span class="attr">  key-file:</span> <span class="string">'/etc/etcd/ssl/etcd-key.pem'</span></span><br><span class="line">  </span><br><span class="line">  <span class="comment"># 服务端会认证客户端证书是否受信任CA签发</span></span><br><span class="line"><span class="attr">  peer-client-cert-auth:</span> <span class="literal">true</span></span><br><span class="line"><span class="attr">  trusted-ca-file:</span> <span class="string">'/etc/etcd/ssl/etcd-ca.pem'</span></span><br><span class="line">  </span><br><span class="line">  <span class="comment"># 是否系统自动生成证书</span></span><br><span class="line"><span class="attr">  auto-tls:</span> <span class="literal">true</span></span><br></pre></td></tr></table></figure>
+<h3 id="etcd的备份"><a href="#etcd的备份" class="headerlink" title="etcd的备份"></a>etcd的备份</h3><p>对于 API 3 备份与恢复方法<br>官方 v3 admin guide<br>在使用 API 3 时需要使用环境变量 ETCDCTL_API 明确指定。<br>在命令行设置：</p>
+<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="builtin-name">export</span> <span class="attribute">ETCDCTL_API</span>=3</span><br></pre></td></tr></table></figure>
+<p>备份数据：</p>
+<figure class="highlight mel"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ etcdctl --endpoints=[localhost:<span class="number">2379</span>] <span class="keyword">snapshot</span> save <span class="keyword">snapshot</span>.db</span><br></pre></td></tr></table></figure>
+<p>恢复：</p>
+<figure class="highlight stata"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ etcdctl snapshot <span class="keyword">restore</span> snapshot.<span class="keyword">db</span> --name m3 --data-<span class="keyword">dir</span>=/home/etcd_data</span><br></pre></td></tr></table></figure>
+<p>恢复后的文件需要修改权限为 etcd:etcd<br>–name:重新指定一个数据目录，可以不指定，默认为 default.etcd<br>–data-dir：指定数据目录<br>建议使用时不指定 name 但指定 data-dir，并将 data-dir 对应于 etcd 服务中配置的 data-dir</p>
+<p>etcd 集群都是至少 3 台机器，官方也说明了集群容错为 (N-1)/2，所以备份数据一般都是用不到，但是鉴上次 gitlab 出现的问题，对于备份数据也要非常重视。</p>
+
+        </div>
+
+        <blockquote class="post-copyright">
+    
+    <div class="content">
+        
+<span class="post-time">
+    最后更新时间：<time datetime="2022-06-07T06:55:07.966Z" itemprop="dateUpdated">2022-06-07 14:55:07</time>
+</span><br>
+
+
+        
+        该文链接：<a href="/2018/12/23/kubernetes-etcd-secret/" target="_blank" rel="external">https://blog.sctux.cc/2018/12/23/kubernetes-etcd-secret/</a>
+        
+    </div>
+    
+    <footer>
+        <a href="https://blog.sctux.cc">
+            <img src="/img/avatar.jpg" alt="maoqiu.guo">
+            maoqiu.guo
+        </a>
+    </footer>
+</blockquote>
+
+        
+<div class="page-reward">
+    <a id="rewardBtn" href="javascript:;" class="page-reward-btn waves-effect waves-circle waves-light">赏</a>
+</div>
+
+
+
+        <div class="post-footer">
+            
+	<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/etcd-cluster/">etcd cluster</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/etcd-secret/">etcd secret</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/kubernetes/">kubernetes</a></li></ul>
+
+
+            
+<div class="page-share-wrap">
+    
+
+<div class="page-share" id="pageShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://blog.sctux.cc/2018/12/23/kubernetes-etcd-secret/&title=《理解Kubernetes安全的持久化保存键值-Etcd》 — 运维人&pic=https://blog.sctux.cc/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://blog.sctux.cc/2018/12/23/kubernetes-etcd-secret/&title=《理解Kubernetes安全的持久化保存键值-Etcd》 — 运维人&source=😊" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.sctux.cc/2018/12/23/kubernetes-etcd-secret/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《理解Kubernetes安全的持久化保存键值-Etcd》 — 运维人&url=https://blog.sctux.cc/2018/12/23/kubernetes-etcd-secret/&via=https://blog.sctux.cc" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=https://blog.sctux.cc/2018/12/23/kubernetes-etcd-secret/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+
+    <a href="javascript:;" id="shareFab" class="page-share-fab waves-effect waves-circle">
+        <i class="icon icon-share-alt icon-lg"></i>
+    </a>
+</div>
+
+
+
+        </div>
+    </div>
+
+    
+<nav class="post-nav flex-row flex-justify-between">
+  
+    <div class="waves-block waves-effect prev">
+      <a href="/2018/12/30/kubernetes-bootstrapping/" id="post-prev" class="post-nav-link">
+        <div class="tips"><i class="icon icon-angle-left icon-lg icon-pr"></i> Prev</div>
+        <h4 class="title">使用Bootstrap Token完成TLS Bootstrapping</h4>
+      </a>
+    </div>
+  
+
+  
+    <div class="waves-block waves-effect next">
+      <a href="/2018/12/22/kubernetes-static-pod/" id="post-next" class="post-nav-link">
+        <div class="tips">Next <i class="icon icon-angle-right icon-lg icon-pl"></i></div>
+        <h4 class="title">理解kubernetes中的静态Pod</h4>
+      </a>
+    </div>
+  
+</nav>
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Valine Comments -->
+    <div class="comments vcomment" id="comments"></div>
+    <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+    <script src="//unpkg.com/valine@latest/dist/Valine.min.js"></script>
+    <!-- Valine Comments script -->
+    <script>
+        var GUEST_INFO = ['nick','mail','link'];
+        var guest_info = 'nick,mail,link'.split(',').filter(function(item){
+          return GUEST_INFO.indexOf(item) > -1
+        });
+        new Valine({
+            el: '#comments',
+            notify: 'true' == 'true',
+            verify: 'true' == 'true',
+            appId: "lHxnnDHJXDgMoFpCbdx8A4q7-gzGzoHsz",
+            appKey: "W8H2NuO8chyDlCEQzionLuuV",
+            avatar: "monsterid",
+            placeholder: "来都来了，说点啥子吧~🌹 (友情提醒，留下正确的邮箱地址可以第一时间获取评论反馈)",
+            guest_info: guest_info.length == 0 ? GUEST_INFO : guest_info,
+            pageSize: "10"
+        })
+    </script>
+    <!-- Valine Comments end -->
+
+
+
+
+
+
+
+</article>
+
+<div id="reward" class="page-modal reward-lay">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <h3 class="reward-title">
+        <i class="icon icon-quote-left"></i>
+        谢谢大爷~
+        <i class="icon icon-quote-right"></i>
+    </h3>
+    <div class="reward-content">
+        
+        <div class="reward-code">
+            <img id="rewardCode" src="/img/wechat.jpg" alt="打赏二维码">
+        </div>
+        
+        <label class="reward-toggle">
+            <input id="rewardToggle" type="checkbox" class="reward-toggle-check" data-wechat="/img/wechat.jpg" data-alipay="/img/alipay.jpg">
+            <div class="reward-toggle-ctrol">
+                <span class="reward-toggle-item wechat">微信</span>
+                <span class="reward-toggle-label"></span>
+                <span class="reward-toggle-item alipay">支付宝</span>
+            </div>
+        </label>
+        
+    </div>
+</div>
+
+
+
+</div>
+
+        <footer class="footer">
+    <div class="top">
+        
+
+        <p>
+            
+            <span>博客内容遵循 <a rel="license" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh">知识共享 署名 - 非商业性 - 相同方式共享 4.0 国际协议</a></span>
+        </p>
+    </div>
+    <div class="bottom">
+        <p><span>maoqiu.guo &copy; 2013 - 2024</span>
+            <span>
+                
+                <a href="http://www.miitbeian.gov.cn/" target="_blank">蜀ICP备007号-1</a><br>
+                
+                Power by <a href="http://hexo.io/" target="_blank">Hexo</a> Theme <a href="https://github.com/yscoder/hexo-theme-indigo" target="_blank">indigo</a>
+            </span>
+        </p>
+    </div>
+</footer>
+
+    </main>
+    <div class="mask" id="mask"></div>
+<a href="javascript:;" id="gotop" class="waves-effect waves-circle waves-light"><span class="icon icon-lg icon-chevron-up"></span></a>
+
+
+
+<div class="global-share" id="globalShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://blog.sctux.cc/2018/12/23/kubernetes-etcd-secret/&title=《理解Kubernetes安全的持久化保存键值-Etcd》 — 运维人&pic=https://blog.sctux.cc/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://blog.sctux.cc/2018/12/23/kubernetes-etcd-secret/&title=《理解Kubernetes安全的持久化保存键值-Etcd》 — 运维人&source=😊" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.sctux.cc/2018/12/23/kubernetes-etcd-secret/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《理解Kubernetes安全的持久化保存键值-Etcd》 — 运维人&url=https://blog.sctux.cc/2018/12/23/kubernetes-etcd-secret/&via=https://blog.sctux.cc" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=https://blog.sctux.cc/2018/12/23/kubernetes-etcd-secret/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+<div class="page-modal wx-share" id="wxShare">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <img src="//api.qrserver.com/v1/create-qr-code/?data=https://blog.sctux.cc/2018/12/23/kubernetes-etcd-secret/" alt="微信分享二维码">
+</div>
+
+
+
+
+    <script src="//cdn.bootcss.com/node-waves/0.7.4/waves.min.js"></script>
+<script>
+var BLOG = { ROOT: '/', SHARE: true, REWARD: true };
+
+
+</script>
+
+<script src="/js/main.min.js?v=1.7.2"></script>
+
+
+<div class="search-panel" id="search-panel">
+    <ul class="search-result" id="search-result"></ul>
+</div>
+<template id="search-tpl">
+<li class="item">
+    <a href="{path}" class="waves-block waves-effect">
+        <div class="title ellipsis" title="{title}">{title}</div>
+        <div class="flex-row flex-middle">
+            <div class="tags ellipsis">
+                {tags}
+            </div>
+            <time class="flex-col time">{date}</time>
+        </div>
+    </a>
+</li>
+</template>
+
+<script src="/js/search.min.js?v=1.7.2" async></script>
+
+
+
+
+
+
+
+
+<script>
+(function() {
+    var OriginTitile = document.title, titleTime;
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            document.title = '老弟，哪儿去啦😊?！';
+            clearTimeout(titleTime);
+        } else {
+            document.title = '(つェ⊂)咦!老弟来啦!';
+            titleTime = setTimeout(function() {
+                document.title = OriginTitile;
+            },2000);
+        }
+    });
+})();
+</script>
+
+
+
+</body>
+</html>

@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.8.0">
+<script>(function(i,s,o,g,r,a,m){i["DaoVoiceObject"]=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;a.charset="utf-8";m.parentNode.insertBefore(a,m)})(window,document,"script",('https:' == document.location.protocol ? 'https:' : 'http:') + "//widget.daovoice.io/widget/9f77122a.js","daovoice")
+
+
+daovoice('init', {
+  app_id: "9f77122a",
+  user_id: "NO_89757", // 必填: 该用户在您系统上的唯一ID
+  email: "daovoice@example.com", // 选填:  该用户在您系统上的主邮箱
+  name: "道客船长", // 选填: 用户名
+  signed_up: 1449821660 // 选填: 用户的注册时间，用Unix时间戳表示
+});
+daovoice('update');
+
+</script>
+    
+
+    
+
+    
+
+
+
+    <meta charset="utf-8">
+    
+    
+    
+    
+    <title>Kubernetes中deployment升级回滚 | 运维人 | Devops、Linux、Kubernetes、Docker、Flask、Python、Shell、SRE</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    
+    <meta name="theme-color" content="#3F51B5">
+    
+    
+    <meta name="keywords" content="deployment,rolling,update,pausing,resuming">
+    <meta name="description" content="在kubernetes中使用deployment管理rs时，可以利用deployment滚动升级的特性，达到服务零停止升级的目的 命令行创建一个deploymen1kubectl run nginx --image=nginx 多副本deployment1kubectl run nginx --image=nginx --replicas=2 --record 滚动升级 （可以加上–record参">
+<meta name="keywords" content="deployment,rolling,update,pausing,resuming">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Kubernetes中deployment升级回滚">
+<meta property="og:url" content="https://blog.sctux.cc/2018/12/10/kubernetes-deployment-rollingupdate/index.html">
+<meta property="og:site_name" content="运维人">
+<meta property="og:description" content="在kubernetes中使用deployment管理rs时，可以利用deployment滚动升级的特性，达到服务零停止升级的目的 命令行创建一个deploymen1kubectl run nginx --image=nginx 多副本deployment1kubectl run nginx --image=nginx --replicas=2 --record 滚动升级 （可以加上–record参">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://blog.sctux.cc/2018/12/10/kubernetes-deployment-rollingupdate/rolling.jpg">
+<meta property="og:updated_time" content="2022-06-07T06:55:07.962Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Kubernetes中deployment升级回滚">
+<meta name="twitter:description" content="在kubernetes中使用deployment管理rs时，可以利用deployment滚动升级的特性，达到服务零停止升级的目的 命令行创建一个deploymen1kubectl run nginx --image=nginx 多副本deployment1kubectl run nginx --image=nginx --replicas=2 --record 滚动升级 （可以加上–record参">
+<meta name="twitter:image" content="https://blog.sctux.cc/2018/12/10/kubernetes-deployment-rollingupdate/rolling.jpg">
+    
+    <link rel="shortcut icon" href="/favicon.ico">
+    <link rel="stylesheet" href="/css/style.css?v=1.7.2">
+    <script>window.lazyScripts=[]</script>
+
+    <!-- custom head -->
+    
+
+</head>
+
+<body>
+    <div id="loading" class="active"></div>
+
+    <aside id="menu">
+  <div class="inner flex-row-vertical">
+    <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menu-off">
+        <i class="icon icon-lg icon-close"></i>
+    </a>
+    <div class="brand-wrap" style="background-image:url(/img/brand.jpg)">
+      <div class="brand">
+        <a href="/" class="avatar waves-effect waves-circle waves-light">
+          <img src="/img/avatar.jpg">
+        </a>
+        <hgroup class="introduce">
+          <h5 class="nickname">maoqiu.guo</h5>
+          <a href="mailto:guomaoqiu@gmail.com" title="guomaoqiu@gmail.com" class="mail">guomaoqiu@gmail.com</a>
+        </hgroup>
+      </div>
+    </div>
+    <div class="scroll-wrap flex-col">
+      <ul class="nav">
+        
+            <li class="waves-block waves-effect">
+              <a href="/">
+                <i class="icon icon-lg icon-home"></i>
+                主页
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/archives">
+                <i class="icon icon-lg icon-archives"></i>
+                归档
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/tags">
+                <i class="icon icon-lg icon-tags"></i>
+                标签
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/categories">
+                <i class="icon icon-lg icon-th-list"></i>
+                分类
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://github.com/guomaoqiu" target="_blank">
+                <i class="icon icon-lg icon-github"></i>
+                Github
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/works">
+                <i class="icon icon-lg icon-hand-peace-o"></i>
+                作品
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="http://demo.sctux.cc" target="_blank">
+                <i class="icon icon-lg icon-link"></i>
+                DevOpsPlatform
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="http://resume.sctux.cc/" target="_blank">
+                <i class="icon icon-lg icon-heart"></i>
+                我的简历
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/about">
+                <i class="icon icon-lg icon-user"></i>
+                关于我
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://blog.sctux.cc/Skilltree.jpg" target="_blank">
+                <i class="icon icon-lg icon-tree"></i>
+                我的技能树
+              </a>
+            </li>
+        
+      </ul>
+    </div>
+  </div>
+</aside>
+
+    <main id="main">
+        <header class="top-header" id="header">
+    <div class="flex-row">
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light on" id="menu-toggle">
+          <i class="icon icon-lg icon-navicon"></i>
+        </a>
+        <div class="flex-col header-title ellipsis">Kubernetes中deployment升级回滚</div>
+        
+        <div class="search-wrap" id="search-wrap">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="back">
+                <i class="icon icon-lg icon-chevron-left"></i>
+            </a>
+            <input type="text" id="key" class="search-input" autocomplete="off" placeholder="输入感兴趣的关键字">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="search">
+                <i class="icon icon-lg icon-search"></i>
+            </a>
+        </div>
+        
+        
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menuShare">
+            <i class="icon icon-lg icon-share-alt"></i>
+        </a>
+        
+    </div>
+</header>
+<header class="content-header post-header">
+
+    <div class="container fade-scale">
+        <h1 class="title">Kubernetes中deployment升级回滚</h1>
+        <h5 class="subtitle">
+            
+                <time datetime="2018-12-10T14:49:01.000Z" itemprop="datePublished" class="page-time">
+  2018-12-10
+</time>
+
+
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/kubernetes/">kubernetes</a></li></ul>
+
+            
+        </h5>
+    </div>
+
+    
+
+
+</header>
+
+
+<div class="container body-wrap">
+    
+    <aside class="post-widget">
+        <nav class="post-toc-wrap post-toc-shrink" id="post-toc">
+            <h4>TOC</h4>
+            <ol class="post-toc"><li class="post-toc-item post-toc-level-5"><a class="post-toc-link" href="#命令行创建一个deploymen"><span class="post-toc-number">1.</span> <span class="post-toc-text">命令行创建一个deploymen</span></a></li><li class="post-toc-item post-toc-level-5"><a class="post-toc-link" href="#多副本deployment"><span class="post-toc-number">2.</span> <span class="post-toc-text">多副本deployment</span></a></li><li class="post-toc-item post-toc-level-5"><a class="post-toc-link" href="#滚动升级-（可以加上–record参数可以记录命令）"><span class="post-toc-number">3.</span> <span class="post-toc-text">滚动升级 （可以加上–record参数可以记录命令）</span></a></li><li class="post-toc-item post-toc-level-5"><a class="post-toc-link" href="#滚动升级状态查看"><span class="post-toc-number">4.</span> <span class="post-toc-text">滚动升级状态查看</span></a></li><li class="post-toc-item post-toc-level-5"><a class="post-toc-link" href="#查看升级历史"><span class="post-toc-number">5.</span> <span class="post-toc-text">查看升级历史</span></a></li><li class="post-toc-item post-toc-level-5"><a class="post-toc-link" href="#资源调整"><span class="post-toc-number">6.</span> <span class="post-toc-text">资源调整:</span></a></li><li class="post-toc-item post-toc-level-5"><a class="post-toc-link" href="#回滚操作"><span class="post-toc-number">7.</span> <span class="post-toc-text">回滚操作:</span></a></li><li class="post-toc-item post-toc-level-5"><a class="post-toc-link" href="#应用弹性伸缩"><span class="post-toc-number">8.</span> <span class="post-toc-text">应用弹性伸缩:</span></a></li><li class="post-toc-item post-toc-level-5"><a class="post-toc-link" href="#暂停和恢复Deployment"><span class="post-toc-number">9.</span> <span class="post-toc-text">暂停和恢复Deployment</span></a></li><li class="post-toc-item post-toc-level-5"><a class="post-toc-link" href="#Deployment-暂停前的初始状态将继续它的功能，而不会对-Deployment-的更新产生任何影响，只要-Deployment是暂停的。"><span class="post-toc-number">10.</span> <span class="post-toc-text">Deployment 暂停前的初始状态将继续它的功能，而不会对 Deployment 的更新产生任何影响，只要 Deployment是暂停的。</span></a></li></ol>
+        </nav>
+    </aside>
+
+
+<article id="post-kubernetes-deployment-rollingupdate" class="post-article article-type-post fade" itemprop="blogPost">
+
+    <div class="post-card">
+        <h1 class="post-card-title">Kubernetes中deployment升级回滚</h1>
+        <div class="post-meta">
+            <time class="post-time" title="2018-12-10 22:49:01" datetime="2018-12-10T14:49:01.000Z" itemprop="datePublished">2018-12-10</time>
+
+            
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/kubernetes/">kubernetes</a></li></ul>
+
+
+
+            
+
+        </div>
+        <div class="post-content" id="post-content" itemprop="postContent">
+            <p>在kubernetes中使用deployment管理rs时，可以利用deployment滚动升级的特性，达到服务零停止升级的目的</p>
+<h5 id="命令行创建一个deploymen"><a href="#命令行创建一个deploymen" class="headerlink" title="命令行创建一个deploymen"></a>命令行创建一个deploymen</h5><figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">kubectl <span class="builtin-name">run</span> nginx <span class="attribute">--image</span>=nginx</span><br></pre></td></tr></table></figure>
+<h5 id="多副本deployment"><a href="#多副本deployment" class="headerlink" title="多副本deployment"></a>多副本deployment</h5><figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">kubectl <span class="builtin-name">run</span> nginx <span class="attribute">--image</span>=nginx <span class="attribute">--replicas</span>=2 --record</span><br></pre></td></tr></table></figure>
+<h5 id="滚动升级-（可以加上–record参数可以记录命令）"><a href="#滚动升级-（可以加上–record参数可以记录命令）" class="headerlink" title="滚动升级 （可以加上–record参数可以记录命令）"></a>滚动升级 （可以加上–record参数可以记录命令）</h5><figure class="highlight dts"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">kubectl set image deploy/nginx nginx=nginx:<span class="number">1.9</span><span class="number">.1</span></span><br><span class="line"></span><br><span class="line"><span class="meta"># 滚动策略:</span></span><br><span class="line">kubectl edit deployment nginx</span><br><span class="line"><span class="symbol">  strategy:</span></span><br><span class="line"><span class="symbol">    rollingUpdate:</span></span><br><span class="line"><span class="symbol">      maxSurge:</span> <span class="number">1</span> <span class="meta"># 升级过程中可以比预设的 pod 的数量多出的个数，默认值是25%</span></span><br><span class="line"><span class="symbol">      maxUnavailable:</span> <span class="number">1</span> <span class="meta"># 最多有几个 pod 处于无法工作的状态，默认值是25%</span></span><br></pre></td></tr></table></figure>
+<h5 id="滚动升级状态查看"><a href="#滚动升级状态查看" class="headerlink" title="滚动升级状态查看"></a>滚动升级状态查看</h5><figure class="highlight fortran"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">kubectl rollout <span class="keyword">status</span> deploy/nginx</span><br></pre></td></tr></table></figure>
+<h5 id="查看升级历史"><a href="#查看升级历史" class="headerlink" title="查看升级历史"></a>查看升级历史</h5><figure class="highlight jboss-cli"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">kubectl rollout <span class="keyword">history</span> <span class="keyword">deploy</span>/nginx</span><br><span class="line"><span class="comment"># 查看单个revision 的详细信息：</span></span><br><span class="line">kubectl rollout <span class="keyword">history</span> <span class="keyword">deploy</span>/nginx <span class="params">--revision=2</span></span><br></pre></td></tr></table></figure>
+<h5 id="资源调整"><a href="#资源调整" class="headerlink" title="资源调整:"></a>资源调整:</h5><figure class="highlight dts"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">kubectl set resources deploy/nginx -c=nginx  --limits=cpu=<span class="number">100</span>m,memory=<span class="number">200</span>m</span><br><span class="line"></span><br><span class="line"><span class="meta"># 此时在查看历史状态:</span></span><br><span class="line">$ kubectl rollout history deploy/nginx</span><br><span class="line">deployments <span class="string">"nginx"</span></span><br><span class="line">REVISION  CHANGE-CAUSE</span><br><span class="line"><span class="number">1</span>         <span class="params">&lt;none&gt;</span></span><br><span class="line"><span class="number">2</span>         <span class="params">&lt;none&gt;</span></span><br><span class="line"><span class="number">3</span>         <span class="params">&lt;none&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="meta"># 查看revision 3 的内容,可以看出刚才调整了pod的资源记录了到了升级历史当中</span></span><br><span class="line">$ kubectl rollout history deploy/nginx --revision=<span class="number">3</span></span><br><span class="line">eployments <span class="string">"nginx"</span> with revision <span class="meta">#3</span></span><br><span class="line">Pod Template:</span><br><span class="line"><span class="symbol">  Labels:</span>       pod-template-hash=<span class="number">440294079</span></span><br><span class="line">        run=nginx</span><br><span class="line"><span class="symbol">  Containers:</span></span><br><span class="line"><span class="symbol">   nginx:</span></span><br><span class="line"><span class="symbol">    Image:</span>      nginx:<span class="number">1.9</span><span class="number">.1</span></span><br><span class="line"><span class="symbol">    Port:</span>       <span class="params">&lt;none&gt;</span></span><br><span class="line"><span class="symbol">    Limits:</span></span><br><span class="line"><span class="symbol">      cpu:</span>      <span class="number">100</span>m</span><br><span class="line"><span class="symbol">      memory:</span>   <span class="number">200</span>m</span><br><span class="line"><span class="symbol">    Environment:</span>        <span class="params">&lt;none&gt;</span></span><br><span class="line"><span class="symbol">    Mounts:</span>     <span class="params">&lt;none&gt;</span></span><br><span class="line"><span class="symbol">  Volumes:</span>      <span class="params">&lt;none&gt;</span></span><br></pre></td></tr></table></figure>
+<h5 id="回滚操作"><a href="#回滚操作" class="headerlink" title="回滚操作:"></a>回滚操作:</h5><figure class="highlight jboss-cli"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 回滚到第二个版本去</span></span><br><span class="line">$ kubectl rollout undo <span class="keyword">deploy</span> nginx <span class="params">--to-revision=2</span></span><br><span class="line">deployment <span class="string">"nginx"</span></span><br></pre></td></tr></table></figure>
+<h5 id="应用弹性伸缩"><a href="#应用弹性伸缩" class="headerlink" title="应用弹性伸缩:"></a>应用弹性伸缩:</h5><figure class="highlight jboss-cli"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl scale <span class="keyword">deploy</span> nginx <span class="params">--replicas=10</span></span><br><span class="line">deployment <span class="string">"nginx"</span> scaled</span><br></pre></td></tr></table></figure>
+<p>如果集群中对接了heapster，和HPA联动后，可以通过<code>autoscale</code>自动弹性伸缩</p>
+<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl autoscale deployment nginx <span class="attribute">--min</span>=10 <span class="attribute">--max</span>=15 <span class="attribute">--cpu-percent</span>=80</span><br></pre></td></tr></table></figure>
+<h5 id="暂停和恢复Deployment"><a href="#暂停和恢复Deployment" class="headerlink" title="暂停和恢复Deployment"></a>暂停和恢复Deployment</h5><p>您可以在发出一次或多次更新前暂停一个 Deployment，然后再恢复它。这样您就能多次暂停和恢复 Deployment，在此期间进行一些更新，修复工作，而不会发出不必要的 rollout。</p>
+<p>例如使用刚刚创建 Deployment：</p>
+<figure class="highlight lsl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl get deploy nginx</span><br><span class="line">NAME      DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE</span><br><span class="line">nginx     <span class="number">3</span>         <span class="number">3</span>         <span class="number">3</span>            <span class="number">3</span>           <span class="number">27</span>s</span><br></pre></td></tr></table></figure>
+<p>使用以下命令暂停 Deployment：</p>
+<figure class="highlight autohotkey"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl rollout <span class="keyword">pause</span> deployment/nginx</span><br><span class="line">deployment <span class="string">"nginx"</span> paused</span><br></pre></td></tr></table></figure>
+<p>然后更新 Deplyment中的镜像：</p>
+<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl <span class="builtin-name">set</span> image deploy/nginx <span class="attribute">nginx</span>=nginx:1.9.1</span><br><span class="line">deployment <span class="string">"nginx-deployment"</span> image updated</span><br></pre></td></tr></table></figure>
+<p>您可以进行任意多次更新，例如更新使用的资源：</p>
+<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl <span class="builtin-name">set</span> resources deployment nginx <span class="attribute">-c</span>=nginx <span class="attribute">--limits</span>=cpu=200m,memory=256Mi</span><br><span class="line">deployment <span class="string">"nginx"</span><span class="built_in"> resource </span>requirements updated</span><br></pre></td></tr></table></figure>
+<h5 id="Deployment-暂停前的初始状态将继续它的功能，而不会对-Deployment-的更新产生任何影响，只要-Deployment是暂停的。"><a href="#Deployment-暂停前的初始状态将继续它的功能，而不会对-Deployment-的更新产生任何影响，只要-Deployment是暂停的。" class="headerlink" title="Deployment 暂停前的初始状态将继续它的功能，而不会对 Deployment 的更新产生任何影响，只要 Deployment是暂停的。"></a>Deployment 暂停前的初始状态将继续它的功能，而不会对 Deployment 的更新产生任何影响，只要 Deployment是暂停的。</h5><p>那么新的更新或者改动的结果将是在暂停期间所有做的操作都是顺序生效取相同操作的最后一步，<br>比如,暂停后我做了以下操作:<br>1.更新了版本: 1.9.1<br>2.更新了资源: memory=222Mi<br>3.又更新了版本: 1.9.3<br>4.又调整了资源: memory=211Mi</p>
+<p>最后，恢复这个 Deployment，观察完成更新的 ReplicaSet 已经创建出来了：</p>
+<figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="/2018/12/10/kubernetes-deployment-rollingupdate/rolling.jpg" alt="" title="">
+                </div>
+                <div class="image-caption"></div>
+            </figure>
+<p>注意： 在恢复 Deployment 之前您无法回退一个已经暂停的 Deployment。</p>
+
+        </div>
+
+        <blockquote class="post-copyright">
+    
+    <div class="content">
+        
+<span class="post-time">
+    最后更新时间：<time datetime="2022-06-07T06:55:07.962Z" itemprop="dateUpdated">2022-06-07 14:55:07</time>
+</span><br>
+
+
+        
+        该文链接：<a href="/2018/12/10/kubernetes-deployment-rollingupdate/" target="_blank" rel="external">https://blog.sctux.cc/2018/12/10/kubernetes-deployment-rollingupdate/</a>
+        
+    </div>
+    
+    <footer>
+        <a href="https://blog.sctux.cc">
+            <img src="/img/avatar.jpg" alt="maoqiu.guo">
+            maoqiu.guo
+        </a>
+    </footer>
+</blockquote>
+
+        
+<div class="page-reward">
+    <a id="rewardBtn" href="javascript:;" class="page-reward-btn waves-effect waves-circle waves-light">赏</a>
+</div>
+
+
+
+        <div class="post-footer">
+            
+	<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/deployment/">deployment</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/pausing/">pausing</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/resuming/">resuming</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/rolling/">rolling</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/update/">update</a></li></ul>
+
+
+            
+<div class="page-share-wrap">
+    
+
+<div class="page-share" id="pageShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://blog.sctux.cc/2018/12/10/kubernetes-deployment-rollingupdate/&title=《Kubernetes中deployment升级回滚》 — 运维人&pic=https://blog.sctux.cc/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://blog.sctux.cc/2018/12/10/kubernetes-deployment-rollingupdate/&title=《Kubernetes中deployment升级回滚》 — 运维人&source=😊" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.sctux.cc/2018/12/10/kubernetes-deployment-rollingupdate/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《Kubernetes中deployment升级回滚》 — 运维人&url=https://blog.sctux.cc/2018/12/10/kubernetes-deployment-rollingupdate/&via=https://blog.sctux.cc" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=https://blog.sctux.cc/2018/12/10/kubernetes-deployment-rollingupdate/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+
+    <a href="javascript:;" id="shareFab" class="page-share-fab waves-effect waves-circle">
+        <i class="icon icon-share-alt icon-lg"></i>
+    </a>
+</div>
+
+
+
+        </div>
+    </div>
+
+    
+<nav class="post-nav flex-row flex-justify-between">
+  
+    <div class="waves-block waves-effect prev">
+      <a href="/2018/12/12/kubernetes_pod_access/" id="post-prev" class="post-nav-link">
+        <div class="tips"><i class="icon icon-angle-left icon-lg icon-pr"></i> Prev</div>
+        <h4 class="title">理解kubernetes中Pod访问方式</h4>
+      </a>
+    </div>
+  
+
+  
+    <div class="waves-block waves-effect next">
+      <a href="/2018/12/09/k8s-yaml-bian-xie-xiao-ji-qiao/" id="post-next" class="post-nav-link">
+        <div class="tips">Next <i class="icon icon-angle-right icon-lg icon-pl"></i></div>
+        <h4 class="title">K8s Yaml编写小技巧</h4>
+      </a>
+    </div>
+  
+</nav>
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Valine Comments -->
+    <div class="comments vcomment" id="comments"></div>
+    <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+    <script src="//unpkg.com/valine@latest/dist/Valine.min.js"></script>
+    <!-- Valine Comments script -->
+    <script>
+        var GUEST_INFO = ['nick','mail','link'];
+        var guest_info = 'nick,mail,link'.split(',').filter(function(item){
+          return GUEST_INFO.indexOf(item) > -1
+        });
+        new Valine({
+            el: '#comments',
+            notify: 'true' == 'true',
+            verify: 'true' == 'true',
+            appId: "lHxnnDHJXDgMoFpCbdx8A4q7-gzGzoHsz",
+            appKey: "W8H2NuO8chyDlCEQzionLuuV",
+            avatar: "monsterid",
+            placeholder: "来都来了，说点啥子吧~🌹 (友情提醒，留下正确的邮箱地址可以第一时间获取评论反馈)",
+            guest_info: guest_info.length == 0 ? GUEST_INFO : guest_info,
+            pageSize: "10"
+        })
+    </script>
+    <!-- Valine Comments end -->
+
+
+
+
+
+
+
+</article>
+
+<div id="reward" class="page-modal reward-lay">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <h3 class="reward-title">
+        <i class="icon icon-quote-left"></i>
+        谢谢大爷~
+        <i class="icon icon-quote-right"></i>
+    </h3>
+    <div class="reward-content">
+        
+        <div class="reward-code">
+            <img id="rewardCode" src="/img/wechat.jpg" alt="打赏二维码">
+        </div>
+        
+        <label class="reward-toggle">
+            <input id="rewardToggle" type="checkbox" class="reward-toggle-check" data-wechat="/img/wechat.jpg" data-alipay="/img/alipay.jpg">
+            <div class="reward-toggle-ctrol">
+                <span class="reward-toggle-item wechat">微信</span>
+                <span class="reward-toggle-label"></span>
+                <span class="reward-toggle-item alipay">支付宝</span>
+            </div>
+        </label>
+        
+    </div>
+</div>
+
+
+
+</div>
+
+        <footer class="footer">
+    <div class="top">
+        
+
+        <p>
+            
+            <span>博客内容遵循 <a rel="license" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh">知识共享 署名 - 非商业性 - 相同方式共享 4.0 国际协议</a></span>
+        </p>
+    </div>
+    <div class="bottom">
+        <p><span>maoqiu.guo &copy; 2013 - 2024</span>
+            <span>
+                
+                <a href="http://www.miitbeian.gov.cn/" target="_blank">蜀ICP备007号-1</a><br>
+                
+                Power by <a href="http://hexo.io/" target="_blank">Hexo</a> Theme <a href="https://github.com/yscoder/hexo-theme-indigo" target="_blank">indigo</a>
+            </span>
+        </p>
+    </div>
+</footer>
+
+    </main>
+    <div class="mask" id="mask"></div>
+<a href="javascript:;" id="gotop" class="waves-effect waves-circle waves-light"><span class="icon icon-lg icon-chevron-up"></span></a>
+
+
+
+<div class="global-share" id="globalShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://blog.sctux.cc/2018/12/10/kubernetes-deployment-rollingupdate/&title=《Kubernetes中deployment升级回滚》 — 运维人&pic=https://blog.sctux.cc/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://blog.sctux.cc/2018/12/10/kubernetes-deployment-rollingupdate/&title=《Kubernetes中deployment升级回滚》 — 运维人&source=😊" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.sctux.cc/2018/12/10/kubernetes-deployment-rollingupdate/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《Kubernetes中deployment升级回滚》 — 运维人&url=https://blog.sctux.cc/2018/12/10/kubernetes-deployment-rollingupdate/&via=https://blog.sctux.cc" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=https://blog.sctux.cc/2018/12/10/kubernetes-deployment-rollingupdate/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+<div class="page-modal wx-share" id="wxShare">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <img src="//api.qrserver.com/v1/create-qr-code/?data=https://blog.sctux.cc/2018/12/10/kubernetes-deployment-rollingupdate/" alt="微信分享二维码">
+</div>
+
+
+
+
+    <script src="//cdn.bootcss.com/node-waves/0.7.4/waves.min.js"></script>
+<script>
+var BLOG = { ROOT: '/', SHARE: true, REWARD: true };
+
+
+</script>
+
+<script src="/js/main.min.js?v=1.7.2"></script>
+
+
+<div class="search-panel" id="search-panel">
+    <ul class="search-result" id="search-result"></ul>
+</div>
+<template id="search-tpl">
+<li class="item">
+    <a href="{path}" class="waves-block waves-effect">
+        <div class="title ellipsis" title="{title}">{title}</div>
+        <div class="flex-row flex-middle">
+            <div class="tags ellipsis">
+                {tags}
+            </div>
+            <time class="flex-col time">{date}</time>
+        </div>
+    </a>
+</li>
+</template>
+
+<script src="/js/search.min.js?v=1.7.2" async></script>
+
+
+
+
+
+
+
+
+<script>
+(function() {
+    var OriginTitile = document.title, titleTime;
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            document.title = '老弟，哪儿去啦😊?！';
+            clearTimeout(titleTime);
+        } else {
+            document.title = '(つェ⊂)咦!老弟来啦!';
+            titleTime = setTimeout(function() {
+                document.title = OriginTitile;
+            },2000);
+        }
+    });
+})();
+</script>
+
+
+
+</body>
+</html>

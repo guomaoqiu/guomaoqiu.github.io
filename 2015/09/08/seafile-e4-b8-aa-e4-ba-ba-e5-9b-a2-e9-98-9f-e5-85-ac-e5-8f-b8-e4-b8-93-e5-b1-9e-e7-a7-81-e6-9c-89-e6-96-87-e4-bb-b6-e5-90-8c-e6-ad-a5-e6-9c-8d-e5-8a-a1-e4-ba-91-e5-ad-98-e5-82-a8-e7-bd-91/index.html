@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.8.0">
+<script>(function(i,s,o,g,r,a,m){i["DaoVoiceObject"]=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;a.charset="utf-8";m.parentNode.insertBefore(a,m)})(window,document,"script",('https:' == document.location.protocol ? 'https:' : 'http:') + "//widget.daovoice.io/widget/9f77122a.js","daovoice")
+
+
+daovoice('init', {
+  app_id: "9f77122a",
+  user_id: "NO_89757", // 必填: 该用户在您系统上的唯一ID
+  email: "daovoice@example.com", // 选填:  该用户在您系统上的主邮箱
+  name: "道客船长", // 选填: 用户名
+  signed_up: 1449821660 // 选填: 用户的注册时间，用Unix时间戳表示
+});
+daovoice('update');
+
+</script>
+    
+
+    
+
+    
+
+
+
+    <meta charset="utf-8">
+    
+    
+    
+    
+    <title>Seafile-个人/团队/公司专属私有文件同步服务 (云存储网盘) | 运维人 | Devops、Linux、Kubernetes、Docker、Flask、Python、Shell、SRE</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    
+    <meta name="theme-color" content="#3F51B5">
+    
+    
+    <meta name="keywords" content="">
+    <meta name="description" content="一、简介： seafile 是由国内团队开发的一个国际化的开源云存储软件项目，目前据说已有10万左右的用户，典型的机构用户包括比利时的皇家自然科学博物馆、德国的 Wuppertal 气候、能源研究所等等。Seafile 同时提供了客户端和服务器端软件免费下载，任何个人或公司都能搭建属于自己的私有文件同步服务。Seafile 的服务器端支持 Linux 、Windows 以及树莓派平台，客户端除了网">
+<meta name="keywords" content="DevOps,Linux,Kubernetes,Flask,Python,Shell,SRE">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Seafile-个人&#x2F;团队&#x2F;公司专属私有文件同步服务 (云存储网盘)">
+<meta property="og:url" content="https://blog.sctux.cc/2015/09/08/seafile-e4-b8-aa-e4-ba-ba-e5-9b-a2-e9-98-9f-e5-85-ac-e5-8f-b8-e4-b8-93-e5-b1-9e-e7-a7-81-e6-9c-89-e6-96-87-e4-bb-b6-e5-90-8c-e6-ad-a5-e6-9c-8d-e5-8a-a1-e4-ba-91-e5-ad-98-e5-82-a8-e7-bd-91/index.html">
+<meta property="og:site_name" content="运维人">
+<meta property="og:description" content="一、简介： seafile 是由国内团队开发的一个国际化的开源云存储软件项目，目前据说已有10万左右的用户，典型的机构用户包括比利时的皇家自然科学博物馆、德国的 Wuppertal 气候、能源研究所等等。Seafile 同时提供了客户端和服务器端软件免费下载，任何个人或公司都能搭建属于自己的私有文件同步服务。Seafile 的服务器端支持 Linux 、Windows 以及树莓派平台，客户端除了网">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/09/seaf.png">
+<meta property="og:image" content="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/09/seahub.png">
+<meta property="og:image" content="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/09/web.png">
+<meta property="og:image" content="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/09/seafile.png">
+<meta property="og:image" content="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/09/account.png">
+<meta property="og:image" content="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/09/Screenshot-from-2015-09-08-220859.png">
+<meta property="og:image" content="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/09/Screenshot-from-2015-09-08-221208.png">
+<meta property="og:image" content="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/09/1-281x500.png">
+<meta property="og:image" content="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/09/2-281x500.png">
+<meta property="og:image" content="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/09/3-281x500.png">
+<meta property="og:image" content="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/09/Screenshot-from-2015-09-08-224030.png">
+<meta property="og:image" content="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/09/Screenshot-from-2015-09-08-224241.png">
+<meta property="og:image" content="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/09/Screenshot-from-2015-09-08-224530.png">
+<meta property="og:image" content="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/09/Screenshot-from-2015-09-08-230020.png">
+<meta property="og:updated_time" content="2022-06-07T06:55:08.086Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Seafile-个人&#x2F;团队&#x2F;公司专属私有文件同步服务 (云存储网盘)">
+<meta name="twitter:description" content="一、简介： seafile 是由国内团队开发的一个国际化的开源云存储软件项目，目前据说已有10万左右的用户，典型的机构用户包括比利时的皇家自然科学博物馆、德国的 Wuppertal 气候、能源研究所等等。Seafile 同时提供了客户端和服务器端软件免费下载，任何个人或公司都能搭建属于自己的私有文件同步服务。Seafile 的服务器端支持 Linux 、Windows 以及树莓派平台，客户端除了网">
+<meta name="twitter:image" content="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/09/seaf.png">
+    
+    <link rel="shortcut icon" href="/favicon.ico">
+    <link rel="stylesheet" href="/css/style.css?v=1.7.2">
+    <script>window.lazyScripts=[]</script>
+
+    <!-- custom head -->
+    
+
+</head>
+
+<body>
+    <div id="loading" class="active"></div>
+
+    <aside id="menu">
+  <div class="inner flex-row-vertical">
+    <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menu-off">
+        <i class="icon icon-lg icon-close"></i>
+    </a>
+    <div class="brand-wrap" style="background-image:url(/img/brand.jpg)">
+      <div class="brand">
+        <a href="/" class="avatar waves-effect waves-circle waves-light">
+          <img src="/img/avatar.jpg">
+        </a>
+        <hgroup class="introduce">
+          <h5 class="nickname">maoqiu.guo</h5>
+          <a href="mailto:guomaoqiu@gmail.com" title="guomaoqiu@gmail.com" class="mail">guomaoqiu@gmail.com</a>
+        </hgroup>
+      </div>
+    </div>
+    <div class="scroll-wrap flex-col">
+      <ul class="nav">
+        
+            <li class="waves-block waves-effect">
+              <a href="/">
+                <i class="icon icon-lg icon-home"></i>
+                主页
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/archives">
+                <i class="icon icon-lg icon-archives"></i>
+                归档
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/tags">
+                <i class="icon icon-lg icon-tags"></i>
+                标签
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/categories">
+                <i class="icon icon-lg icon-th-list"></i>
+                分类
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://github.com/guomaoqiu" target="_blank">
+                <i class="icon icon-lg icon-github"></i>
+                Github
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/works">
+                <i class="icon icon-lg icon-hand-peace-o"></i>
+                作品
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="http://demo.sctux.cc" target="_blank">
+                <i class="icon icon-lg icon-link"></i>
+                DevOpsPlatform
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="http://resume.sctux.cc/" target="_blank">
+                <i class="icon icon-lg icon-heart"></i>
+                我的简历
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/about">
+                <i class="icon icon-lg icon-user"></i>
+                关于我
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://blog.sctux.cc/Skilltree.jpg" target="_blank">
+                <i class="icon icon-lg icon-tree"></i>
+                我的技能树
+              </a>
+            </li>
+        
+      </ul>
+    </div>
+  </div>
+</aside>
+
+    <main id="main">
+        <header class="top-header" id="header">
+    <div class="flex-row">
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light on" id="menu-toggle">
+          <i class="icon icon-lg icon-navicon"></i>
+        </a>
+        <div class="flex-col header-title ellipsis">Seafile-个人/团队/公司专属私有文件同步服务 (云存储网盘)</div>
+        
+        <div class="search-wrap" id="search-wrap">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="back">
+                <i class="icon icon-lg icon-chevron-left"></i>
+            </a>
+            <input type="text" id="key" class="search-input" autocomplete="off" placeholder="输入感兴趣的关键字">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="search">
+                <i class="icon icon-lg icon-search"></i>
+            </a>
+        </div>
+        
+        
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menuShare">
+            <i class="icon icon-lg icon-share-alt"></i>
+        </a>
+        
+    </div>
+</header>
+<header class="content-header post-header">
+
+    <div class="container fade-scale">
+        <h1 class="title">Seafile-个人/团队/公司专属私有文件同步服务 (云存储网盘)</h1>
+        <h5 class="subtitle">
+            
+                <time datetime="2015-09-08T15:38:37.000Z" itemprop="datePublished" class="page-time">
+  2015-09-08
+</time>
+
+
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/Other/">Other</a></li></ul>
+
+            
+        </h5>
+    </div>
+
+    
+
+
+</header>
+
+
+<div class="container body-wrap">
+    
+
+<article id="post-seafile-e4-b8-aa-e4-ba-ba-e5-9b-a2-e9-98-9f-e5-85-ac-e5-8f-b8-e4-b8-93-e5-b1-9e-e7-a7-81-e6-9c-89-e6-96-87-e4-bb-b6-e5-90-8c-e6-ad-a5-e6-9c-8d-e5-8a-a1-e4-ba-91-e5-ad-98-e5-82-a8-e7-bd-91" class="post-article article-type-post fade" itemprop="blogPost">
+
+    <div class="post-card">
+        <h1 class="post-card-title">Seafile-个人/团队/公司专属私有文件同步服务 (云存储网盘)</h1>
+        <div class="post-meta">
+            <time class="post-time" title="2015-09-08 23:38:37" datetime="2015-09-08T15:38:37.000Z" itemprop="datePublished">2015-09-08</time>
+
+            
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/Other/">Other</a></li></ul>
+
+
+
+            
+
+        </div>
+        <div class="post-content" id="post-content" itemprop="postContent">
+            <p>一、简介： <strong>seafile</strong> 是由国内团队开发的一个国际化的<strong>开源云存储软件</strong>项目，目前据说已有10万左右的用户，典型的机构用户包括比利时的皇家自然科学博物馆、德国的 Wuppertal 气候、能源研究所等等。Seafile 同时提供了客户端和服务器端软件免费下载，任何个人或公司都能搭建属于自己的私有文件同步服务。Seafile 的服务器端支持 Linux 、Windows 以及树莓派平台，客户端除了网页版之外，还支持 Mac、Linux、Windows 三个桌面平台以及 Android 和 iOS 两个移动平台。你可以利用局域网里的一台电脑作为服务器，搭建一个仅局域网内部能访问的专有云存储服务，也能将 Seafile 部署到互联网上的诸如阿里云、Linode 或任何 VPS、独立服务器上，实现一个私人的在线云存储服务。 同时，Seafile 支持用户同时使用多个同步服务器，而且能够在不同服务器之间切换。比如，用户可以用公司服务器来同步工作文件，用个人服务器与朋友共享私人文件，两者互不干扰，私密性也可保证。而且，由于 Seafile 是开源的项目，因此相对来说数据的私密性还是有保障的，起码不必担心有什么看不见的后门。具体介绍可以参见seafile官方文档介绍。 下面我们就开始在局域网内搭建一台私有的云存储。 二、安装seafile服务器 1、安装前准备： 请确保服务器 上面安装了以下模块(这款软件是用Django+Python2.7所开发的，所以要保证服务器上面的python版本) python 2.7 python-setuptools python-imaging (这个是python的一个库，网上不好找到，下载地址<a href="http://www.pythonware.com/products/pil/" target="_blank" rel="noopener">http://www.pythonware.com/products/pil/</a>) python-mysqldb 2、获取服务端软件包</p>
+<p>wget <a href="https://bintray.com/artifact/download/seafile-org/seafile/seafile-server\_4.3.2\_x86-64.tar.gz" target="_blank" rel="noopener">https://bintray.com/artifact/download/seafile-org/seafile/seafile-server\_4.3.2\_x86-64.tar.gz</a></p>
+<p>3、解压安装</p>
+<p>tar -xf seafile-server_4.3.2_x86-64.tar.gz<br>mkdir /home/seafile<br>mv seafile-server-4.3.2 /home/seafile/seafile-server<br>cd /home/seafile/seafile-server</p>
+<p>./setup-seafile-mysql.sh  #运行安装脚本并回答预设问题</p>
+<p>如果你的系统中没有安装上面的某个软件，那么 Seafile初始化脚本会提醒你安装相应的软件包.</p>
+<p>./setup-seafile-mysql.sh<br>Checking python on this machine …  #-&gt;执行这个脚本之后会去检查之前说的那些依赖包，如果安装包不完整将会提示你某个软件包未安装<br>  Checking python module: setuptools … Done.<br>  Checking python module: python-imaging … Done.<br>  Checking python module: python-mysqldb … Done.</p>
+<p>-----------------------------------------------------------------<br>This script will guide you to setup your seafile server using MySQL.<br>Make sure you have read seafile server manual at</p>
+<pre><code>https://github.com/haiwen/seafile/wiki
+</code></pre><p>Press ENTER to continue              #-&gt;这里我们需要一下回车，再继续<br>-----------------------------------------------------------------</p>
+<p>What is the name of the server? It will be displayed on the client.<br>3 - 15 letters or digits<br>[ server name ] seafile-server       #-&gt;设置我们的服务器名称</p>
+<p>What is the ip or domain of the server?<br>For example: <a href="http://www.mycompany.com" target="_blank" rel="noopener">www.mycompany.com</a>, 192.168.1.101         #-&gt;服务器的IP<br>[ This server’s ip or domain ] 192.168.2.108</p>
+<p>Where do you want to put your seafile data?<br>Please use a volume with enough free space<br>[ default “/home/seafile/seafile-data” ] /data/seafile   #-&gt;存储的位置我这里选择的是/data/seafile</p>
+<p>Which port do you want to use for the seafile fileserver?<br>[ default “8082” ]     #-&gt;默认的工作端口</p>
+<p>-------------------------------------------------------<br>Please choose a way to initialize seafile databases:<br>-------------------------------------------------------</p>
+<p>#-&gt;如果选择1, 你需要提供根密码. 脚本程序会创建数据库和用户。</p>
+<p>#-&gt;如果选择2, ccnet/seafile/seahub 数据库应该已经被你（或者其他人）提前创建。<br>[1] Create new ccnet/seafile/seahub databases<br>[2] Use existing ccnet/seafile/seahub databases</p>
+<p>[ 1 or 2 ] 1</p>
+<p>What is the host of mysql server?<br>[ default “localhost” ] </p>
+<p>What is the port of mysql server?<br>[ default “3306” ] </p>
+<p>What is the password of the mysql root user?<br>[ root password ]    #-&gt;这里需要mysql的root权限进行创建库的操作</p>
+<p>verifying password of user root …  done</p>
+<p>Enter the name for mysql user of seafile. It would be created if not exists.<br>[ default “root” ] </p>
+<p>Enter the database name for ccnet-server:<br>[ default “ccnet-db” ] </p>
+<p>Enter the database name for seafile-server:<br>[ default “seafile-db” ] </p>
+<p>Enter the database name for seahub:<br>[ default “seahub-db” ] </p>
+<p>#-&gt;以上三个库名都用默认的 </p>
+<p>以上步骤完成后将会出现一下提示信息，说明我们安装就成功啦 [<figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/09/seaf.png" alt="seaf](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/09/seaf.png)" title="">
+                </div>
+                <div class="image-caption">seaf](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/09/seaf.png)</div>
+            </figure> 三、启动seafile服务和seahub网站 1、在/home/seafile/seafile-server目录下执行</p>
+<p>#-&gt;启动seafile<br>./seafile.sh start # 启动 Seafile 服务</p>
+<p>#-&gt;启动seahub<br>./seahub.sh start <port>  # 启动 Seahub 网站 （默认运行在8000端口上）</port></p>
+<p>注意：你第一次启动 seahub 时，<code>seahub.sh</code> 脚本会提示你创建一个 seafile 管理员帐号，就像下面这样 <a href="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/09/seahub.png" target="_blank" rel="noopener"><img src="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/09/seahub.png" alt="seahub"></a> 这个管理账号必须是你自己取注册的任意邮箱地址，登陆管理使用这个地址，我这里用的是gmail. 服务启动后, 打开浏览器并输入这个地址 <a href="http://192.168.2.108:8000" target="_blank" rel="noopener">http://192.168.2.108:8000</a> <a href="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/09/web.png" target="_blank" rel="noopener"><img src="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/09/web.png" alt="web"></a> 输入账号密码就会被重定向到登陆页面. 输入你在安装 Seafile 时提供的用户名和密码后，你会进入 Myhome 页面，新建资料库. <a href="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/09/seafile.png" target="_blank" rel="noopener"><img src="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/09/seafile.png" alt="seafile"></a>   至此，seafile私有与存储共享平台已经部署完毕了。 下面我们可以去下载一个客户端安装上 我这里使用的Ubuntu下的客户端 <a href="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/09/account.png" target="_blank" rel="noopener"><img src="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/09/account.png" alt="account"></a> <a href="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/09/Screenshot-from-2015-09-08-220859.png" target="_blank" rel="noopener"><img src="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/09/Screenshot-from-2015-09-08-220859.png" alt="Screenshot from 2015-09-08 22:08:59"></a>   因为之前就把我的库下载到了本地，你可以在本地库添加文件，然后点击同步就会同步到服务器端啦，就像这样(如果你不使用客户端的话，可以使用网页版) <a href="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/09/Screenshot-from-2015-09-08-221208.png" target="_blank" rel="noopener"><img src="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/09/Screenshot-from-2015-09-08-221208.png" alt="Screenshot from 2015-09-08 22:12:08"></a> 当然他的客户端不只是在linux(ubuntu) 上面才有哦， 客户端在： 移动端有：Android，Ios 桌面端有：windows、Linux、Mac 服务端在： Windows、Linux、树莓派 任何平台的浏览器。 下面是我手机端的截图，服务器跟手机的wifi是在一个局域网内的 <a href="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/09/1.png" target="_blank" rel="noopener"><img src="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/09/1-281x500.png" alt="1"></a> <a href="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/09/2.png" target="_blank" rel="noopener"><img src="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/09/2-281x500.png" alt="2"></a> <a href="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/09/3.png" target="_blank" rel="noopener"><img src="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/09/3-281x500.png" alt="3"></a>   既然说了是团队、企业或者个人使用，那每个人都要有个账号，那我们需要新建一个账号才行，因为我使用的seafile server是社区版，有许多的功能都不能使用，但是我觉得作为一个小团队，或者个人使用再适合不过了。 下面我们创建一个账号，在win上面登陆，必须要让你都服务器连接网络，并且注册使用seafile的用户必须使用email地址作为登陆账号，这个账号必须是存在可登录的email <a href="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/09/Screenshot-from-2015-09-08-224030.png" target="_blank" rel="noopener"><img src="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/09/Screenshot-from-2015-09-08-224030.png" alt="Screenshot from 2015-09-08 22:40:30"></a> <a href="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/09/Screenshot-from-2015-09-08-224241.png" target="_blank" rel="noopener"><img src="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/09/Screenshot-from-2015-09-08-224241.png" alt="Screenshot from 2015-09-08 22:42:41"></a> <a href="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/09/Screenshot-from-2015-09-08-224530.png" target="_blank" rel="noopener"><img src="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/09/Screenshot-from-2015-09-08-224530.png" alt="Screenshot from 2015-09-08 22:45:30"></a> 我们只需要将这个资料库下载到本地就可了，添加文件，然后右击“我的资料库”就可以看到同步到服务器了。 然后我们可以在本地资料库中指定某个文件生成一个下载链接，可以分享给我的小伙伴下载。 我看了一下服务器上面的数据存储目录，数据传入到服务器端就类似于Map Reduce这种软件架构将数据切成了很多很多份，然后创建索引保存到数据库，获取数据时拿到索引，最后根据索引重组数据，再返回结果给客户端。 <a href="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/09/Screenshot-from-2015-09-08-230020.png" target="_blank" rel="noopener"><img src="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/09/Screenshot-from-2015-09-08-230020.png" alt="Screenshot from 2015-09-08 23:00:20"></a> 上图中0211e<strong><strong>*</strong></strong>这个目录是用户seafileshare的资料库，文件上传到服务器是它就将一个完整的文件拆散了，在服务端我们找不到一个完整的软件包。这种存储方式跟mogilefs有些类似。 感觉社区版还是有些局限性，但是对于个人，一个团队我个人觉得完全足够啦。 好了如果需要了解更多，可以到官网了解使用：<a href="https://www.seafile.com/en/home/" target="_blank" rel="noopener">http://www.seafile.com</a></p>
+
+        </div>
+
+        <blockquote class="post-copyright">
+    
+    <div class="content">
+        
+<span class="post-time">
+    最后更新时间：<time datetime="2022-06-07T06:55:08.086Z" itemprop="dateUpdated">2022-06-07 14:55:08</time>
+</span><br>
+
+
+        
+        该文链接：<a href="/2015/09/08/seafile-e4-b8-aa-e4-ba-ba-e5-9b-a2-e9-98-9f-e5-85-ac-e5-8f-b8-e4-b8-93-e5-b1-9e-e7-a7-81-e6-9c-89-e6-96-87-e4-bb-b6-e5-90-8c-e6-ad-a5-e6-9c-8d-e5-8a-a1-e4-ba-91-e5-ad-98-e5-82-a8-e7-bd-91/" target="_blank" rel="external">https://blog.sctux.cc/2015/09/08/seafile-e4-b8-aa-e4-ba-ba-e5-9b-a2-e9-98-9f-e5-85-ac-e5-8f-b8-e4-b8-93-e5-b1-9e-e7-a7-81-e6-9c-89-e6-96-87-e4-bb-b6-e5-90-8c-e6-ad-a5-e6-9c-8d-e5-8a-a1-e4-ba-91-e5-ad-98-e5-82-a8-e7-bd-91/</a>
+        
+    </div>
+    
+    <footer>
+        <a href="https://blog.sctux.cc">
+            <img src="/img/avatar.jpg" alt="maoqiu.guo">
+            maoqiu.guo
+        </a>
+    </footer>
+</blockquote>
+
+        
+<div class="page-reward">
+    <a id="rewardBtn" href="javascript:;" class="page-reward-btn waves-effect waves-circle waves-light">赏</a>
+</div>
+
+
+
+        <div class="post-footer">
+            
+
+            
+<div class="page-share-wrap">
+    
+
+<div class="page-share" id="pageShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://blog.sctux.cc/2015/09/08/seafile-e4-b8-aa-e4-ba-ba-e5-9b-a2-e9-98-9f-e5-85-ac-e5-8f-b8-e4-b8-93-e5-b1-9e-e7-a7-81-e6-9c-89-e6-96-87-e4-bb-b6-e5-90-8c-e6-ad-a5-e6-9c-8d-e5-8a-a1-e4-ba-91-e5-ad-98-e5-82-a8-e7-bd-91/&title=《Seafile-个人/团队/公司专属私有文件同步服务 (云存储网盘)》 — 运维人&pic=https://blog.sctux.cc/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://blog.sctux.cc/2015/09/08/seafile-e4-b8-aa-e4-ba-ba-e5-9b-a2-e9-98-9f-e5-85-ac-e5-8f-b8-e4-b8-93-e5-b1-9e-e7-a7-81-e6-9c-89-e6-96-87-e4-bb-b6-e5-90-8c-e6-ad-a5-e6-9c-8d-e5-8a-a1-e4-ba-91-e5-ad-98-e5-82-a8-e7-bd-91/&title=《Seafile-个人/团队/公司专属私有文件同步服务 (云存储网盘)》 — 运维人&source=😊" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.sctux.cc/2015/09/08/seafile-e4-b8-aa-e4-ba-ba-e5-9b-a2-e9-98-9f-e5-85-ac-e5-8f-b8-e4-b8-93-e5-b1-9e-e7-a7-81-e6-9c-89-e6-96-87-e4-bb-b6-e5-90-8c-e6-ad-a5-e6-9c-8d-e5-8a-a1-e4-ba-91-e5-ad-98-e5-82-a8-e7-bd-91/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《Seafile-个人/团队/公司专属私有文件同步服务 (云存储网盘)》 — 运维人&url=https://blog.sctux.cc/2015/09/08/seafile-e4-b8-aa-e4-ba-ba-e5-9b-a2-e9-98-9f-e5-85-ac-e5-8f-b8-e4-b8-93-e5-b1-9e-e7-a7-81-e6-9c-89-e6-96-87-e4-bb-b6-e5-90-8c-e6-ad-a5-e6-9c-8d-e5-8a-a1-e4-ba-91-e5-ad-98-e5-82-a8-e7-bd-91/&via=https://blog.sctux.cc" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=https://blog.sctux.cc/2015/09/08/seafile-e4-b8-aa-e4-ba-ba-e5-9b-a2-e9-98-9f-e5-85-ac-e5-8f-b8-e4-b8-93-e5-b1-9e-e7-a7-81-e6-9c-89-e6-96-87-e4-bb-b6-e5-90-8c-e6-ad-a5-e6-9c-8d-e5-8a-a1-e4-ba-91-e5-ad-98-e5-82-a8-e7-bd-91/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+
+    <a href="javascript:;" id="shareFab" class="page-share-fab waves-effect waves-circle">
+        <i class="icon icon-share-alt icon-lg"></i>
+    </a>
+</div>
+
+
+
+        </div>
+    </div>
+
+    
+<nav class="post-nav flex-row flex-justify-between">
+  
+    <div class="waves-block waves-effect prev">
+      <a href="/2015/09/10/python-e9-93-be-e6-8e-a5mysql-e6-95-b0-e6-8d-ae-e5-ba-93-e7-9a-84-e4-b8-80-e4-ba-9b-e6-93-8d-e4-bd-9c/" id="post-prev" class="post-nav-link">
+        <div class="tips"><i class="icon icon-angle-left icon-lg icon-pr"></i> Prev</div>
+        <h4 class="title">Python链接mysql数据库的一些操作</h4>
+      </a>
+    </div>
+  
+
+  
+    <div class="waves-block waves-effect next">
+      <a href="/2015/08/18/saltstack-pillar-de-shi-xian-fang-shi/" id="post-next" class="post-nav-link">
+        <div class="tips">Next <i class="icon icon-angle-right icon-lg icon-pl"></i></div>
+        <h4 class="title">学习SaltStack小记—第三章《Pillar使用方法》</h4>
+      </a>
+    </div>
+  
+</nav>
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Valine Comments -->
+    <div class="comments vcomment" id="comments"></div>
+    <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+    <script src="//unpkg.com/valine@latest/dist/Valine.min.js"></script>
+    <!-- Valine Comments script -->
+    <script>
+        var GUEST_INFO = ['nick','mail','link'];
+        var guest_info = 'nick,mail,link'.split(',').filter(function(item){
+          return GUEST_INFO.indexOf(item) > -1
+        });
+        new Valine({
+            el: '#comments',
+            notify: 'true' == 'true',
+            verify: 'true' == 'true',
+            appId: "lHxnnDHJXDgMoFpCbdx8A4q7-gzGzoHsz",
+            appKey: "W8H2NuO8chyDlCEQzionLuuV",
+            avatar: "monsterid",
+            placeholder: "来都来了，说点啥子吧~🌹 (友情提醒，留下正确的邮箱地址可以第一时间获取评论反馈)",
+            guest_info: guest_info.length == 0 ? GUEST_INFO : guest_info,
+            pageSize: "10"
+        })
+    </script>
+    <!-- Valine Comments end -->
+
+
+
+
+
+
+
+</article>
+
+<div id="reward" class="page-modal reward-lay">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <h3 class="reward-title">
+        <i class="icon icon-quote-left"></i>
+        谢谢大爷~
+        <i class="icon icon-quote-right"></i>
+    </h3>
+    <div class="reward-content">
+        
+        <div class="reward-code">
+            <img id="rewardCode" src="/img/wechat.jpg" alt="打赏二维码">
+        </div>
+        
+        <label class="reward-toggle">
+            <input id="rewardToggle" type="checkbox" class="reward-toggle-check" data-wechat="/img/wechat.jpg" data-alipay="/img/alipay.jpg">
+            <div class="reward-toggle-ctrol">
+                <span class="reward-toggle-item wechat">微信</span>
+                <span class="reward-toggle-label"></span>
+                <span class="reward-toggle-item alipay">支付宝</span>
+            </div>
+        </label>
+        
+    </div>
+</div>
+
+
+
+</div>
+
+        <footer class="footer">
+    <div class="top">
+        
+
+        <p>
+            
+            <span>博客内容遵循 <a rel="license" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh">知识共享 署名 - 非商业性 - 相同方式共享 4.0 国际协议</a></span>
+        </p>
+    </div>
+    <div class="bottom">
+        <p><span>maoqiu.guo &copy; 2013 - 2024</span>
+            <span>
+                
+                <a href="http://www.miitbeian.gov.cn/" target="_blank">蜀ICP备007号-1</a><br>
+                
+                Power by <a href="http://hexo.io/" target="_blank">Hexo</a> Theme <a href="https://github.com/yscoder/hexo-theme-indigo" target="_blank">indigo</a>
+            </span>
+        </p>
+    </div>
+</footer>
+
+    </main>
+    <div class="mask" id="mask"></div>
+<a href="javascript:;" id="gotop" class="waves-effect waves-circle waves-light"><span class="icon icon-lg icon-chevron-up"></span></a>
+
+
+
+<div class="global-share" id="globalShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://blog.sctux.cc/2015/09/08/seafile-e4-b8-aa-e4-ba-ba-e5-9b-a2-e9-98-9f-e5-85-ac-e5-8f-b8-e4-b8-93-e5-b1-9e-e7-a7-81-e6-9c-89-e6-96-87-e4-bb-b6-e5-90-8c-e6-ad-a5-e6-9c-8d-e5-8a-a1-e4-ba-91-e5-ad-98-e5-82-a8-e7-bd-91/&title=《Seafile-个人/团队/公司专属私有文件同步服务 (云存储网盘)》 — 运维人&pic=https://blog.sctux.cc/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://blog.sctux.cc/2015/09/08/seafile-e4-b8-aa-e4-ba-ba-e5-9b-a2-e9-98-9f-e5-85-ac-e5-8f-b8-e4-b8-93-e5-b1-9e-e7-a7-81-e6-9c-89-e6-96-87-e4-bb-b6-e5-90-8c-e6-ad-a5-e6-9c-8d-e5-8a-a1-e4-ba-91-e5-ad-98-e5-82-a8-e7-bd-91/&title=《Seafile-个人/团队/公司专属私有文件同步服务 (云存储网盘)》 — 运维人&source=😊" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.sctux.cc/2015/09/08/seafile-e4-b8-aa-e4-ba-ba-e5-9b-a2-e9-98-9f-e5-85-ac-e5-8f-b8-e4-b8-93-e5-b1-9e-e7-a7-81-e6-9c-89-e6-96-87-e4-bb-b6-e5-90-8c-e6-ad-a5-e6-9c-8d-e5-8a-a1-e4-ba-91-e5-ad-98-e5-82-a8-e7-bd-91/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《Seafile-个人/团队/公司专属私有文件同步服务 (云存储网盘)》 — 运维人&url=https://blog.sctux.cc/2015/09/08/seafile-e4-b8-aa-e4-ba-ba-e5-9b-a2-e9-98-9f-e5-85-ac-e5-8f-b8-e4-b8-93-e5-b1-9e-e7-a7-81-e6-9c-89-e6-96-87-e4-bb-b6-e5-90-8c-e6-ad-a5-e6-9c-8d-e5-8a-a1-e4-ba-91-e5-ad-98-e5-82-a8-e7-bd-91/&via=https://blog.sctux.cc" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=https://blog.sctux.cc/2015/09/08/seafile-e4-b8-aa-e4-ba-ba-e5-9b-a2-e9-98-9f-e5-85-ac-e5-8f-b8-e4-b8-93-e5-b1-9e-e7-a7-81-e6-9c-89-e6-96-87-e4-bb-b6-e5-90-8c-e6-ad-a5-e6-9c-8d-e5-8a-a1-e4-ba-91-e5-ad-98-e5-82-a8-e7-bd-91/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+<div class="page-modal wx-share" id="wxShare">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <img src="//api.qrserver.com/v1/create-qr-code/?data=https://blog.sctux.cc/2015/09/08/seafile-e4-b8-aa-e4-ba-ba-e5-9b-a2-e9-98-9f-e5-85-ac-e5-8f-b8-e4-b8-93-e5-b1-9e-e7-a7-81-e6-9c-89-e6-96-87-e4-bb-b6-e5-90-8c-e6-ad-a5-e6-9c-8d-e5-8a-a1-e4-ba-91-e5-ad-98-e5-82-a8-e7-bd-91/" alt="微信分享二维码">
+</div>
+
+
+
+
+    <script src="//cdn.bootcss.com/node-waves/0.7.4/waves.min.js"></script>
+<script>
+var BLOG = { ROOT: '/', SHARE: true, REWARD: true };
+
+
+</script>
+
+<script src="/js/main.min.js?v=1.7.2"></script>
+
+
+<div class="search-panel" id="search-panel">
+    <ul class="search-result" id="search-result"></ul>
+</div>
+<template id="search-tpl">
+<li class="item">
+    <a href="{path}" class="waves-block waves-effect">
+        <div class="title ellipsis" title="{title}">{title}</div>
+        <div class="flex-row flex-middle">
+            <div class="tags ellipsis">
+                {tags}
+            </div>
+            <time class="flex-col time">{date}</time>
+        </div>
+    </a>
+</li>
+</template>
+
+<script src="/js/search.min.js?v=1.7.2" async></script>
+
+
+
+
+
+
+
+
+<script>
+(function() {
+    var OriginTitile = document.title, titleTime;
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            document.title = '老弟，哪儿去啦😊?！';
+            clearTimeout(titleTime);
+        } else {
+            document.title = '(つェ⊂)咦!老弟来啦!';
+            titleTime = setTimeout(function() {
+                document.title = OriginTitile;
+            },2000);
+        }
+    });
+})();
+</script>
+
+
+
+</body>
+</html>

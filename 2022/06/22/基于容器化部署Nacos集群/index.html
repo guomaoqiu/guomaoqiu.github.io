@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.8.0">
+<script>(function(i,s,o,g,r,a,m){i["DaoVoiceObject"]=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;a.charset="utf-8";m.parentNode.insertBefore(a,m)})(window,document,"script",('https:' == document.location.protocol ? 'https:' : 'http:') + "//widget.daovoice.io/widget/9f77122a.js","daovoice")
+
+
+daovoice('init', {
+  app_id: "9f77122a",
+  user_id: "NO_89757", // 必填: 该用户在您系统上的唯一ID
+  email: "daovoice@example.com", // 选填:  该用户在您系统上的主邮箱
+  name: "道客船长", // 选填: 用户名
+  signed_up: 1449821660 // 选填: 用户的注册时间，用Unix时间戳表示
+});
+daovoice('update');
+
+</script>
+    
+
+    
+
+    
+
+
+
+    <meta charset="utf-8">
+    
+    
+    
+    
+    <title>基于容器化部署Nacos集群 | 运维人 | Devops、Linux、Kubernetes、Docker、Flask、Python、Shell、SRE</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    
+    <meta name="theme-color" content="#3F51B5">
+    
+    
+    <meta name="keywords" content="nacos">
+    <meta name="description" content="一、搭建架构                                                                                                           ● 3个或3个以上Nacos节点才能构成集群；● Nacos Nginx Proxy用于代理转发；  二、准备工作Nacos2.0版本相比1.X新增了gRPC的通信方式，因此">
+<meta name="keywords" content="nacos">
+<meta property="og:type" content="article">
+<meta property="og:title" content="基于容器化部署Nacos集群">
+<meta property="og:url" content="https://blog.sctux.cc/2022/06/22/基于容器化部署Nacos集群/index.html">
+<meta property="og:site_name" content="运维人">
+<meta property="og:description" content="一、搭建架构                                                                                                           ● 3个或3个以上Nacos节点才能构成集群；● Nacos Nginx Proxy用于代理转发；  二、准备工作Nacos2.0版本相比1.X新增了gRPC的通信方式，因此">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://blog.sctux.cc/2022/06/22/基于容器化部署Nacos集群/arch-1.png">
+<meta property="og:image" content="https://blog.sctux.cc/2022/06/22/基于容器化部署Nacos集群/arch-2.png">
+<meta property="og:image" content="https://blog.sctux.cc/2022/06/22/基于容器化部署Nacos集群/3.png">
+<meta property="og:image" content="https://blog.sctux.cc/2022/06/22/基于容器化部署Nacos集群/4.png">
+<meta property="og:image" content="https://blog.sctux.cc/2022/06/22/基于容器化部署Nacos集群/5.png">
+<meta property="og:image" content="https://blog.sctux.cc/2022/06/22/基于容器化部署Nacos集群/6.png">
+<meta property="og:image" content="https://blog.sctux.cc/2022/06/22/基于容器化部署Nacos集群/7.jpg">
+<meta property="og:updated_time" content="2022-07-15T14:32:06.362Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="基于容器化部署Nacos集群">
+<meta name="twitter:description" content="一、搭建架构                                                                                                           ● 3个或3个以上Nacos节点才能构成集群；● Nacos Nginx Proxy用于代理转发；  二、准备工作Nacos2.0版本相比1.X新增了gRPC的通信方式，因此">
+<meta name="twitter:image" content="https://blog.sctux.cc/2022/06/22/基于容器化部署Nacos集群/arch-1.png">
+    
+    <link rel="shortcut icon" href="/favicon.ico">
+    <link rel="stylesheet" href="/css/style.css?v=1.7.2">
+    <script>window.lazyScripts=[]</script>
+
+    <!-- custom head -->
+    
+
+</head>
+
+<body>
+    <div id="loading" class="active"></div>
+
+    <aside id="menu">
+  <div class="inner flex-row-vertical">
+    <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menu-off">
+        <i class="icon icon-lg icon-close"></i>
+    </a>
+    <div class="brand-wrap" style="background-image:url(/img/brand.jpg)">
+      <div class="brand">
+        <a href="/" class="avatar waves-effect waves-circle waves-light">
+          <img src="/img/avatar.jpg">
+        </a>
+        <hgroup class="introduce">
+          <h5 class="nickname">maoqiu.guo</h5>
+          <a href="mailto:guomaoqiu@gmail.com" title="guomaoqiu@gmail.com" class="mail">guomaoqiu@gmail.com</a>
+        </hgroup>
+      </div>
+    </div>
+    <div class="scroll-wrap flex-col">
+      <ul class="nav">
+        
+            <li class="waves-block waves-effect">
+              <a href="/">
+                <i class="icon icon-lg icon-home"></i>
+                主页
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/archives">
+                <i class="icon icon-lg icon-archives"></i>
+                归档
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/tags">
+                <i class="icon icon-lg icon-tags"></i>
+                标签
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/categories">
+                <i class="icon icon-lg icon-th-list"></i>
+                分类
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://github.com/guomaoqiu" target="_blank">
+                <i class="icon icon-lg icon-github"></i>
+                Github
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/works">
+                <i class="icon icon-lg icon-hand-peace-o"></i>
+                作品
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="http://demo.sctux.cc" target="_blank">
+                <i class="icon icon-lg icon-link"></i>
+                DevOpsPlatform
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="http://resume.sctux.cc/" target="_blank">
+                <i class="icon icon-lg icon-heart"></i>
+                我的简历
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/about">
+                <i class="icon icon-lg icon-user"></i>
+                关于我
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://blog.sctux.cc/Skilltree.jpg" target="_blank">
+                <i class="icon icon-lg icon-tree"></i>
+                我的技能树
+              </a>
+            </li>
+        
+      </ul>
+    </div>
+  </div>
+</aside>
+
+    <main id="main">
+        <header class="top-header" id="header">
+    <div class="flex-row">
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light on" id="menu-toggle">
+          <i class="icon icon-lg icon-navicon"></i>
+        </a>
+        <div class="flex-col header-title ellipsis">基于容器化部署Nacos集群</div>
+        
+        <div class="search-wrap" id="search-wrap">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="back">
+                <i class="icon icon-lg icon-chevron-left"></i>
+            </a>
+            <input type="text" id="key" class="search-input" autocomplete="off" placeholder="输入感兴趣的关键字">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="search">
+                <i class="icon icon-lg icon-search"></i>
+            </a>
+        </div>
+        
+        
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menuShare">
+            <i class="icon icon-lg icon-share-alt"></i>
+        </a>
+        
+    </div>
+</header>
+<header class="content-header post-header">
+
+    <div class="container fade-scale">
+        <h1 class="title">基于容器化部署Nacos集群</h1>
+        <h5 class="subtitle">
+            
+                <time datetime="2022-06-22T14:41:33.000Z" itemprop="datePublished" class="page-time">
+  2022-06-22
+</time>
+
+
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/基础组件/">基础组件</a><ul class="article-category-list-child"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/基础组件/部署/">部署</a></li></ul></li></ul>
+
+            
+        </h5>
+    </div>
+
+    
+
+
+</header>
+
+
+<div class="container body-wrap">
+    
+    <aside class="post-widget">
+        <nav class="post-toc-wrap post-toc-shrink" id="post-toc">
+            <h4>TOC</h4>
+            <ol class="post-toc"><li class="post-toc-item post-toc-level-1"><a class="post-toc-link" href="#一、搭建架构"><span class="post-toc-number">1.</span> <span class="post-toc-text">一、搭建架构</span></a></li><li class="post-toc-item post-toc-level-1"><a class="post-toc-link" href="#二、准备工作"><span class="post-toc-number">2.</span> <span class="post-toc-text">二、准备工作</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#2-1-创建Nacos数据库"><span class="post-toc-number">2.1.</span> <span class="post-toc-text">2.1  创建Nacos数据库</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#2-1-1-获取nacos-2-0-2-包文件中的基础表结构数据"><span class="post-toc-number">2.2.</span> <span class="post-toc-text">2.1.1 获取nacos 2.0.2 包文件中的基础表结构数据</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#2-1-2-创建mysql服务"><span class="post-toc-number">2.3.</span> <span class="post-toc-text">2.1.2 创建mysql服务</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#2-2-Naocs服务"><span class="post-toc-number">2.4.</span> <span class="post-toc-text">2.2  Naocs服务</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#2-2-1-创建、编写yaml文件"><span class="post-toc-number">2.5.</span> <span class="post-toc-text">2.2.1 创建、编写yaml文件</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#2-2-2-运行Nacos"><span class="post-toc-number">2.6.</span> <span class="post-toc-text">2.2.2 运行Nacos</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#2-3-Nginx代理配置"><span class="post-toc-number">2.7.</span> <span class="post-toc-text">2.3 Nginx代理配置</span></a></li></ol></li><li class="post-toc-item post-toc-level-1"><a class="post-toc-link" href="#三、小记"><span class="post-toc-number">3.</span> <span class="post-toc-text">三、小记</span></a></li><li class="post-toc-item post-toc-level-1"><a class="post-toc-link" href="#四、吐槽"><span class="post-toc-number">4.</span> <span class="post-toc-text">四、吐槽</span></a></li></ol>
+        </nav>
+    </aside>
+
+
+<article id="post-基于容器化部署Nacos集群" class="post-article article-type-post fade" itemprop="blogPost">
+
+    <div class="post-card">
+        <h1 class="post-card-title">基于容器化部署Nacos集群</h1>
+        <div class="post-meta">
+            <time class="post-time" title="2022-06-22 22:41:33" datetime="2022-06-22T14:41:33.000Z" itemprop="datePublished">2022-06-22</time>
+
+            
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/基础组件/">基础组件</a><ul class="article-category-list-child"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/基础组件/部署/">部署</a></li></ul></li></ul>
+
+
+
+            
+
+        </div>
+        <div class="post-content" id="post-content" itemprop="postContent">
+            <h1 id="一、搭建架构"><a href="#一、搭建架构" class="headerlink" title="一、搭建架构"></a>一、搭建架构</h1><figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="/2022/06/22/基于容器化部署Nacos集群/arch-1.png" alt="" title="">
+                </div>
+                <div class="image-caption"></div>
+            </figure>
+<p>● 3个或3个以上Nacos节点才能构成集群；<br>● Nacos Nginx Proxy用于代理转发；</p>
+<hr>
+<h1 id="二、准备工作"><a href="#二、准备工作" class="headerlink" title="二、准备工作"></a>二、准备工作</h1><p><strong><em>Nacos2.0版本相比1.X新增了gRPC的通信方式，因此需要增加2个端口。新增端口是在配置的主端口(server.port)基础上，进行一定偏移量自动生成。</em></strong></p>
+<table>
+<thead>
+<tr>
+<th>端口</th>
+<th>与主端口的偏移量</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>8848</td>
+<td>0</td>
+<td>Nacos程序主配置端口</td>
+</tr>
+<tr>
+<td>9848</td>
+<td>+1000</td>
+<td>客户端gRPC请求服务端端口，用于客户端向服务端发起连接和请求</td>
+</tr>
+<tr>
+<td>9849</td>
+<td>+1001</td>
+<td>服务端gRPC请求服务端端口，用于服务间同步等</td>
+</tr>
+<tr>
+<td>7848</td>
+<td>-1000</td>
+<td>Nacos 集群通信端口，用于Nacos 集群间进行选举，检测等</td>
+</tr>
+</tbody>
+</table>
+<p><strong><em>使用VIP/nginx请求时，需要配置成TCP转发，不能配置http2转发，否则连接会被nginx断开</em></strong><br><figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="/2022/06/22/基于容器化部署Nacos集群/arch-2.png" alt="" title="">
+                </div>
+                <div class="image-caption"></div>
+            </figure></p>
+<p>按照上述官方的端口分配要求 ，此处部署的使用三台服务器上面创建的Nacos集群端口分配如下：</p>
+<table>
+<thead>
+<tr>
+<th>节点</th>
+<th>IP</th>
+<th>端口（所需暴露）</th>
+<th>备注</th>
+<th>版本</th>
+<th>当前线下环境部署文件路径</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Nacos_1</td>
+<td>192168.18.73</td>
+<td>宿主机：8858，9858，9859，7858  容器：8858，9858，9859，7858</td>
+<td>Nacos 节点一</td>
+<td>nacos/nacos-server:2.0.2</td>
+<td>/root/nacos-deploy/</td>
+</tr>
+<tr>
+<td>Nacos_2</td>
+<td>192168.18.74</td>
+<td>宿主机：8858，9858，9859，7858  容器：8858，9858，9859，7858</td>
+<td>Nacos 节点二</td>
+<td>nacos/nacos-server:2.0.2</td>
+<td>/root/nacos-deploy/</td>
+</tr>
+<tr>
+<td>Nacos_3</td>
+<td>192168.18.75</td>
+<td>宿主机：8858，9858，9859，7858  容器：8858，9858，9859，7858</td>
+<td>Nacos 节点三</td>
+<td>nacos/nacos-server:2.0.2</td>
+<td>/root/nacos-deploy/</td>
+</tr>
+<tr>
+<td>Nacos DB</td>
+<td>192168.18.75</td>
+<td>宿主机：3306 容器：3306</td>
+<td>Nacos所需数据库</td>
+<td>mysql:5.7.34</td>
+<td>/root/nacos-mysql-deploy</td>
+</tr>
+<tr>
+<td>Nacos  Nginx Proxy</td>
+<td>192168.18.75</td>
+<td>宿主机：80  容器：80</td>
+<td>Nacos代理</td>
+<td>nginx:stable-alpine</td>
+<td>/root/nacos-proxy-deploy</td>
+</tr>
+</tbody>
+</table>
+<h2 id="2-1-创建Nacos数据库"><a href="#2-1-创建Nacos数据库" class="headerlink" title="2.1  创建Nacos数据库"></a>2.1  创建Nacos数据库</h2><p>这里使用的是容器化运行nacos，需要创建一个数据库，并从官方对应的版本中去导入基本数据库结构的数据文件</p>
+<h2 id="2-1-1-获取nacos-2-0-2-包文件中的基础表结构数据"><a href="#2-1-1-获取nacos-2-0-2-包文件中的基础表结构数据" class="headerlink" title="2.1.1 获取nacos 2.0.2 包文件中的基础表结构数据"></a>2.1.1 获取nacos 2.0.2 包文件中的基础表结构数据</h2><figure class="highlight stata"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">https:<span class="comment">//github.com/alibaba/nacos/releases/download/2.0.2/nacos-server-2.0.2.tar.gz</span></span><br><span class="line"></span><br><span class="line"># tar -xf nacos-server-2.0.2.tar.gz</span><br><span class="line"># <span class="keyword">cd</span>  nacos</span><br><span class="line"># tree -<span class="keyword">L</span> 2</span><br><span class="line">.</span><br><span class="line">├── bin</span><br><span class="line">│   ├── shutdown.cmd</span><br><span class="line">│   ├── shutdown.<span class="keyword">sh</span></span><br><span class="line">│   ├── startup.cmd</span><br><span class="line">│   └── startup.<span class="keyword">sh</span></span><br><span class="line">├── <span class="keyword">conf</span></span><br><span class="line">│   ├── 1.4.0-ipv6_support-<span class="keyword">update</span>.sql</span><br><span class="line">│   ├── application.properties</span><br><span class="line">│   ├── application.properties.example</span><br><span class="line">│   ├── <span class="keyword">cluster</span>.<span class="keyword">conf</span>.example</span><br><span class="line">│   ├── nacos-logback.xml</span><br><span class="line">│   ├── nacos-mysql.sql</span><br><span class="line">│   └── schema.sql</span><br><span class="line">├── LICENSE</span><br><span class="line">├── NOTICE</span><br><span class="line">└── target</span><br><span class="line">    └── nacos-server.jar</span><br><span class="line">以上是nacos的二进制包文件 ，这里只用到了 nacos-mysql.sql  这个文件</span><br></pre></td></tr></table></figure>
+<h2 id="2-1-2-创建mysql服务"><a href="#2-1-2-创建mysql服务" class="headerlink" title="2.1.2 创建mysql服务"></a>2.1.2 创建mysql服务</h2><figure class="highlight dts"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta"># 192.168.18.75</span></span><br><span class="line">sudo -i </span><br><span class="line">mkdir <span class="meta-keyword">/data/</span>mysql</span><br><span class="line">cat <span class="params">&lt;&lt; EOF &gt;</span> <span class="meta-keyword">/root/</span>nacos-mysql-deploy/mysql.yaml</span><br><span class="line"><span class="symbol">version:</span> <span class="string">"3"</span></span><br><span class="line"><span class="symbol">services:</span></span><br><span class="line">  mysql-db:</span><br><span class="line"><span class="symbol">    container_name:</span> nacos-mysql</span><br><span class="line"><span class="symbol">    image:</span> mysql:<span class="number">5.7</span><span class="number">.34</span></span><br><span class="line"><span class="symbol">    ports:</span></span><br><span class="line">      - <span class="string">"3306:3306"</span></span><br><span class="line"><span class="symbol">    environment:</span></span><br><span class="line"><span class="symbol">      MYSQL_ROOT_PASSWORD:</span> xxxxxxxxxxxx</span><br><span class="line"><span class="symbol">    volumes:</span></span><br><span class="line">      - <span class="string">"/data/mysql:/var/lib/mysql"</span></span><br><span class="line"><span class="symbol">    restart:</span> always</span><br><span class="line">EOF</span><br><span class="line"></span><br><span class="line">docker-compose -f  <span class="meta-keyword">/root/</span>nacos-mysql-deploy/mysql.yaml up -d</span><br><span class="line"></span><br><span class="line"><span class="meta"># 导入官方表数据</span></span><br><span class="line">docker cp <span class="meta-keyword">/root/</span>nacos<span class="meta-keyword">/conf/</span>nacos-mysql.sql nacos-mysql:/tmp</span><br><span class="line"></span><br><span class="line">docker exec -it nacos-mysql sh</span><br><span class="line"></span><br><span class="line">mysql -uroot -pxxxxxxxxxxxx</span><br><span class="line"></span><br><span class="line">create database nacos;</span><br><span class="line"></span><br><span class="line">use nacos;</span><br><span class="line"></span><br><span class="line">source <span class="meta-keyword">/tmp/</span>nacos-mysql.sql;</span><br></pre></td></tr></table></figure>
+<h2 id="2-2-Naocs服务"><a href="#2-2-Naocs服务" class="headerlink" title="2.2  Naocs服务"></a>2.2  Naocs服务</h2><h2 id="2-2-1-创建、编写yaml文件"><a href="#2-2-1-创建、编写yaml文件" class="headerlink" title="2.2.1 创建、编写yaml文件"></a>2.2.1 创建、编写yaml文件</h2><figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br></pre></td><td class="code"><pre><span class="line">sudo -i</span><br><span class="line">mkdir /data/nacos2.0.2_1/logs -p</span><br><span class="line">mkdir /root/nacos-deploy/</span><br><span class="line">cat &lt;&lt; EOF &gt; /root/nacos-deploy/nacos1.yaml</span><br><span class="line">version: <span class="string">"3"</span></span><br><span class="line">services:</span><br><span class="line">  nacos1:</span><br><span class="line">    hostname: nacos2.0.2_1</span><br><span class="line">    container_name: nacos2.0.2_1</span><br><span class="line">    image: nacos/nacos-server:2.0.2</span><br><span class="line">    volumes:</span><br><span class="line">      - /data/nacos2.0.2_1/logs:/home/nacos/logs</span><br><span class="line">      - /data/nacos2.0.2_1/custom.properties:/home/nacos/init.d/custom.properties</span><br><span class="line">    ports:</span><br><span class="line">      - <span class="string">"8858:8858"</span></span><br><span class="line">      - <span class="string">"9858:9858"</span></span><br><span class="line">      - <span class="string">"9859:9859"</span></span><br><span class="line">      - <span class="string">"7858:7858"</span></span><br><span class="line">    environment:</span><br><span class="line">      - <span class="attribute">MODE</span>=cluster</span><br><span class="line">      - <span class="attribute">PREFER_HOST_MODE</span>=hostname</span><br><span class="line">      - <span class="attribute">NACOS_SERVER_IP</span>=192.168.18.73</span><br><span class="line">      - <span class="attribute">NACOS_APPLICATION_PORT</span>=8858</span><br><span class="line">      - <span class="attribute">NACOS_SERVERS</span>=192.168.18.73:8858 192.168.18.74:8858 192.168.18.75:8858</span><br><span class="line">      - <span class="attribute">SPRING_DATASOURCE_PLATFORM</span>=mysql</span><br><span class="line">      - <span class="attribute">MYSQL_SERVICE_HOST</span>=192.168.18.75</span><br><span class="line">      - <span class="attribute">MYSQL_SERVICE_DB_NAME</span>=nacos</span><br><span class="line">      - <span class="attribute">MYSQL_SERVICE_PORT</span>=3306</span><br><span class="line">      - <span class="attribute">MYSQL_SERVICE_USER</span>=root</span><br><span class="line">      - <span class="attribute">MYSQL_SERVICE_PASSWORD</span>=xxxxxxxxxxx</span><br><span class="line">      - <span class="attribute">NACOS_AUTH_ENABLE</span>=<span class="literal">true</span></span><br><span class="line">      - <span class="attribute">MYSQL_DATABASE_NUM</span>=1</span><br><span class="line">    restart: always</span><br><span class="line">EOF</span><br><span class="line"><span class="comment">######################</span></span><br><span class="line">sudo -i</span><br><span class="line">mkdir /data/nacos2.0.2_2/logs -p</span><br><span class="line">mkdir /root/nacos-deploy/</span><br><span class="line">cat &lt;&lt; EOF &gt; /root/nacos-deploy/nacos2.yaml</span><br><span class="line">version: <span class="string">"3"</span></span><br><span class="line">services:</span><br><span class="line">  nacos2:</span><br><span class="line">    hostname: nacos2.0.2_2</span><br><span class="line">    container_name: nacos2.0.2_2</span><br><span class="line">    image: nacos/nacos-server:2.0.2</span><br><span class="line">    volumes:</span><br><span class="line">      - /data/nacos2.0.2_2/logs:/home/nacos/logs</span><br><span class="line">      - /data/nacos2.0.2_2/custom.properties:/home/nacos/init.d/custom.properties</span><br><span class="line">    ports:</span><br><span class="line">      - <span class="string">"8858:8858"</span></span><br><span class="line">      - <span class="string">"9858:9858"</span></span><br><span class="line">      - <span class="string">"9859:9859"</span></span><br><span class="line">      - <span class="string">"7858:7858"</span></span><br><span class="line">    environment:</span><br><span class="line">      - <span class="attribute">MODE</span>=cluster</span><br><span class="line">      - <span class="attribute">PREFER_HOST_MODE</span>=hostname</span><br><span class="line">      - <span class="attribute">NACOS_SERVER_IP</span>=192.168.18.74</span><br><span class="line">      - <span class="attribute">NACOS_APPLICATION_PORT</span>=8858</span><br><span class="line">      - <span class="attribute">NACOS_SERVERS</span>=192.168.18.73:8858 192.168.18.74:8858 192.168.18.75:8858</span><br><span class="line">      - <span class="attribute">SPRING_DATASOURCE_PLATFORM</span>=mysql</span><br><span class="line">      - <span class="attribute">MYSQL_SERVICE_HOST</span>=192.168.18.75</span><br><span class="line">      - <span class="attribute">MYSQL_SERVICE_DB_NAME</span>=nacos</span><br><span class="line">      - <span class="attribute">MYSQL_SERVICE_PORT</span>=3306</span><br><span class="line">      - <span class="attribute">MYSQL_SERVICE_USER</span>=root</span><br><span class="line">      - <span class="attribute">MYSQL_SERVICE_PASSWORD</span>=xxxxxxxxxxx</span><br><span class="line">      - <span class="attribute">NACOS_AUTH_ENABLE</span>=<span class="literal">true</span></span><br><span class="line">      - <span class="attribute">MYSQL_DATABASE_NUM</span>=1</span><br><span class="line">    restart: always</span><br><span class="line">EOF</span><br><span class="line"><span class="comment">######################</span></span><br><span class="line">sudo -i</span><br><span class="line">mkdir /data/nacos2.0.2_3/logs -p</span><br><span class="line">mkdir /root/nacos-deploy/</span><br><span class="line">cat &lt;&lt; EOF &gt; /root/nacos-deploy/nacos3.yaml</span><br><span class="line">version: <span class="string">"3"</span></span><br><span class="line">services:</span><br><span class="line">  nacos3:</span><br><span class="line">    hostname: nacos2.0.2_3</span><br><span class="line">    container_name: nacos2.0.2_3</span><br><span class="line">    image: nacos/nacos-server:2.0.2</span><br><span class="line">    volumes:</span><br><span class="line">      - /data/nacos2.0.2_3/logs:/home/nacos/logs</span><br><span class="line">      - /data/nacos2.0.2_3/custom.properties:/home/nacos/init.d/custom.properties</span><br><span class="line">    ports:</span><br><span class="line">      - <span class="string">"8858:8858"</span></span><br><span class="line">      - <span class="string">"9858:9858"</span></span><br><span class="line">      - <span class="string">"9859:9859"</span></span><br><span class="line">      - <span class="string">"7858:7858"</span></span><br><span class="line">    environment:</span><br><span class="line">      - <span class="attribute">MODE</span>=cluster</span><br><span class="line">      - <span class="attribute">PREFER_HOST_MODE</span>=hostname</span><br><span class="line">      - <span class="attribute">NACOS_SERVER_IP</span>=192.168.18.75</span><br><span class="line">      - <span class="attribute">NACOS_APPLICATION_PORT</span>=8858</span><br><span class="line">      - <span class="attribute">NACOS_SERVERS</span>=192.168.18.73:8858 192.168.18.74:8858 192.168.18.75:8858</span><br><span class="line">      - <span class="attribute">SPRING_DATASOURCE_PLATFORM</span>=mysql</span><br><span class="line">      - <span class="attribute">MYSQL_SERVICE_HOST</span>=192.168.18.75</span><br><span class="line">      - <span class="attribute">MYSQL_SERVICE_DB_NAME</span>=nacos</span><br><span class="line">      - <span class="attribute">MYSQL_SERVICE_PORT</span>=3306	</span><br><span class="line">      - <span class="attribute">MYSQL_SERVICE_USER</span>=root</span><br><span class="line">      - <span class="attribute">MYSQL_SERVICE_PASSWORD</span>=xxxxxxxxxxx</span><br><span class="line">      - <span class="attribute">NACOS_AUTH_ENABLE</span>=<span class="literal">true</span></span><br><span class="line">      - <span class="attribute">MYSQL_DATABASE_NUM</span>=1</span><br><span class="line">    restart: always</span><br><span class="line">EOF</span><br></pre></td></tr></table></figure>
+<p>以上 各配置中的端口非标准端口，需要注意环境变量 NACOS_APPLICATION_PORT  如果不指定为非特定端口，那么缺省在配置中的环境变量则为 8848 ，在同一台机器上运行三个节点会出现问题！</p>
+<h2 id="2-2-2-运行Nacos"><a href="#2-2-2-运行Nacos" class="headerlink" title="2.2.2 运行Nacos"></a>2.2.2 运行Nacos</h2><p>各节点运行即可</p>
+<figure class="highlight lsl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"># <span class="number">192.168</span><span class="number">.18</span><span class="number">.73</span></span><br><span class="line">docker-compose -f /root/nacos-deploy/nacos1.yaml up -d</span><br><span class="line"></span><br><span class="line"># <span class="number">192.168</span><span class="number">.18</span><span class="number">.74</span></span><br><span class="line">docker-compose -f /root/nacos-deploy/nacos2.yaml up -d</span><br><span class="line"></span><br><span class="line"># <span class="number">192.168</span><span class="number">.18</span><span class="number">.75</span></span><br><span class="line">docker-compose -f /root/nacos-deploy/nacos3.yaml up -d</span><br></pre></td></tr></table></figure>
+<figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="/2022/06/22/基于容器化部署Nacos集群/3.png" alt="" title="">
+                </div>
+                <div class="image-caption"></div>
+            </figure>
+<p>上图 三个节点单独访问页面正常；通过代理访问正常；</p>
+<p>注意：web页面并没有使用到客户端，服务端gRPC调用服务，但是在程序中需要请求对应的端口，所以务必需要暴露出来，因为使用了非标准端口，那么在nginx做代理时就直接(伪装)映射成标准端口即可。</p>
+<h2 id="2-3-Nginx代理配置"><a href="#2-3-Nginx代理配置" class="headerlink" title="2.3 Nginx代理配置"></a>2.3 Nginx代理配置</h2><p>此处仍然使用容器化方式运行。<br>配置nginx代理</p>
+<figure class="highlight stata"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">mkdir</span> /root/nacos-proxy-deploy</span><br><span class="line"><span class="keyword">cd</span> /root/nacos-proxy-deploy</span><br><span class="line"><span class="keyword">cat</span> &lt;&lt;EOF &gt; nginx.<span class="keyword">conf</span>  </span><br><span class="line">user  nginx;</span><br><span class="line">worker_processes  auto;</span><br><span class="line"> </span><br><span class="line">error_log  /<span class="keyword">var</span>/<span class="keyword">log</span>/nginx/<span class="keyword">error</span>.<span class="keyword">log</span> notice;</span><br><span class="line">pid        /<span class="keyword">var</span>/<span class="keyword">run</span>/nginx.pid;</span><br><span class="line"> </span><br><span class="line"> </span><br><span class="line">events &#123;</span><br><span class="line">    worker_connections  65535;</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line">stream &#123;</span><br><span class="line">    upstream nacos-server-grpc9848 &#123;</span><br><span class="line">      server 192.168.18.73:9858 max_fails=1 fail_timeout=30s;</span><br><span class="line">      server 192.168.18.74:9858 max_fails=1 fail_timeout=30s;</span><br><span class="line">      server 192.168.18.75:9858 max_fails=1 fail_timeout=30s</span><br><span class="line">     &#125;</span><br><span class="line"> </span><br><span class="line">    server &#123;</span><br><span class="line">        listen 9848;</span><br><span class="line">        proxy_pass nacos-server-grpc9848;</span><br><span class="line">    &#125;</span><br><span class="line"> </span><br><span class="line">    upstream nacos-server-grpc9849 &#123;</span><br><span class="line">      server 192.168.18.73:9859 max_fails=1 fail_timeout=30s;</span><br><span class="line">      server 192.168.18.74:9859 max_fails=1 fail_timeout=30s;      </span><br><span class="line">      server 192.168.18.75:9859 max_fails=1 fail_timeout=30s;</span><br><span class="line">     &#125;</span><br><span class="line"> </span><br><span class="line">    server &#123;</span><br><span class="line">        listen 9849;</span><br><span class="line">        proxy_pass nacos-server-grpc9849;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line">http &#123;</span><br><span class="line">    <span class="keyword">include</span>       /etc/nginx/mime.types;</span><br><span class="line">    default_type  application/octet-stream;</span><br><span class="line"> </span><br><span class="line">    log_format  main  '<span class="variable">$remote_addr</span> - <span class="variable">$remote_user</span> [<span class="variable">$time_local</span>] <span class="string">"$request"</span> '</span><br><span class="line">                      '<span class="variable">$status</span> <span class="variable">$body_bytes_sent</span> <span class="string">"$http_referer"</span> '</span><br><span class="line">                      '<span class="string">"$http_user_agent"</span> <span class="string">"$http_x_forwarded_for"</span>';</span><br><span class="line"> </span><br><span class="line">    access_log  /<span class="keyword">var</span>/<span class="keyword">log</span>/nginx/access.<span class="keyword">log</span>  main;</span><br><span class="line"> </span><br><span class="line">    sendfile        <span class="keyword">on</span>;</span><br><span class="line">    #tcp_nopush     <span class="keyword">on</span>;</span><br><span class="line"> </span><br><span class="line">    keepalive_timeout  65;</span><br><span class="line"> </span><br><span class="line">    #gzip  <span class="keyword">on</span>;</span><br><span class="line"> </span><br><span class="line">    upstream NACOS &#123;</span><br><span class="line">      server  192.168.18.73:8858 max_fails=1 fail_timeout=30s;</span><br><span class="line">      server  192.168.18.74:8858 max_fails=1 fail_timeout=30s;</span><br><span class="line">      server  192.168.18.75:8858 max_fails=1 fail_timeout=30s;</span><br><span class="line">   &#125;</span><br><span class="line"> </span><br><span class="line">    server &#123;</span><br><span class="line">      listen       8848 default_server;</span><br><span class="line">      server_name  _;</span><br><span class="line"> </span><br><span class="line">      location / &#123;</span><br><span class="line">        proxy_pass http:<span class="comment">//NACOS;</span></span><br><span class="line">      &#125;</span><br><span class="line"> </span><br><span class="line">    &#125;</span><br><span class="line"> </span><br><span class="line">    <span class="keyword">include</span> /etc/nginx/<span class="keyword">conf</span>.<span class="keyword">d</span><span class="comment">/*.conf;</span></span><br><span class="line"><span class="comment">&#125;</span></span><br><span class="line"><span class="comment">EOF</span></span><br></pre></td></tr></table></figure>
+<p>代理容器yaml文件编写</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">cat</span> <span class="string">&gt; nacos-nginx-proxy.yaml &lt;&lt; EOF  </span></span><br><span class="line"><span class="string"></span><span class="attr">version:</span> <span class="string">"3"</span></span><br><span class="line"><span class="attr">services:</span></span><br><span class="line"><span class="attr">  nacos_proxy:</span></span><br><span class="line"><span class="attr">    container_name:</span> <span class="string">nacos_nginx_proxy</span></span><br><span class="line"><span class="attr">    image:</span> <span class="string">"nginx:stable-alpine"</span></span><br><span class="line"><span class="attr">    ports:</span></span><br><span class="line"><span class="bullet">      -</span> <span class="number">80</span><span class="string">:</span> <span class="number">8848</span>  <span class="comment">#这里定义一个80是为了前端访问，或客户端配置定义时无需再加端口，一个ip或者域名即可</span></span><br><span class="line"><span class="bullet">      -</span> <span class="number">8848</span><span class="string">:8848</span></span><br><span class="line"><span class="bullet">      -</span> <span class="number">9848</span><span class="string">:9848</span></span><br><span class="line"><span class="bullet">      -</span> <span class="number">9849</span><span class="string">:9849</span></span><br><span class="line"><span class="attr">    volumes:</span></span><br><span class="line"><span class="bullet">      -</span> <span class="string">/root/nacos-proxy-deploy/nginx.conf:/etc/nginx/nginx.conf:ro</span></span><br><span class="line"><span class="attr">    restart:</span> <span class="string">always</span></span><br><span class="line"><span class="string">EOF</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 容器运行</span></span><br><span class="line"><span class="string">docker-compose</span> <span class="bullet">-f</span> <span class="string">nacos-proxy.yaml</span> <span class="string">up</span> <span class="bullet">-d</span></span><br></pre></td></tr></table></figure>
+<figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="/2022/06/22/基于容器化部署Nacos集群/4.png" alt="" title="">
+                </div>
+                <div class="image-caption"></div>
+            </figure>
+<p>至此搭建完毕，但是容器运行正常不一定服务就是正常，这时需要测试实例服务注册是否正常</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br></pre></td><td class="code"><pre><span class="line">cat &gt; nacos_check_status.py &lt;&lt; EOF</span><br><span class="line"><span class="comment"># author: maoqiu.guo</span></span><br><span class="line"><span class="comment"># desc: Nacos服务注册功能测试、状态监控</span></span><br><span class="line"><span class="comment"># date：2022-06-11</span></span><br><span class="line"> </span><br><span class="line"><span class="keyword">import</span> requests</span><br><span class="line"><span class="keyword">import</span> json</span><br><span class="line"><span class="keyword">import</span> time</span><br><span class="line"><span class="keyword">import</span> logging</span><br><span class="line"><span class="keyword">from</span> logging.handlers <span class="keyword">import</span> RotatingFileHandler</span><br><span class="line"><span class="keyword">import</span> sys</span><br><span class="line"> </span><br><span class="line"> </span><br><span class="line">logging.basicConfig(level=logging.DEBUG)</span><br><span class="line"><span class="comment"># 创建日志记录器，指明日志保存的路径，每个日志文件的最大值，保存的日志文件个数上限</span></span><br><span class="line">log_handle = RotatingFileHandler(<span class="string">'./log.txt'</span>, maxBytes=<span class="number">1024</span>*<span class="number">1024</span>, backupCount=<span class="number">5</span>)</span><br><span class="line"><span class="comment"># 创建日志记录的格式</span></span><br><span class="line">formatter = logging.Formatter(<span class="string">"format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s-%(funcName)s',"</span>)</span><br><span class="line"><span class="comment"># 为创建的日志记录器设置日志记录格式</span></span><br><span class="line">log_handle.setFormatter(formatter)</span><br><span class="line"><span class="comment"># 为全局的日志工具对象添加日志记录器</span></span><br><span class="line">logging.getLogger().addHandler(log_handle)</span><br><span class="line"> </span><br><span class="line"></span><br><span class="line"><span class="comment"># 进度条</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">progress_bar</span><span class="params">(timmer)</span>:</span></span><br><span class="line">    <span class="keyword">for</span> i <span class="keyword">in</span> range(<span class="number">1</span>, <span class="number">101</span>):</span><br><span class="line">        print(<span class="string">"\r"</span>, end=<span class="string">""</span>)</span><br><span class="line">        print(<span class="string">"Waiting: &#123;&#125;%: "</span>.format(i), <span class="string">"▋"</span> * (i // <span class="number">2</span>), end=<span class="string">""</span>)</span><br><span class="line">        sys.stdout.flush()</span><br><span class="line">        time.sleep(timmer)</span><br><span class="line"> </span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Nacos</span><span class="params">()</span>:</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__init__</span><span class="params">(self)</span>:</span></span><br><span class="line">        self.webhookurl=<span class="string">"https://oapi.dingtalk.com/robot/send?access_token=1968dd11647dfd686c4e1107cf1ad3d0d21c3813a824ee632728327722d9fa82"</span></span><br><span class="line">        self.login_url = <span class="string">"/nacos/v1/auth/users/login"</span></span><br><span class="line">        self.accessToken=<span class="keyword">None</span></span><br><span class="line">        self.service_url =  <span class="string">"/nacos/v1/ns/catalog/services"</span></span><br><span class="line">        self.instance_url = <span class="string">"/nacos/v1/ns/instance"</span></span><br><span class="line"> </span><br><span class="line"><span class="meta">    @staticmethod</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">dingding</span><span class="params">(self, content)</span>:</span></span><br><span class="line">         </span><br><span class="line">        data = &#123;</span><br><span class="line">            <span class="string">"msgtype"</span>: <span class="string">"text"</span>,</span><br><span class="line">            <span class="string">"text"</span>: &#123;</span><br><span class="line">                <span class="string">"content"</span>: <span class="string">"Nacos-"</span> + content,</span><br><span class="line">            &#125;,</span><br><span class="line">        &#125;</span><br><span class="line">        headers = &#123;<span class="string">'Content-Type'</span>: <span class="string">'application/json;charset=utf-8'</span>&#125;</span><br><span class="line">        response = requests.post(self.webhookurl, data=json.dumps(data), headers=headers)</span><br><span class="line">        print(response.content)</span><br><span class="line"> </span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">get_access_token</span><span class="params">(self, nacos_server)</span>:</span></span><br><span class="line">        logging.info(<span class="string">"\n\n************** NacosServer: &#123;0&#125; **************"</span>.format(nacos_server))</span><br><span class="line">        <span class="string">"登录获取nacos accessToken"</span></span><br><span class="line">        params= <span class="string">"username=nacos&amp;password=nacos"</span></span><br><span class="line">        <span class="keyword">try</span>:</span><br><span class="line">            r = json.loads(requests.post(params=params, url=<span class="string">"http://"</span> + nacos_server + self.login_url, timeout=<span class="number">5</span>).text)</span><br><span class="line">            accessToken = str((r[<span class="string">'accessToken'</span>]))</span><br><span class="line">            <span class="keyword">return</span> &#123;<span class="string">"accessToken"</span>: accessToken, <span class="string">"result"</span>: <span class="keyword">True</span>, <span class="string">"server"</span>: nacos_server, <span class="string">"msg"</span>: <span class="string">"Login Nacos Success...[&#123;0&#125;]"</span>.format(nacos_server)&#125;</span><br><span class="line">        <span class="keyword">except</span> Exception <span class="keyword">as</span> e:</span><br><span class="line">            <span class="keyword">return</span> &#123;<span class="string">"accessToken"</span>: <span class="keyword">None</span>, <span class="string">"result"</span>: <span class="keyword">False</span>, <span class="string">"server"</span>: nacos_server, <span class="string">"msg"</span>: <span class="string">"Login Nacos Falied...[&#123;0&#125;] Error: &#123;1&#125;"</span>.format(nacos_server, str(e))&#125;</span><br><span class="line"> </span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">register_test</span><span class="params">(self, accessToken, nacos_server)</span>:</span></span><br><span class="line">        <span class="string">'''</span></span><br><span class="line"><span class="string">        1. 创建实例</span></span><br><span class="line"><span class="string">        2. 注册服务</span></span><br><span class="line"><span class="string">        3. 删除实例</span></span><br><span class="line"><span class="string">        4. 删除服务</span></span><br><span class="line"><span class="string">        '''</span></span><br><span class="line">        data=&#123;</span><br><span class="line">            <span class="string">"serviceName"</span>: <span class="string">"test_service_instance"</span>,</span><br><span class="line">            <span class="string">"namespaceId"</span>: <span class="string">"public"</span>,</span><br><span class="line">            <span class="string">"accessToken"</span>: accessToken,</span><br><span class="line">            <span class="string">"ip"</span>: nacos_server.split(<span class="string">":"</span>)[<span class="number">0</span>],</span><br><span class="line">            <span class="string">"port"</span>: nacos_server.split(<span class="string">":"</span>)[<span class="number">1</span>],</span><br><span class="line">            <span class="string">"ephemeral"</span>: <span class="keyword">False</span></span><br><span class="line">        &#125;</span><br><span class="line"> </span><br><span class="line">        <span class="comment"># 创建服务(注册实例)</span></span><br><span class="line">        <span class="keyword">try</span>:</span><br><span class="line">            r = (requests.post(params=data, url=<span class="string">"http://"</span> + nacos_server + self.instance_url, timeout=<span class="number">5</span>).text)</span><br><span class="line">            <span class="keyword">if</span> r == <span class="string">"ok"</span>:</span><br><span class="line">                msg = <span class="string">"[注册实例&amp;创建服务成功] Service: &#123;0&#125; NameSpace: &#123;1&#125; &#123;2&#125; InstanceIP: &#123;3&#125;"</span>.format(data[<span class="string">'serviceName'</span>], data[<span class="string">'namespaceId'</span>], nacos_server, data[<span class="string">'ip'</span>])</span><br><span class="line">                logging.info(msg)</span><br><span class="line">            <span class="keyword">else</span>:</span><br><span class="line">                msg = <span class="string">"[注册实例&amp;创建服务失败] Service: &#123;0&#125; NameSpace: &#123;1&#125; &#123;2&#125; &#123;3&#125;"</span>.format(data[<span class="string">'serviceName'</span>], data[<span class="string">'namespaceId'</span>], nacos_server, r)</span><br><span class="line">                logging.error(msg)</span><br><span class="line">                self.dingding(self, content=msg)</span><br><span class="line">        <span class="keyword">except</span> Exception <span class="keyword">as</span> e:</span><br><span class="line">                msg = <span class="string">"[注册实例&amp;创建服务失败] Service: &#123;0&#125; NameSpace: &#123;1&#125; &#123;2&#125; &#123;3&#125;"</span>.format(data[<span class="string">'serviceName'</span>], data[<span class="string">'namespaceId'</span>], nacos_server, r)</span><br><span class="line">                logging.error(msg)</span><br><span class="line">                self.dingding(self, content=msg)</span><br><span class="line">            </span><br><span class="line">    <span class="comment"># 删除实例</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">delete_instance_service</span><span class="params">(self, accessToken, nacos_server)</span>:</span></span><br><span class="line">        data=&#123;</span><br><span class="line">            <span class="string">"serviceName"</span>: <span class="string">"test_service_instance"</span>,</span><br><span class="line">            <span class="string">"namespaceId"</span>: <span class="string">"public"</span>,</span><br><span class="line">            <span class="string">"accessToken"</span>: accessToken,</span><br><span class="line">            <span class="string">"ip"</span>: nacos_server.split(<span class="string">":"</span>)[<span class="number">0</span>],</span><br><span class="line">            <span class="string">"port"</span>: nacos_server.split(<span class="string">":"</span>)[<span class="number">1</span>],</span><br><span class="line">            <span class="string">"ephemeral"</span>: <span class="keyword">False</span></span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment"># 注销实例</span></span><br><span class="line">        <span class="keyword">try</span>:</span><br><span class="line">            r = (requests.delete(params=data, url=<span class="string">"http://"</span> + nacos_server + self.instance_url, timeout=<span class="number">5</span>).text)           </span><br><span class="line">            <span class="keyword">if</span> r == <span class="string">"ok"</span>:</span><br><span class="line">                msg = <span class="string">"[注销实例成功] Service: &#123;0&#125; NameSpace: &#123;1&#125; &#123;2&#125; "</span>.format(data[<span class="string">'serviceName'</span>], data[<span class="string">'namespaceId'</span>], nacos_server)</span><br><span class="line">                logging.info(msg)</span><br><span class="line">            <span class="keyword">else</span>:</span><br><span class="line">                msg = <span class="string">"[注销实例失败] Service: &#123;0&#125; NameSpace: &#123;1&#125; &#123;2&#125; &#123;3&#125;"</span>.format(data[<span class="string">'serviceName'</span>], data[<span class="string">'namespaceId'</span>], nacos_server, r)</span><br><span class="line">                logging.error(msg)</span><br><span class="line">                self.dingding(self, content=msg)</span><br><span class="line">        <span class="keyword">except</span> Exception <span class="keyword">as</span> e:</span><br><span class="line">                msg = <span class="string">"[注销实例失败] Service: &#123;0&#125; NameSpace: &#123;1&#125; &#123;2&#125; &#123;3&#125;"</span>.format(data[<span class="string">'serviceName'</span>], data[<span class="string">'namespaceId'</span>], nacos_server, r)</span><br><span class="line">                logging.error(msg)</span><br><span class="line">                self.dingding(self, content=msg)</span><br><span class="line"> </span><br><span class="line">        progress_bar(timmer=<span class="number">0.08</span>)</span><br><span class="line">        <span class="comment"># 删除服务</span></span><br><span class="line">        <span class="keyword">try</span>:</span><br><span class="line">            r = (requests.delete(params=data, url=<span class="string">"http://"</span> + nacos_server + <span class="string">"/nacos/v1/ns/service"</span>, timeout=<span class="number">5</span>).text)</span><br><span class="line">            <span class="keyword">if</span> r == <span class="string">"ok"</span>:</span><br><span class="line">                msg = <span class="string">"[删除服务成功] Service: &#123;0&#125; NameSpace: &#123;1&#125; &#123;2&#125; "</span>.format(data[<span class="string">'serviceName'</span>], data[<span class="string">'namespaceId'</span>], nacos_server)</span><br><span class="line">                logging.info(msg)</span><br><span class="line">            <span class="keyword">else</span>:</span><br><span class="line">                msg = <span class="string">"[删除服务失败] Service: &#123;0&#125; NameSpace: &#123;1&#125; &#123;2&#125; &#123;3&#125;"</span>.format(data[<span class="string">'serviceName'</span>], data[<span class="string">'namespaceId'</span>], nacos_server, r)</span><br><span class="line">                logging.error(msg)</span><br><span class="line">                self.dingding(self, content=msg)</span><br><span class="line">        <span class="keyword">except</span> Exception <span class="keyword">as</span> e:</span><br><span class="line">                msg = <span class="string">"[删除服务失败] Service: &#123;0&#125; NameSpace: &#123;1&#125; &#123;2&#125; &#123;3&#125;"</span>.format(data[<span class="string">'serviceName'</span>], data[<span class="string">'namespaceId'</span>], nacos_server, r)</span><br><span class="line">                logging.error(msg)</span><br><span class="line">                self.dingding(self, content=msg)</span><br><span class="line">        progress_bar(timmer=<span class="number">0.1</span>)</span><br><span class="line"> </span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">get_service_list</span><span class="params">(self, accessToken, nacos_server)</span>:</span></span><br><span class="line">        <span class="string">"请求访问某个环境的某一个服务列表, 检查返回数据是否为空,为空则为不正常"</span></span><br><span class="line">        payload=&#123;</span><br><span class="line">            <span class="string">"accessToken"</span>: accessToken,</span><br><span class="line">            <span class="string">"pageNo"</span>: <span class="number">1</span>,</span><br><span class="line">            <span class="string">"pageSize"</span>: <span class="number">10</span>,</span><br><span class="line">            <span class="string">"namespaceId"</span>: <span class="string">"stage"</span></span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">try</span>:</span><br><span class="line">            r = json.loads(requests.get(params=payload, url=<span class="string">"http://"</span> + nacos_server + self.service_url).text)</span><br><span class="line">            <span class="keyword">if</span> r[<span class="string">'count'</span>] == <span class="number">0</span>:</span><br><span class="line">                msg = <span class="string">"[获取注册服务数据失败] Nacos Server &#123;0&#125; 当前Stage服务列表为空!"</span>.format(nacos_server)</span><br><span class="line">                logging.info(msg)</span><br><span class="line">                self.dingding(self, content=msg)</span><br><span class="line">            <span class="keyword">else</span>:</span><br><span class="line">                <span class="comment"># print("Nacos 注册服务数据正常...[&#123;0&#125;]".format(nacos_server))</span></span><br><span class="line">                logging.info(<span class="string">"[获取注册服务数据成功] ServiceTotal &#123;1&#125; on &#123;0&#125; - SercieName: stage "</span>.format(nacos_server,r[<span class="string">'count'</span>]))</span><br><span class="line"> </span><br><span class="line">        <span class="keyword">except</span> Exception <span class="keyword">as</span> e:</span><br><span class="line">            <span class="keyword">pass</span></span><br><span class="line"> </span><br><span class="line"> </span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">letsgo</span><span class="params">(self, nacos_server)</span>:</span></span><br><span class="line">        <span class="comment"># 登录获取token</span></span><br><span class="line">        login_nacos_res = (self.get_access_token(nacos_server))</span><br><span class="line">         </span><br><span class="line">        <span class="keyword">if</span> login_nacos_res[<span class="string">"result"</span>]:</span><br><span class="line">            logging.info(<span class="string">"[登录获取accessToken 成功] Nacos Server &#123;0&#125; "</span>.format((login_nacos_res[<span class="string">'server'</span>])))</span><br><span class="line"> </span><br><span class="line">            self.get_service_list(login_nacos_res[<span class="string">'accessToken'</span>], login_nacos_res[<span class="string">'server'</span>] )</span><br><span class="line"> </span><br><span class="line">            <span class="comment"># 创建实例&amp;服务</span></span><br><span class="line">            self.register_test(login_nacos_res[<span class="string">'accessToken'</span>], login_nacos_res[<span class="string">'server'</span>] )</span><br><span class="line"> </span><br><span class="line">            <span class="comment">#time.sleep(60 * 2)</span></span><br><span class="line">            progress_bar(timmer=<span class="number">0.1</span>)</span><br><span class="line">            self.delete_instance_service(login_nacos_res[<span class="string">'accessToken'</span>], login_nacos_res[<span class="string">'server'</span>] )</span><br><span class="line"> </span><br><span class="line">        <span class="keyword">else</span>:</span><br><span class="line">            msg = <span class="string">"[登录获取accessToken 失败] &#123;0&#125; "</span>.format((login_nacos_res[<span class="string">'msg'</span>]))</span><br><span class="line">            logging.info(msg)</span><br><span class="line">            self.dingding(self, content=msg)</span><br><span class="line"> </span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">"__main__"</span>:</span><br><span class="line">    <span class="keyword">while</span> <span class="keyword">True</span>:</span><br><span class="line">        nacos_server_list=[</span><br><span class="line">        	<span class="comment">#"nacos.axiba.com",</span></span><br><span class="line">            <span class="string">"192.168.18.75:80"</span>,</span><br><span class="line">            <span class="string">"192.168.18.75:8848"</span>,</span><br><span class="line">            <span class="string">"192.168.18.73:8858"</span>,</span><br><span class="line">            <span class="string">"192.168.18.74:8858"</span>,</span><br><span class="line">            <span class="string">"192.168.18.75:8858"</span>,</span><br><span class="line">        ]</span><br><span class="line">        <span class="keyword">for</span> i <span class="keyword">in</span> nacos_server_list:</span><br><span class="line">            Nacos().letsgo(i)</span><br><span class="line">EOF</span><br></pre></td></tr></table></figure>
+<p>运行后：</p>
+<p>以上脚本通过Nacos的OpenApi循环式通过从每个节点访问后发起以及通过Nginx代理发起服务实例的查询、注册、删除操作。<br><figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="/2022/06/22/基于容器化部署Nacos集群/5.png" alt="" title="">
+                </div>
+                <div class="image-caption"></div>
+            </figure></p>
+<ol>
+<li>登录获取AccessToke(每个请求需要携带)</li>
+<li><p>在 获取stage环境的服务列表数据，这是为了监测返回数据是否正常，因为这里刚搭建起来，如果里面服务数据不正常则会出现上面提示，并发送消息到钉钉；</p>
+<p><img src="/2022/06/22/基于容器化部署Nacos集群/6.png" alt="">  </p>
+</li>
+</ol>
+<p>上图是通过代理访问获取stage中的服务为0，后发送通知，说明此时可能(因为通过负载并不知道该请求是落在了哪一个Nacos节点)集群中某个节点出现故障数据不正常了，但是在检测脚本中会通过每个节点去注册，那么一定会在出现通知某个节点故障。</p>
+<ol start="4">
+<li>在public环境中通过调用OpenApi方式创建、注册一个实例 test_service_instance 跟服务，然后注销实例，并删除服务，这是为了监测集群是否正常。</li>
+</ol>
+<h1 id="三、小记"><a href="#三、小记" class="headerlink" title="三、小记"></a>三、小记</h1><ol>
+<li>虽然文档给出的描述是只有当服务下实例数为0时允许删除，但是实际上并没有强制检查校验服务下的实例数是否为0。Nacos的服务创建有多种方式，可以主动创建可以在注册实例的时候创建，可以在实例发送心跳时创建，所以哪怕主动删除了还会自动创建回来。；</li>
+<li>所有已注册服务在容器重启后会丢失，但是只要保证集群中有一个节点正常，那么重启后的服务数据会同步其他正常节点的，即需要客户端重新注册；</li>
+<li>正常情况在某个节点注册了服务后会同步到其他节点。</li>
+<li>各节点无法选举一个leader时 查看日志：/data/nacos2.0.2_1/logs/alipay-jraft.log</li>
+<li>实例服务相关日志:  /data/nacos2.0.2_1/naming-raft.log</li>
+<li>通过日志发现，暴露8848端口是为了nacos客户端登陆获取Token，后续操作都会携带Token进行资源操作；然后暴露9848端口是客户端用于gRPC的请求，所以如果是设置了代理转发，务必将其暴露，否则连接失败失败。</li>
+</ol>
+<h1 id="四、吐槽"><a href="#四、吐槽" class="headerlink" title="四、吐槽"></a>四、吐槽</h1><p>Nacos 官方为了推商业版，社区版几乎毛病百出，不管不顾，文档也是写得一团糟~ 无力吐槽</p>
+<p> <img src="/2022/06/22/基于容器化部署Nacos集群/7.jpg" alt="">  </p>
+
+        </div>
+
+        <blockquote class="post-copyright">
+    
+    <div class="content">
+        
+<span class="post-time">
+    最后更新时间：<time datetime="2022-07-15T14:32:06.362Z" itemprop="dateUpdated">2022-07-15 22:32:06</time>
+</span><br>
+
+
+        
+        该文链接：<a href="/2022/06/22/基于容器化部署Nacos集群/" target="_blank" rel="external">https://blog.sctux.cc/2022/06/22/基于容器化部署Nacos集群/</a>
+        
+    </div>
+    
+    <footer>
+        <a href="https://blog.sctux.cc">
+            <img src="/img/avatar.jpg" alt="maoqiu.guo">
+            maoqiu.guo
+        </a>
+    </footer>
+</blockquote>
+
+        
+<div class="page-reward">
+    <a id="rewardBtn" href="javascript:;" class="page-reward-btn waves-effect waves-circle waves-light">赏</a>
+</div>
+
+
+
+        <div class="post-footer">
+            
+	<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/nacos/">nacos</a></li></ul>
+
+
+            
+<div class="page-share-wrap">
+    
+
+<div class="page-share" id="pageShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://blog.sctux.cc/2022/06/22/基于容器化部署Nacos集群/&title=《基于容器化部署Nacos集群》 — 运维人&pic=https://blog.sctux.cc/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://blog.sctux.cc/2022/06/22/基于容器化部署Nacos集群/&title=《基于容器化部署Nacos集群》 — 运维人&source=😊" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.sctux.cc/2022/06/22/基于容器化部署Nacos集群/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《基于容器化部署Nacos集群》 — 运维人&url=https://blog.sctux.cc/2022/06/22/基于容器化部署Nacos集群/&via=https://blog.sctux.cc" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=https://blog.sctux.cc/2022/06/22/基于容器化部署Nacos集群/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+
+    <a href="javascript:;" id="shareFab" class="page-share-fab waves-effect waves-circle">
+        <i class="icon icon-share-alt icon-lg"></i>
+    </a>
+</div>
+
+
+
+        </div>
+    </div>
+
+    
+<nav class="post-nav flex-row flex-justify-between">
+  
+    <div class="waves-block waves-effect prev">
+      <a href="/2022/09/12/Prometheus-Consul实现企业级宿主机-容器监控告警/" id="post-prev" class="post-nav-link">
+        <div class="tips"><i class="icon icon-angle-left icon-lg icon-pr"></i> Prev</div>
+        <h4 class="title">Prometheus+Consul实现企业级宿主机+容器监控告警</h4>
+      </a>
+    </div>
+  
+
+  
+    <div class="waves-block waves-effect next">
+      <a href="/2022/05/12/自动化巡检的必要性以及重要性/" id="post-next" class="post-nav-link">
+        <div class="tips">Next <i class="icon icon-angle-right icon-lg icon-pl"></i></div>
+        <h4 class="title">运维工作中自动化巡检的必要性以及重要性</h4>
+      </a>
+    </div>
+  
+</nav>
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Valine Comments -->
+    <div class="comments vcomment" id="comments"></div>
+    <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+    <script src="//unpkg.com/valine@latest/dist/Valine.min.js"></script>
+    <!-- Valine Comments script -->
+    <script>
+        var GUEST_INFO = ['nick','mail','link'];
+        var guest_info = 'nick,mail,link'.split(',').filter(function(item){
+          return GUEST_INFO.indexOf(item) > -1
+        });
+        new Valine({
+            el: '#comments',
+            notify: 'true' == 'true',
+            verify: 'true' == 'true',
+            appId: "lHxnnDHJXDgMoFpCbdx8A4q7-gzGzoHsz",
+            appKey: "W8H2NuO8chyDlCEQzionLuuV",
+            avatar: "monsterid",
+            placeholder: "来都来了，说点啥子吧~🌹 (友情提醒，留下正确的邮箱地址可以第一时间获取评论反馈)",
+            guest_info: guest_info.length == 0 ? GUEST_INFO : guest_info,
+            pageSize: "10"
+        })
+    </script>
+    <!-- Valine Comments end -->
+
+
+
+
+
+
+
+</article>
+
+<div id="reward" class="page-modal reward-lay">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <h3 class="reward-title">
+        <i class="icon icon-quote-left"></i>
+        谢谢大爷~
+        <i class="icon icon-quote-right"></i>
+    </h3>
+    <div class="reward-content">
+        
+        <div class="reward-code">
+            <img id="rewardCode" src="/img/wechat.jpg" alt="打赏二维码">
+        </div>
+        
+        <label class="reward-toggle">
+            <input id="rewardToggle" type="checkbox" class="reward-toggle-check" data-wechat="/img/wechat.jpg" data-alipay="/img/alipay.jpg">
+            <div class="reward-toggle-ctrol">
+                <span class="reward-toggle-item wechat">微信</span>
+                <span class="reward-toggle-label"></span>
+                <span class="reward-toggle-item alipay">支付宝</span>
+            </div>
+        </label>
+        
+    </div>
+</div>
+
+
+
+</div>
+
+        <footer class="footer">
+    <div class="top">
+        
+
+        <p>
+            
+            <span>博客内容遵循 <a rel="license" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh">知识共享 署名 - 非商业性 - 相同方式共享 4.0 国际协议</a></span>
+        </p>
+    </div>
+    <div class="bottom">
+        <p><span>maoqiu.guo &copy; 2013 - 2024</span>
+            <span>
+                
+                <a href="http://www.miitbeian.gov.cn/" target="_blank">蜀ICP备007号-1</a><br>
+                
+                Power by <a href="http://hexo.io/" target="_blank">Hexo</a> Theme <a href="https://github.com/yscoder/hexo-theme-indigo" target="_blank">indigo</a>
+            </span>
+        </p>
+    </div>
+</footer>
+
+    </main>
+    <div class="mask" id="mask"></div>
+<a href="javascript:;" id="gotop" class="waves-effect waves-circle waves-light"><span class="icon icon-lg icon-chevron-up"></span></a>
+
+
+
+<div class="global-share" id="globalShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://blog.sctux.cc/2022/06/22/基于容器化部署Nacos集群/&title=《基于容器化部署Nacos集群》 — 运维人&pic=https://blog.sctux.cc/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://blog.sctux.cc/2022/06/22/基于容器化部署Nacos集群/&title=《基于容器化部署Nacos集群》 — 运维人&source=😊" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.sctux.cc/2022/06/22/基于容器化部署Nacos集群/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《基于容器化部署Nacos集群》 — 运维人&url=https://blog.sctux.cc/2022/06/22/基于容器化部署Nacos集群/&via=https://blog.sctux.cc" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=https://blog.sctux.cc/2022/06/22/基于容器化部署Nacos集群/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+<div class="page-modal wx-share" id="wxShare">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <img src="//api.qrserver.com/v1/create-qr-code/?data=https://blog.sctux.cc/2022/06/22/基于容器化部署Nacos集群/" alt="微信分享二维码">
+</div>
+
+
+
+
+    <script src="//cdn.bootcss.com/node-waves/0.7.4/waves.min.js"></script>
+<script>
+var BLOG = { ROOT: '/', SHARE: true, REWARD: true };
+
+
+</script>
+
+<script src="/js/main.min.js?v=1.7.2"></script>
+
+
+<div class="search-panel" id="search-panel">
+    <ul class="search-result" id="search-result"></ul>
+</div>
+<template id="search-tpl">
+<li class="item">
+    <a href="{path}" class="waves-block waves-effect">
+        <div class="title ellipsis" title="{title}">{title}</div>
+        <div class="flex-row flex-middle">
+            <div class="tags ellipsis">
+                {tags}
+            </div>
+            <time class="flex-col time">{date}</time>
+        </div>
+    </a>
+</li>
+</template>
+
+<script src="/js/search.min.js?v=1.7.2" async></script>
+
+
+
+
+
+
+
+
+<script>
+(function() {
+    var OriginTitile = document.title, titleTime;
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            document.title = '老弟，哪儿去啦😊?！';
+            clearTimeout(titleTime);
+        } else {
+            document.title = '(つェ⊂)咦!老弟来啦!';
+            titleTime = setTimeout(function() {
+                document.title = OriginTitile;
+            },2000);
+        }
+    });
+})();
+</script>
+
+
+
+</body>
+</html>

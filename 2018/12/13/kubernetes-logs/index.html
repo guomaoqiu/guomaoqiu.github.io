@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.8.0">
+<script>(function(i,s,o,g,r,a,m){i["DaoVoiceObject"]=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;a.charset="utf-8";m.parentNode.insertBefore(a,m)})(window,document,"script",('https:' == document.location.protocol ? 'https:' : 'http:') + "//widget.daovoice.io/widget/9f77122a.js","daovoice")
+
+
+daovoice('init', {
+  app_id: "9f77122a",
+  user_id: "NO_89757", // 必填: 该用户在您系统上的唯一ID
+  email: "daovoice@example.com", // 选填:  该用户在您系统上的主邮箱
+  name: "道客船长", // 选填: 用户名
+  signed_up: 1449821660 // 选填: 用户的注册时间，用Unix时间戳表示
+});
+daovoice('update');
+
+</script>
+    
+
+    
+
+    
+
+
+
+    <meta charset="utf-8">
+    
+    
+    
+    
+    <title>管理Kubernetes日志 | 运维人 | Devops、Linux、Kubernetes、Docker、Flask、Python、Shell、SRE</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    
+    <meta name="theme-color" content="#3F51B5">
+    
+    
+    <meta name="keywords" content="kubernetes,log">
+    <meta name="description" content="概述日志是我们在运维部署当中非常重要的一个东西，对于我个人工作经验而言，一般出现问题，第一步事情就是查看日志，其次是服务器资源查看这样去定位问题，那么在kubernets集群当中呢，我主要给其分了两种类型:  kubernetes组件日志 运行于kubernetes上的容器应用日志  kubernetes组件日志我们知道在kubernetes集群是有多个组件组成，协同为我们提供一个运行容器的环境。">
+<meta name="keywords" content="kubernetes,log">
+<meta property="og:type" content="article">
+<meta property="og:title" content="管理Kubernetes日志">
+<meta property="og:url" content="https://blog.sctux.cc/2018/12/13/kubernetes-logs/index.html">
+<meta property="og:site_name" content="运维人">
+<meta property="og:description" content="概述日志是我们在运维部署当中非常重要的一个东西，对于我个人工作经验而言，一般出现问题，第一步事情就是查看日志，其次是服务器资源查看这样去定位问题，那么在kubernets集群当中呢，我主要给其分了两种类型:  kubernetes组件日志 运行于kubernetes上的容器应用日志  kubernetes组件日志我们知道在kubernetes集群是有多个组件组成，协同为我们提供一个运行容器的环境。">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2022-06-07T06:55:07.973Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="管理Kubernetes日志">
+<meta name="twitter:description" content="概述日志是我们在运维部署当中非常重要的一个东西，对于我个人工作经验而言，一般出现问题，第一步事情就是查看日志，其次是服务器资源查看这样去定位问题，那么在kubernets集群当中呢，我主要给其分了两种类型:  kubernetes组件日志 运行于kubernetes上的容器应用日志  kubernetes组件日志我们知道在kubernetes集群是有多个组件组成，协同为我们提供一个运行容器的环境。">
+    
+    <link rel="shortcut icon" href="/favicon.ico">
+    <link rel="stylesheet" href="/css/style.css?v=1.7.2">
+    <script>window.lazyScripts=[]</script>
+
+    <!-- custom head -->
+    
+
+</head>
+
+<body>
+    <div id="loading" class="active"></div>
+
+    <aside id="menu">
+  <div class="inner flex-row-vertical">
+    <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menu-off">
+        <i class="icon icon-lg icon-close"></i>
+    </a>
+    <div class="brand-wrap" style="background-image:url(/img/brand.jpg)">
+      <div class="brand">
+        <a href="/" class="avatar waves-effect waves-circle waves-light">
+          <img src="/img/avatar.jpg">
+        </a>
+        <hgroup class="introduce">
+          <h5 class="nickname">maoqiu.guo</h5>
+          <a href="mailto:guomaoqiu@gmail.com" title="guomaoqiu@gmail.com" class="mail">guomaoqiu@gmail.com</a>
+        </hgroup>
+      </div>
+    </div>
+    <div class="scroll-wrap flex-col">
+      <ul class="nav">
+        
+            <li class="waves-block waves-effect">
+              <a href="/">
+                <i class="icon icon-lg icon-home"></i>
+                主页
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/archives">
+                <i class="icon icon-lg icon-archives"></i>
+                归档
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/tags">
+                <i class="icon icon-lg icon-tags"></i>
+                标签
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/categories">
+                <i class="icon icon-lg icon-th-list"></i>
+                分类
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://github.com/guomaoqiu" target="_blank">
+                <i class="icon icon-lg icon-github"></i>
+                Github
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/works">
+                <i class="icon icon-lg icon-hand-peace-o"></i>
+                作品
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="http://demo.sctux.cc" target="_blank">
+                <i class="icon icon-lg icon-link"></i>
+                DevOpsPlatform
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="http://resume.sctux.cc/" target="_blank">
+                <i class="icon icon-lg icon-heart"></i>
+                我的简历
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/about">
+                <i class="icon icon-lg icon-user"></i>
+                关于我
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://blog.sctux.cc/Skilltree.jpg" target="_blank">
+                <i class="icon icon-lg icon-tree"></i>
+                我的技能树
+              </a>
+            </li>
+        
+      </ul>
+    </div>
+  </div>
+</aside>
+
+    <main id="main">
+        <header class="top-header" id="header">
+    <div class="flex-row">
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light on" id="menu-toggle">
+          <i class="icon icon-lg icon-navicon"></i>
+        </a>
+        <div class="flex-col header-title ellipsis">管理Kubernetes日志</div>
+        
+        <div class="search-wrap" id="search-wrap">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="back">
+                <i class="icon icon-lg icon-chevron-left"></i>
+            </a>
+            <input type="text" id="key" class="search-input" autocomplete="off" placeholder="输入感兴趣的关键字">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="search">
+                <i class="icon icon-lg icon-search"></i>
+            </a>
+        </div>
+        
+        
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menuShare">
+            <i class="icon icon-lg icon-share-alt"></i>
+        </a>
+        
+    </div>
+</header>
+<header class="content-header post-header">
+
+    <div class="container fade-scale">
+        <h1 class="title">管理Kubernetes日志</h1>
+        <h5 class="subtitle">
+            
+                <time datetime="2018-12-13T12:47:40.000Z" itemprop="datePublished" class="page-time">
+  2018-12-13
+</time>
+
+
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/kubernetes/">kubernetes</a></li></ul>
+
+            
+        </h5>
+    </div>
+
+    
+
+
+</header>
+
+
+<div class="container body-wrap">
+    
+    <aside class="post-widget">
+        <nav class="post-toc-wrap post-toc-shrink" id="post-toc">
+            <h4>TOC</h4>
+            <ol class="post-toc"><li class="post-toc-item post-toc-level-1"><a class="post-toc-link" href="#概述"><span class="post-toc-number">1.</span> <span class="post-toc-text">概述</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#kubernetes组件日志"><span class="post-toc-number">1.1.</span> <span class="post-toc-text">kubernetes组件日志</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#运行于kubernetes上的容器应用日志"><span class="post-toc-number">1.2.</span> <span class="post-toc-text">运行于kubernetes上的容器应用日志</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#从容器标准输出截获"><span class="post-toc-number">1.2.1.</span> <span class="post-toc-text">从容器标准输出截获</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#进入容器进行查看"><span class="post-toc-number">1.2.2.</span> <span class="post-toc-text">进入容器进行查看</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#将日志文件挂载到主机目录"><span class="post-toc-number">1.2.3.</span> <span class="post-toc-text">将日志文件挂载到主机目录</span></a></li></ol></li></ol></li></ol>
+        </nav>
+    </aside>
+
+
+<article id="post-kubernetes-logs" class="post-article article-type-post fade" itemprop="blogPost">
+
+    <div class="post-card">
+        <h1 class="post-card-title">管理Kubernetes日志</h1>
+        <div class="post-meta">
+            <time class="post-time" title="2018-12-13 20:47:40" datetime="2018-12-13T12:47:40.000Z" itemprop="datePublished">2018-12-13</time>
+
+            
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/kubernetes/">kubernetes</a></li></ul>
+
+
+
+            
+
+        </div>
+        <div class="post-content" id="post-content" itemprop="postContent">
+            <h1 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h1><p>日志是我们在运维部署当中非常重要的一个东西，对于我个人工作经验而言，一般出现问题，第一步事情就是查看日志，其次是服务器资源查看这样去定位问题，那么在kubernets集群当中呢，我主要给其分了两种类型:</p>
+<ul>
+<li>kubernetes组件日志</li>
+<li>运行于kubernetes上的容器应用日志</li>
+</ul>
+<h2 id="kubernetes组件日志"><a href="#kubernetes组件日志" class="headerlink" title="kubernetes组件日志"></a>kubernetes组件日志</h2><p>我们知道在kubernetes集群是有多个组件组成，协同为我们提供一个运行容器的环境。当运行当中出现问题，也是需要查看对应组件的日志，进行问题排查、处理。那么常见的日志如下：</p>
+<figure class="highlight maxima"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">/<span class="built_in">var</span>/<span class="built_in">log</span>/kube-apiserver.<span class="built_in">log</span></span><br><span class="line">/<span class="built_in">var</span>/<span class="built_in">log</span>/kube-proxy.<span class="built_in">log</span></span><br><span class="line">/<span class="built_in">var</span>/<span class="built_in">log</span>/kube-controller-manager.<span class="built_in">log</span></span><br><span class="line">/<span class="built_in">var</span>/<span class="built_in">log</span>/kube-scheduler.<span class="built_in">log</span></span><br><span class="line">/<span class="built_in">var</span>/<span class="built_in">log</span>/kubelet.<span class="built_in">log</span></span><br></pre></td></tr></table></figure>
+<p>当然根据搭建集群的方式不同，我们配置的日志目录也不尽相同，所以只是列举一下；<br>如果组件的安装方式由systemd来管理的话 我们还可以通过以下命令进行排错</p>
+<figure class="highlight fortran"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">journalctl -u kubelet</span><br><span class="line">或</span><br><span class="line">systemctl <span class="keyword">status</span> kubelet -l</span><br></pre></td></tr></table></figure>
+<p>如果使用的是kuernetes插件式方式部署的组件则使用以下命令</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">kubectl logs -f <span class="tag">&lt;<span class="name">组件名称</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<h2 id="运行于kubernetes上的容器应用日志"><a href="#运行于kubernetes上的容器应用日志" class="headerlink" title="运行于kubernetes上的容器应用日志"></a>运行于kubernetes上的容器应用日志</h2><p>运行于kubernetes上的，比如一个nginx容器；我们如何查看这个应用的日志呢？</p>
+<h3 id="从容器标准输出截获"><a href="#从容器标准输出截获" class="headerlink" title="从容器标准输出截获"></a>从容器标准输出截获</h3><p>用法类似于docker</p>
+<figure class="highlight dts"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">kubectl logs -<span class="class">f </span>&#123;POD_NAME&#125; -<span class="class">c </span>&#123;Container_NAME&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="进入容器进行查看"><a href="#进入容器进行查看" class="headerlink" title="进入容器进行查看"></a>进入容器进行查看</h3><figure class="highlight dts"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">kubectl exec -<span class="class">it </span>&#123;POD_NAME&#125; -<span class="class">c </span>&#123;Container_NAME&#125; <span class="meta-keyword">/bin/</span>sh</span><br><span class="line">docker exec -<span class="class">it </span>&#123;Container_NAME&#125; <span class="meta-keyword">/bin/</span>sh</span><br></pre></td></tr></table></figure>
+<h3 id="将日志文件挂载到主机目录"><a href="#将日志文件挂载到主机目录" class="headerlink" title="将日志文件挂载到主机目录"></a>将日志文件挂载到主机目录</h3><p>比如我要把nginx的日志挂载到运行于该POD的宿主机的某个目录</p>
+<figure class="highlight dts"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta"># 编写yaml文件</span></span><br><span class="line"><span class="meta"># 这里我们知道手写一个yaml是很烦的，而且那么多关键词不是那么容易记住，</span></span><br><span class="line"><span class="meta"># 那么此时就需要在现有环境中找一个pod然后把他的yaml导出再做修改</span></span><br><span class="line"><span class="meta"># 如果环境中还是没有pod，那就直接run一个</span></span><br><span class="line"></span><br><span class="line">$ kubectl get pod nginx<span class="number">-67</span>ccc95d8c-fd5nk -o yaml --export &gt; nginx.yaml</span><br><span class="line"></span><br><span class="line"><span class="meta"># 删除一些不必要的字段</span></span><br><span class="line">$ vim nginx.yaml </span><br><span class="line"></span><br><span class="line"><span class="symbol">apiVersion:</span> v1</span><br><span class="line"><span class="symbol">kind:</span> Pod</span><br><span class="line"><span class="symbol">metadata:</span></span><br><span class="line"><span class="symbol">  name:</span> nginx</span><br><span class="line"><span class="symbol">  labels:</span></span><br><span class="line"><span class="symbol">    run:</span> nginx</span><br><span class="line"><span class="symbol">spec:</span></span><br><span class="line"><span class="symbol">  containers:</span></span><br><span class="line">  - image: nginx:latest</span><br><span class="line"><span class="symbol">    imagePullPolicy:</span> IfNotPresent</span><br><span class="line"><span class="symbol">    name:</span> nginx</span><br><span class="line"><span class="symbol">    volumeMounts:</span></span><br><span class="line">    - mountPath: <span class="meta-keyword">/var/</span>log/nginx  <span class="meta"># nginx应用默认日志目录</span></span><br><span class="line"><span class="symbol">      name:</span> nginx-log-volume     </span><br><span class="line"><span class="symbol">  volumes:</span></span><br><span class="line">  - name: nginx-log-volume</span><br><span class="line"><span class="symbol">    hostPath:</span></span><br><span class="line"><span class="symbol">      path:</span> <span class="meta-keyword">/var/</span>k8s/log         <span class="meta"># 宿主机目录</span></span><br><span class="line">      </span><br><span class="line">$ kubectl create -f nginx.yaml</span><br><span class="line">pod <span class="string">"nginx"</span> created</span><br><span class="line"></span><br><span class="line"><span class="meta"># 查看宿主机，这样容器的日志目录我就挂到了宿主</span></span><br><span class="line"><span class="meta"># 而不用在进入容器中查看了</span></span><br><span class="line">$ ll <span class="meta-keyword">/var/</span>k8s<span class="meta-keyword">/log/</span> </span><br><span class="line">total <span class="number">0</span></span><br><span class="line">-rw-r----- <span class="number">1</span> root root <span class="number">0</span> Dec <span class="number">18</span> <span class="number">15</span>:<span class="number">17</span> access.log</span><br><span class="line">-rw-r----- <span class="number">1</span> root root <span class="number">0</span> Dec <span class="number">18</span> <span class="number">15</span>:<span class="number">17</span> error.log</span><br></pre></td></tr></table></figure>
+<p>注意点: 写yaml的时候一定要养成导出现有资源类型的yaml的习惯再去修改；这样能避免手动编写时格式的一些问题，如果关键字记不住那就一定要用<code>kubectl explain</code>获取资源文档</p>
+
+        </div>
+
+        <blockquote class="post-copyright">
+    
+    <div class="content">
+        
+<span class="post-time">
+    最后更新时间：<time datetime="2022-06-07T06:55:07.973Z" itemprop="dateUpdated">2022-06-07 14:55:07</time>
+</span><br>
+
+
+        
+        该文链接：<a href="/2018/12/13/kubernetes-logs/" target="_blank" rel="external">https://blog.sctux.cc/2018/12/13/kubernetes-logs/</a>
+        
+    </div>
+    
+    <footer>
+        <a href="https://blog.sctux.cc">
+            <img src="/img/avatar.jpg" alt="maoqiu.guo">
+            maoqiu.guo
+        </a>
+    </footer>
+</blockquote>
+
+        
+<div class="page-reward">
+    <a id="rewardBtn" href="javascript:;" class="page-reward-btn waves-effect waves-circle waves-light">赏</a>
+</div>
+
+
+
+        <div class="post-footer">
+            
+	<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/kubernetes/">kubernetes</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/log/">log</a></li></ul>
+
+
+            
+<div class="page-share-wrap">
+    
+
+<div class="page-share" id="pageShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://blog.sctux.cc/2018/12/13/kubernetes-logs/&title=《管理Kubernetes日志》 — 运维人&pic=https://blog.sctux.cc/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://blog.sctux.cc/2018/12/13/kubernetes-logs/&title=《管理Kubernetes日志》 — 运维人&source=😊" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.sctux.cc/2018/12/13/kubernetes-logs/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《管理Kubernetes日志》 — 运维人&url=https://blog.sctux.cc/2018/12/13/kubernetes-logs/&via=https://blog.sctux.cc" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=https://blog.sctux.cc/2018/12/13/kubernetes-logs/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+
+    <a href="javascript:;" id="shareFab" class="page-share-fab waves-effect waves-circle">
+        <i class="icon icon-share-alt icon-lg"></i>
+    </a>
+</div>
+
+
+
+        </div>
+    </div>
+
+    
+<nav class="post-nav flex-row flex-justify-between">
+  
+    <div class="waves-block waves-effect prev">
+      <a href="/2018/12/14/kubernetes-statefulset/" id="post-prev" class="post-nav-link">
+        <div class="tips"><i class="icon icon-angle-left icon-lg icon-pr"></i> Prev</div>
+        <h4 class="title">理解kubernetes中的有状态服务StatefulSet</h4>
+      </a>
+    </div>
+  
+
+  
+    <div class="waves-block waves-effect next">
+      <a href="/2018/12/12/kubernetes_pod_access/" id="post-next" class="post-nav-link">
+        <div class="tips">Next <i class="icon icon-angle-right icon-lg icon-pl"></i></div>
+        <h4 class="title">理解kubernetes中Pod访问方式</h4>
+      </a>
+    </div>
+  
+</nav>
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Valine Comments -->
+    <div class="comments vcomment" id="comments"></div>
+    <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+    <script src="//unpkg.com/valine@latest/dist/Valine.min.js"></script>
+    <!-- Valine Comments script -->
+    <script>
+        var GUEST_INFO = ['nick','mail','link'];
+        var guest_info = 'nick,mail,link'.split(',').filter(function(item){
+          return GUEST_INFO.indexOf(item) > -1
+        });
+        new Valine({
+            el: '#comments',
+            notify: 'true' == 'true',
+            verify: 'true' == 'true',
+            appId: "lHxnnDHJXDgMoFpCbdx8A4q7-gzGzoHsz",
+            appKey: "W8H2NuO8chyDlCEQzionLuuV",
+            avatar: "monsterid",
+            placeholder: "来都来了，说点啥子吧~🌹 (友情提醒，留下正确的邮箱地址可以第一时间获取评论反馈)",
+            guest_info: guest_info.length == 0 ? GUEST_INFO : guest_info,
+            pageSize: "10"
+        })
+    </script>
+    <!-- Valine Comments end -->
+
+
+
+
+
+
+
+</article>
+
+<div id="reward" class="page-modal reward-lay">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <h3 class="reward-title">
+        <i class="icon icon-quote-left"></i>
+        谢谢大爷~
+        <i class="icon icon-quote-right"></i>
+    </h3>
+    <div class="reward-content">
+        
+        <div class="reward-code">
+            <img id="rewardCode" src="/img/wechat.jpg" alt="打赏二维码">
+        </div>
+        
+        <label class="reward-toggle">
+            <input id="rewardToggle" type="checkbox" class="reward-toggle-check" data-wechat="/img/wechat.jpg" data-alipay="/img/alipay.jpg">
+            <div class="reward-toggle-ctrol">
+                <span class="reward-toggle-item wechat">微信</span>
+                <span class="reward-toggle-label"></span>
+                <span class="reward-toggle-item alipay">支付宝</span>
+            </div>
+        </label>
+        
+    </div>
+</div>
+
+
+
+</div>
+
+        <footer class="footer">
+    <div class="top">
+        
+
+        <p>
+            
+            <span>博客内容遵循 <a rel="license" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh">知识共享 署名 - 非商业性 - 相同方式共享 4.0 国际协议</a></span>
+        </p>
+    </div>
+    <div class="bottom">
+        <p><span>maoqiu.guo &copy; 2013 - 2024</span>
+            <span>
+                
+                <a href="http://www.miitbeian.gov.cn/" target="_blank">蜀ICP备007号-1</a><br>
+                
+                Power by <a href="http://hexo.io/" target="_blank">Hexo</a> Theme <a href="https://github.com/yscoder/hexo-theme-indigo" target="_blank">indigo</a>
+            </span>
+        </p>
+    </div>
+</footer>
+
+    </main>
+    <div class="mask" id="mask"></div>
+<a href="javascript:;" id="gotop" class="waves-effect waves-circle waves-light"><span class="icon icon-lg icon-chevron-up"></span></a>
+
+
+
+<div class="global-share" id="globalShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://blog.sctux.cc/2018/12/13/kubernetes-logs/&title=《管理Kubernetes日志》 — 运维人&pic=https://blog.sctux.cc/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://blog.sctux.cc/2018/12/13/kubernetes-logs/&title=《管理Kubernetes日志》 — 运维人&source=😊" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.sctux.cc/2018/12/13/kubernetes-logs/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《管理Kubernetes日志》 — 运维人&url=https://blog.sctux.cc/2018/12/13/kubernetes-logs/&via=https://blog.sctux.cc" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=https://blog.sctux.cc/2018/12/13/kubernetes-logs/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+<div class="page-modal wx-share" id="wxShare">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <img src="//api.qrserver.com/v1/create-qr-code/?data=https://blog.sctux.cc/2018/12/13/kubernetes-logs/" alt="微信分享二维码">
+</div>
+
+
+
+
+    <script src="//cdn.bootcss.com/node-waves/0.7.4/waves.min.js"></script>
+<script>
+var BLOG = { ROOT: '/', SHARE: true, REWARD: true };
+
+
+</script>
+
+<script src="/js/main.min.js?v=1.7.2"></script>
+
+
+<div class="search-panel" id="search-panel">
+    <ul class="search-result" id="search-result"></ul>
+</div>
+<template id="search-tpl">
+<li class="item">
+    <a href="{path}" class="waves-block waves-effect">
+        <div class="title ellipsis" title="{title}">{title}</div>
+        <div class="flex-row flex-middle">
+            <div class="tags ellipsis">
+                {tags}
+            </div>
+            <time class="flex-col time">{date}</time>
+        </div>
+    </a>
+</li>
+</template>
+
+<script src="/js/search.min.js?v=1.7.2" async></script>
+
+
+
+
+
+
+
+
+<script>
+(function() {
+    var OriginTitile = document.title, titleTime;
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            document.title = '老弟，哪儿去啦😊?！';
+            clearTimeout(titleTime);
+        } else {
+            document.title = '(つェ⊂)咦!老弟来啦!';
+            titleTime = setTimeout(function() {
+                document.title = OriginTitile;
+            },2000);
+        }
+    });
+})();
+</script>
+
+
+
+</body>
+</html>

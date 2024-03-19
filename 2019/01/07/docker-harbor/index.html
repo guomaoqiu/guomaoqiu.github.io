@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.8.0">
+<script>(function(i,s,o,g,r,a,m){i["DaoVoiceObject"]=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;a.charset="utf-8";m.parentNode.insertBefore(a,m)})(window,document,"script",('https:' == document.location.protocol ? 'https:' : 'http:') + "//widget.daovoice.io/widget/9f77122a.js","daovoice")
+
+
+daovoice('init', {
+  app_id: "9f77122a",
+  user_id: "NO_89757", // 必填: 该用户在您系统上的唯一ID
+  email: "daovoice@example.com", // 选填:  该用户在您系统上的主邮箱
+  name: "道客船长", // 选填: 用户名
+  signed_up: 1449821660 // 选填: 用户的注册时间，用Unix时间戳表示
+});
+daovoice('update');
+
+</script>
+    
+
+    
+
+    
+
+
+
+    <meta charset="utf-8">
+    
+    
+    
+    
+    <title>基于Harbor搭建企业级私有镜像仓库 | 运维人 | Devops、Linux、Kubernetes、Docker、Flask、Python、Shell、SRE</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    
+    <meta name="theme-color" content="#3F51B5">
+    
+    
+    <meta name="keywords" content="docker-registry">
+    <meta name="description" content="基于harbor搭建企业docker镜像仓库背景docker中要使用镜像，一般会从本地、docker Hup公共仓库和其它第三方公共仓库中下载镜像，一般出于安全和外网(墙)资源下载速率的原因考虑企业级上不会轻易使用。那么有没有一种办法可以存储自己的镜像又有安全认证的仓库呢?  —-&amp;gt; 企业级环境中基于Harbor搭建自己的安全认证仓库。 Harbor是VMware公司最近开源的企业级Dock">
+<meta name="keywords" content="docker-registry">
+<meta property="og:type" content="article">
+<meta property="og:title" content="基于Harbor搭建企业级私有镜像仓库">
+<meta property="og:url" content="https://blog.sctux.cc/2019/01/07/docker-harbor/index.html">
+<meta property="og:site_name" content="运维人">
+<meta property="og:description" content="基于harbor搭建企业docker镜像仓库背景docker中要使用镜像，一般会从本地、docker Hup公共仓库和其它第三方公共仓库中下载镜像，一般出于安全和外网(墙)资源下载速率的原因考虑企业级上不会轻易使用。那么有没有一种办法可以存储自己的镜像又有安全认证的仓库呢?  —-&amp;gt; 企业级环境中基于Harbor搭建自己的安全认证仓库。 Harbor是VMware公司最近开源的企业级Dock">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://blog.sctux.cc/2019/01/07/docker-harbor/15468488877244.jpg">
+<meta property="og:image" content="https://blog.sctux.cc/2019/01/07/docker-harbor/docker-harbor//15468489958269.jpg">
+<meta property="og:image" content="https://blog.sctux.cc/2019/01/07/docker-harbor/15468494639235.jpg">
+<meta property="og:image" content="https://blog.sctux.cc/2019/01/07/docker-harbor/15468535525128.jpg">
+<meta property="og:image" content="https://blog.sctux.cc/2019/01/07/docker-harbor/15468562743522.jpg">
+<meta property="og:updated_time" content="2022-06-07T06:55:07.839Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="基于Harbor搭建企业级私有镜像仓库">
+<meta name="twitter:description" content="基于harbor搭建企业docker镜像仓库背景docker中要使用镜像，一般会从本地、docker Hup公共仓库和其它第三方公共仓库中下载镜像，一般出于安全和外网(墙)资源下载速率的原因考虑企业级上不会轻易使用。那么有没有一种办法可以存储自己的镜像又有安全认证的仓库呢?  —-&amp;gt; 企业级环境中基于Harbor搭建自己的安全认证仓库。 Harbor是VMware公司最近开源的企业级Dock">
+<meta name="twitter:image" content="https://blog.sctux.cc/2019/01/07/docker-harbor/15468488877244.jpg">
+    
+    <link rel="shortcut icon" href="/favicon.ico">
+    <link rel="stylesheet" href="/css/style.css?v=1.7.2">
+    <script>window.lazyScripts=[]</script>
+
+    <!-- custom head -->
+    
+
+</head>
+
+<body>
+    <div id="loading" class="active"></div>
+
+    <aside id="menu">
+  <div class="inner flex-row-vertical">
+    <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menu-off">
+        <i class="icon icon-lg icon-close"></i>
+    </a>
+    <div class="brand-wrap" style="background-image:url(/img/brand.jpg)">
+      <div class="brand">
+        <a href="/" class="avatar waves-effect waves-circle waves-light">
+          <img src="/img/avatar.jpg">
+        </a>
+        <hgroup class="introduce">
+          <h5 class="nickname">maoqiu.guo</h5>
+          <a href="mailto:guomaoqiu@gmail.com" title="guomaoqiu@gmail.com" class="mail">guomaoqiu@gmail.com</a>
+        </hgroup>
+      </div>
+    </div>
+    <div class="scroll-wrap flex-col">
+      <ul class="nav">
+        
+            <li class="waves-block waves-effect">
+              <a href="/">
+                <i class="icon icon-lg icon-home"></i>
+                主页
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/archives">
+                <i class="icon icon-lg icon-archives"></i>
+                归档
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/tags">
+                <i class="icon icon-lg icon-tags"></i>
+                标签
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/categories">
+                <i class="icon icon-lg icon-th-list"></i>
+                分类
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://github.com/guomaoqiu" target="_blank">
+                <i class="icon icon-lg icon-github"></i>
+                Github
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/works">
+                <i class="icon icon-lg icon-hand-peace-o"></i>
+                作品
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="http://demo.sctux.cc" target="_blank">
+                <i class="icon icon-lg icon-link"></i>
+                DevOpsPlatform
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="http://resume.sctux.cc/" target="_blank">
+                <i class="icon icon-lg icon-heart"></i>
+                我的简历
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/about">
+                <i class="icon icon-lg icon-user"></i>
+                关于我
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://blog.sctux.cc/Skilltree.jpg" target="_blank">
+                <i class="icon icon-lg icon-tree"></i>
+                我的技能树
+              </a>
+            </li>
+        
+      </ul>
+    </div>
+  </div>
+</aside>
+
+    <main id="main">
+        <header class="top-header" id="header">
+    <div class="flex-row">
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light on" id="menu-toggle">
+          <i class="icon icon-lg icon-navicon"></i>
+        </a>
+        <div class="flex-col header-title ellipsis">基于Harbor搭建企业级私有镜像仓库</div>
+        
+        <div class="search-wrap" id="search-wrap">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="back">
+                <i class="icon icon-lg icon-chevron-left"></i>
+            </a>
+            <input type="text" id="key" class="search-input" autocomplete="off" placeholder="输入感兴趣的关键字">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="search">
+                <i class="icon icon-lg icon-search"></i>
+            </a>
+        </div>
+        
+        
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menuShare">
+            <i class="icon icon-lg icon-share-alt"></i>
+        </a>
+        
+    </div>
+</header>
+<header class="content-header post-header">
+
+    <div class="container fade-scale">
+        <h1 class="title">基于Harbor搭建企业级私有镜像仓库</h1>
+        <h5 class="subtitle">
+            
+                <time datetime="2019-01-07T10:23:27.000Z" itemprop="datePublished" class="page-time">
+  2019-01-07
+</time>
+
+
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/docker/">docker</a></li></ul>
+
+            
+        </h5>
+    </div>
+
+    
+
+
+</header>
+
+
+<div class="container body-wrap">
+    
+    <aside class="post-widget">
+        <nav class="post-toc-wrap post-toc-shrink" id="post-toc">
+            <h4>TOC</h4>
+            <ol class="post-toc"><li class="post-toc-item post-toc-level-1"><a class="post-toc-link" href="#基于harbor搭建企业docker镜像仓库"><span class="post-toc-number">1.</span> <span class="post-toc-text">基于harbor搭建企业docker镜像仓库</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#背景"><span class="post-toc-number">1.1.</span> <span class="post-toc-text">背景</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#安装Harbor"><span class="post-toc-number">1.2.</span> <span class="post-toc-text">安装Harbor</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#安装docker-dompose"><span class="post-toc-number">1.2.1.</span> <span class="post-toc-text">安装docker-dompose</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#获取Harbor软件包"><span class="post-toc-number">1.2.2.</span> <span class="post-toc-text">获取Harbor软件包</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#生成ssl证书"><span class="post-toc-number">1.2.3.</span> <span class="post-toc-text">生成ssl证书</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#通过自带脚本一键安装"><span class="post-toc-number">1.2.4.</span> <span class="post-toc-text">通过自带脚本一键安装</span></a></li></ol></li></ol></li></ol>
+        </nav>
+    </aside>
+
+
+<article id="post-docker-harbor" class="post-article article-type-post fade" itemprop="blogPost">
+
+    <div class="post-card">
+        <h1 class="post-card-title">基于Harbor搭建企业级私有镜像仓库</h1>
+        <div class="post-meta">
+            <time class="post-time" title="2019-01-07 18:23:27" datetime="2019-01-07T10:23:27.000Z" itemprop="datePublished">2019-01-07</time>
+
+            
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/docker/">docker</a></li></ul>
+
+
+
+            
+
+        </div>
+        <div class="post-content" id="post-content" itemprop="postContent">
+            <h1 id="基于harbor搭建企业docker镜像仓库"><a href="#基于harbor搭建企业docker镜像仓库" class="headerlink" title="基于harbor搭建企业docker镜像仓库"></a>基于harbor搭建企业docker镜像仓库</h1><h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>docker中要使用镜像，一般会从本地、docker Hup公共仓库和其它第三方公共仓库中下载镜像，一般出于安全和外网(墙)资源下载速率的原因考虑企业级上不会轻易使用。那么有没有一种办法可以存储自己的镜像又有安全认证的仓库呢? </p>
+<pre><code>—-&gt; 企业级环境中基于Harbor搭建自己的安全认证仓库。
+</code></pre><p>Harbor是VMware公司最近开源的企业级Docker Registry项目, 其目标是帮助用户迅速搭建一个企业级的Docker registry服务。</p>
+<h2 id="安装Harbor"><a href="#安装Harbor" class="headerlink" title="安装Harbor"></a>安装Harbor</h2><p>harbor需要安装docker和docker-compose才能使用，安装docker步骤省略，</p>
+<h3 id="安装docker-dompose"><a href="#安装docker-dompose" class="headerlink" title="安装docker-dompose"></a>安装docker-dompose</h3><p>docker-dompose安装步骤如下： </p>
+<p>下载最新版的docker-compose文件 </p>
+<figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ curl -L https:<span class="regexp">//gi</span>thub.com<span class="regexp">/docker/</span>compose<span class="regexp">/releases/</span>download<span class="regexp">/1.23.2/</span>docker-compose-$(uname -s)-$(uname -m) -o <span class="regexp">/usr/</span>local<span class="regexp">/bin/</span>docker-compose</span><br></pre></td></tr></table></figure>
+<p>添加可执行权限</p>
+<figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ chmod +x <span class="regexp">/usr/</span>local<span class="regexp">/bin/</span>docker-compose</span><br></pre></td></tr></table></figure>
+<p>验证版本</p>
+<figure class="highlight lsl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ docker-compose -v</span><br><span class="line">docker-compose version <span class="number">1.23</span><span class="number">.2</span>, build <span class="number">1110</span>ad01</span><br></pre></td></tr></table></figure>
+<h3 id="获取Harbor软件包"><a href="#获取Harbor软件包" class="headerlink" title="获取Harbor软件包"></a>获取Harbor软件包</h3><figure class="highlight x86asm"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="symbol">https:</span>//storage.googleapis.com/harbor-releases/release-<span class="number">1.7</span><span class="meta">.0</span>/harbor-offline-installer-v1<span class="meta">.7</span><span class="meta">.1</span>.tgz</span><br></pre></td></tr></table></figure>
+<p>解压</p>
+<figure class="highlight lsl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">tar -xf harbor-offline-installer-v1<span class="number">.7</span><span class="number">.1</span>.tgz -C /usr/local/</span><br></pre></td></tr></table></figure>
+<p>编辑配置文件</p>
+<figure class="highlight makefile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">$ cd /usr/local/harbor</span><br><span class="line">$ vim harbor.cfg</span><br><span class="line">hostname = reg.for-k8s.com 		  <span class="comment"># 本机外网IP或域名，该地址供用户通过UI进行访问，不要使用127.0.0.1</span></span><br><span class="line">ui_url_protocol = https             <span class="comment"># 用户访问私仓时使用的协议，默认时http，配置成https</span></span><br><span class="line">db_password = root123           　　 <span class="comment"># 指定mysql数据库管理员密码</span></span><br><span class="line">harbor_admin_password：Harbor12345   <span class="comment"># harbor的管理员账户密码</span></span><br><span class="line">ssl_cert = /data/cert/reg.for-k8s.com.crt 　　<span class="comment"># 设置证书文件路径</span></span><br><span class="line">ssl_cert_key = /data/cert/reg.for-k8s.com.key  <span class="comment"># 设置证书密钥文件路径</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 其他配置选项按需填写即可</span></span><br></pre></td></tr></table></figure>
+<h3 id="生成ssl证书"><a href="#生成ssl证书" class="headerlink" title="生成ssl证书"></a>生成ssl证书</h3><p>生成根证书</p>
+<figure class="highlight vim"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="keyword">cd</span> /dada/cert/</span><br><span class="line"></span><br><span class="line">$ openssl req  -newkey rs<span class="variable">a:4096</span> -nodes -<span class="built_in">sha256</span> -keyout <span class="keyword">ca</span>.key -x509 -days <span class="number">365</span> -out <span class="keyword">ca</span>.crt -subj <span class="string">"/C=CN/L=Shanghai/O=harbor/CN=harbor-registry"</span></span><br></pre></td></tr></table></figure>
+<p>生成一个证书签名, 设置访问域名为 reg.for-k8s.com</p>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ openssl req -newkey rsa:<span class="number">4096</span> -nodes -sha256 -keyout reg<span class="selector-class">.for-k8s</span><span class="selector-class">.com</span><span class="selector-class">.key</span> -out server<span class="selector-class">.csr</span> -subj <span class="string">"/C=CN/L=Shanghai/O=harbor/CN=reg.for-k8s.com"</span></span><br></pre></td></tr></table></figure>
+<p>生成主机证书</p>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ openssl x509 -req -days <span class="number">365</span> -<span class="keyword">in</span> server<span class="selector-class">.csr</span> -CA ca<span class="selector-class">.crt</span> -CAkey ca<span class="selector-class">.key</span> -CAcreateserial -out reg<span class="selector-class">.for-k8s</span><span class="selector-class">.com</span><span class="selector-class">.crt</span></span><br></pre></td></tr></table></figure>
+<h3 id="通过自带脚本一键安装"><a href="#通过自带脚本一键安装" class="headerlink" title="通过自带脚本一键安装"></a>通过自带脚本一键安装</h3><figure class="highlight lasso"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">$ cd /usr/<span class="built_in">local</span>/harbor/</span><br><span class="line">./install.sh</span><br><span class="line"><span class="params">...</span><span class="params">...</span></span><br><span class="line"><span class="params">...</span><span class="params">...</span></span><br><span class="line"><span class="params">...</span><span class="params">...</span></span><br><span class="line">✔ ---<span class="params">-Harbor</span> has been installed <span class="literal">and</span> started successfully.----</span><br><span class="line"></span><br><span class="line">Now you should be able <span class="keyword">to</span> visit the admin <span class="keyword">portal</span> at https:<span class="comment">//reg.for-k8s.com.</span></span><br><span class="line">For more details, please visit https:<span class="comment">//github.com/goharbor/harbor .</span></span><br></pre></td></tr></table></figure>
+<p>然后绑定hosts访问即可:<br><figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="/2019/01/07/docker-harbor/15468488877244.jpg" alt="" title="">
+                </div>
+                <div class="image-caption"></div>
+            </figure></p>
+<p>默认账号密码<code>admin / Harbor12345</code><br><figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="docker-harbor//15468489958269.jpg" alt="" title="">
+                </div>
+                <div class="image-caption"></div>
+            </figure></p>
+<p>ok 那上面的私有仓库服务已经搭建完毕了，该怎么使用呢？</p>
+<ol start="0">
+<li><p>首先在harbor上创建一个项目<code>myproject</code>(我这里不使用默认的libary)</p>
+<figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="/2019/01/07/docker-harbor/15468494639235.jpg" alt="" title="">
+                </div>
+                <div class="image-caption"></div>
+            </figure>
+<p>这里我选择私有仓库, pull/push都需要在主机上面执行<code>docker login</code>才行;</p>
+</li>
+<li><p>当我通过Dockerfile构建一个新镜像的时候, 直接指明registry和标签, 比如:</p>
+</li>
+</ol>
+<figure class="highlight vim"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">$ docker build -t <span class="keyword">reg</span>.<span class="keyword">for</span>-k8s.<span class="keyword">com</span>/myproject/mydocker-image:v1.<span class="number">0.1</span> .</span><br><span class="line">Sending build context <span class="keyword">to</span> Docker daemon  <span class="number">97.21</span>MB</span><br><span class="line">Step <span class="number">1</span>/<span class="number">12</span> : FROM  <span class="number">1</span>and1internet/ubuntu-<span class="number">16</span></span><br><span class="line"> ---&gt; dbf985f1f449</span><br><span class="line">Step <span class="number">2</span>/<span class="number">12</span> : MAINTAINER guomaoqiu &lt;guomaoqiu@gmail.<span class="keyword">com</span>&gt;</span><br><span class="line"> ---&gt; Using cache</span><br><span class="line"> ---&gt; <span class="number">598894333</span>db9</span><br><span class="line">......</span><br><span class="line">......</span><br><span class="line">Successfully built b190966f3773</span><br><span class="line">Successfully tagged <span class="keyword">reg</span>.<span class="keyword">for</span>-k8s.<span class="keyword">com</span>/myproject/mydocker-image:v1.<span class="number">0.1</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">$ docker images | <span class="keyword">grep</span> myproject</span><br><span class="line"><span class="keyword">reg</span>.<span class="keyword">for</span>-k8s.<span class="keyword">com</span>/myproject/mydocker-image  v1.<span class="number">0.1</span>   b190966f3773   <span class="number">44</span> seconds ago    <span class="number">482</span>MB</span><br></pre></td></tr></table></figure>
+<ol start="2">
+<li>加入当你从别处获取的镜像想上传到私有仓库呢？就是打个tag就行啦, 比如我想把从官网的这个nginx镜像放到我的仓库:</li>
+</ol>
+<figure class="highlight vim"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">$ docker <span class="keyword">tag</span> nginx <span class="keyword">reg</span>.<span class="keyword">for</span>-k8s.<span class="keyword">com</span>/myproject/mynginx:latest</span><br><span class="line">$ docker images | <span class="keyword">grep</span> myproject</span><br><span class="line"><span class="keyword">reg</span>.<span class="keyword">for</span>-k8s.<span class="keyword">com</span>/myproject/mydocker-image    v1.<span class="number">0.1</span> b190966f3773  <span class="number">2</span> minutes ago       <span class="number">482</span>MB</span><br><span class="line"><span class="keyword">reg</span>.<span class="keyword">for</span>-k8s.<span class="keyword">com</span>/myproject/mynginx           latest <span class="number">568</span>c4670fa80  <span class="number">5</span> weeks ago         <span class="number">109</span>MB</span><br></pre></td></tr></table></figure>
+<ol start="3">
+<li>登录仓库</li>
+</ol>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">$ docker login -u admin -<span class="selector-tag">p</span> Harbor12345 reg<span class="selector-class">.for-k8s</span><span class="selector-class">.com</span></span><br><span class="line">Username: admin</span><br><span class="line">Password:</span><br><span class="line">WARNING! Your password will be stored unencrypted <span class="keyword">in</span> /root/.docker/config<span class="selector-class">.json</span>.</span><br><span class="line">Configure <span class="selector-tag">a</span> credential helper to remove this warning. See</span><br><span class="line">https:<span class="comment">//docs.docker.com/engine/reference/commandline/login/#credentials-store</span></span><br><span class="line"></span><br><span class="line">Login Succeeded</span><br></pre></td></tr></table></figure>
+<ol start="4">
+<li>最后把本地的镜像push到仓库<br>当我执行这个的时候报错了：<figure class="highlight subunit"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">docker push reg.for-k8s.com/myproject/mynginx:latest</span><br><span class="line"><span class="keyword">Error </span>response from daemon: Get https://reg.for-k8s.com/v2/: x509: certificate signed by unknown authority</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<p>解决办法就是如果不在客户端部署证书，那么在Docker启动时设置参数 “–insecure-registry IP/仓库域名”,然后重载服务重启docker进程；注意的是我这里使用的这个域名是自定义的，那么需要在需要上传下载镜像的机器上，同样需要修改docker进程参数，并且绑定hosts,否则即使配置了参数，这个域名没法解析也是push/pull不到镜像的。</p>
+<ol start="5">
+<li>再次执行push操作:</li>
+</ol>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">$</span> <span class="string">docker</span> <span class="string">push</span> <span class="string">reg.for-k8s.com/myproject/mynginx:latest</span></span><br><span class="line"><span class="string">The</span> <span class="string">push</span> <span class="string">refers</span> <span class="string">to</span> <span class="string">repository</span> <span class="string">[reg.for-k8s.com/myproject/mynginx]</span></span><br><span class="line"><span class="attr">b7efe781401d:</span> <span class="string">Pushed</span></span><br><span class="line"><span class="attr">c9c2a3696080:</span> <span class="string">Pushed</span></span><br><span class="line"><span class="number">7</span><span class="attr">b4e562e58dc:</span> <span class="string">Pushed</span></span><br><span class="line"><span class="attr">latest:</span> <span class="attr">digest:</span> <span class="attr">sha256:e2847e35d4e0e2d459a7696538cbfea42ea2d3b8a1ee8329ba7e68694950afd3</span> <span class="attr">size:</span> <span class="number">948</span></span><br><span class="line"></span><br><span class="line"><span class="string">$</span> <span class="string">[root@k8s-m1</span> <span class="string">kubectl-terminal-ubuntu]#</span> <span class="string">docker</span> <span class="string">push</span> <span class="string">reg.for-k8s.com/myproject/mydocker-image:v1.0.1</span></span><br><span class="line"><span class="string">The</span> <span class="string">push</span> <span class="string">refers</span> <span class="string">to</span> <span class="string">repository</span> <span class="string">[reg.for-k8s.com/myproject/mydocker-image]</span></span><br><span class="line"><span class="number">96</span><span class="attr">dca48ee72c:</span> <span class="string">Pushed</span></span><br><span class="line"><span class="attr">fa879b69764c:</span> <span class="string">Pushed</span></span><br><span class="line"><span class="number">4</span><span class="attr">d823b00e6b7:</span> <span class="string">Pushed</span></span><br><span class="line"><span class="number">6</span><span class="attr">bf6e96da4a0:</span> <span class="string">Pushed</span></span><br><span class="line"><span class="attr">eedda540c6a8:</span> <span class="string">Pushed</span></span><br><span class="line"><span class="attr">f2a971e53afa:</span> <span class="string">Pushed</span></span><br><span class="line"><span class="number">3</span><span class="attr">ee1a3b3fd18:</span> <span class="string">Pushed</span></span><br><span class="line"><span class="number">8</span><span class="attr">a225cfa6dea:</span> <span class="string">Pushed</span></span><br><span class="line"><span class="number">428</span><span class="attr">c1ba11354:</span> <span class="string">Pushed</span></span><br><span class="line"><span class="attr">b097f5edab7b:</span> <span class="string">Pushed</span></span><br><span class="line"><span class="number">27712</span><span class="attr">caf4371:</span> <span class="string">Pushed</span></span><br><span class="line"><span class="number">8241</span><span class="attr">afc74c6f:</span> <span class="string">Pushed</span></span><br><span class="line"><span class="string">v1.0.1:</span> <span class="attr">digest:</span> <span class="attr">sha256:a20629f62d73cff93bf73b31958878a1d76c2dd42e36ebb2cb6d0ac294a46da7</span> <span class="attr">size:</span> <span class="number">2826</span></span><br></pre></td></tr></table></figure>
+<figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="/2019/01/07/docker-harbor/15468535525128.jpg" alt="" title="">
+                </div>
+                <div class="image-caption"></div>
+            </figure>
+<p>以上push成功；</p>
+<p>测试pull<br>那为了测试pull并且能成功运行，我这里通过kuernetes运行一个DaemonSet，镜像采用: <code>mynginx</code> ,并且设置镜像pull策略为<code>Always</code>, 然后创建一个服务在集群内部通过ClusterIP能够访问, yaml如下:</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">$</span> <span class="string">cat</span> <span class="string">&gt;&gt;</span> <span class="string">test.yaml</span> <span class="string">&lt;&lt;</span> <span class="string">EOF</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Service</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line"><span class="attr">  labels:</span></span><br><span class="line"><span class="attr">    app:</span> <span class="string">mynginx-service</span></span><br><span class="line"><span class="attr">  name:</span> <span class="string">mynginx-service</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line"><span class="attr">  ports:</span></span><br><span class="line"><span class="attr">  - name:</span> <span class="number">80</span><span class="bullet">-80</span></span><br><span class="line"><span class="attr">    port:</span> <span class="number">80</span></span><br><span class="line"><span class="attr">    protocol:</span> <span class="string">TCP</span></span><br><span class="line"><span class="attr">    targetPort:</span> <span class="number">80</span></span><br><span class="line"><span class="attr">  selector:</span></span><br><span class="line"><span class="attr">    run:</span> <span class="string">mynginx</span></span><br><span class="line"><span class="attr">  type:</span> <span class="string">ClusterIP</span></span><br><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">extensions/v1beta1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">DaemonSet</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line"><span class="attr">  labels:</span></span><br><span class="line"><span class="attr">    run:</span> <span class="string">mynginx</span></span><br><span class="line"><span class="attr">  name:</span> <span class="string">mynginx</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line"><span class="attr">  selector:</span></span><br><span class="line"><span class="attr">    matchLabels:</span></span><br><span class="line"><span class="attr">      run:</span> <span class="string">mynginx</span></span><br><span class="line"><span class="attr">  template:</span></span><br><span class="line"><span class="attr">    metadata:</span></span><br><span class="line"><span class="attr">      labels:</span></span><br><span class="line"><span class="attr">        run:</span> <span class="string">mynginx</span></span><br><span class="line"><span class="attr">    spec:</span></span><br><span class="line"><span class="attr">      containers:</span></span><br><span class="line"><span class="attr">      - image:</span> <span class="string">reg.for-k8s.com/myproject/mynginx:latest</span></span><br><span class="line"><span class="attr">        imagePullPolicy:</span> <span class="string">Always</span></span><br><span class="line"><span class="attr">        name:</span> <span class="string">mynginx</span></span><br><span class="line"><span class="string">EOF</span></span><br><span class="line"></span><br><span class="line"><span class="string">$</span>  <span class="string">kubectl</span> <span class="string">apply</span> <span class="bullet">-f</span> <span class="string">daemonset.yaml</span></span><br><span class="line"><span class="string">service/mynginx-service</span> <span class="string">created</span></span><br><span class="line"><span class="string">daemonset.extensions/mynginx</span> <span class="string">create</span></span><br></pre></td></tr></table></figure>
+<p>由于我刚才创建仓库的时候设置的仓库隐私性为私有的<br>需要docker login 登录成功之后，k8s kubectl create 就拉取不了镜像；<br>如果设置为公开，那么久不需要配置这一步骤。只需要docker login 登录成功之后，k8s kubectl create 就可以拉取镜像; 但是我不想让其为公开的；所以还需要配置如下步骤：</p>
+<p>配置一个私有仓库harbor的secret：</p>
+<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">kubectl create<span class="built_in"> secret </span>docker-registry registry-secret <span class="attribute">--namespace</span>=default \</span><br><span class="line"><span class="attribute">--docker-server</span>=https://reg.for-k8s.com <span class="attribute">--docker-username</span>=admin \</span><br><span class="line"><span class="attribute">--docker-password</span>=Harbor12345</span><br></pre></td></tr></table></figure>
+<p>部署时指定imagePullSecrets, 修改在上面的yaml中添加这个选项:</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">$</span> <span class="string">cat</span> <span class="string">&gt;&gt;</span> <span class="string">test.yaml</span> <span class="string">&lt;&lt;</span> <span class="string">EOF</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Service</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line"><span class="attr">  labels:</span></span><br><span class="line"><span class="attr">    app:</span> <span class="string">mynginx-service</span></span><br><span class="line"><span class="attr">  name:</span> <span class="string">mynginx-service</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line"><span class="attr">  ports:</span></span><br><span class="line"><span class="attr">  - name:</span> <span class="number">80</span><span class="bullet">-80</span></span><br><span class="line"><span class="attr">    port:</span> <span class="number">80</span></span><br><span class="line"><span class="attr">    protocol:</span> <span class="string">TCP</span></span><br><span class="line"><span class="attr">    targetPort:</span> <span class="number">80</span></span><br><span class="line"><span class="attr">  selector:</span></span><br><span class="line"><span class="attr">    run:</span> <span class="string">mynginx</span></span><br><span class="line"><span class="attr">  type:</span> <span class="string">ClusterIP</span></span><br><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">extensions/v1beta1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">DaemonSet</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line"><span class="attr">  labels:</span></span><br><span class="line"><span class="attr">    run:</span> <span class="string">mynginx</span></span><br><span class="line"><span class="attr">  name:</span> <span class="string">mynginx</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line"><span class="attr">  selector:</span></span><br><span class="line"><span class="attr">    matchLabels:</span></span><br><span class="line"><span class="attr">      run:</span> <span class="string">mynginx</span></span><br><span class="line"><span class="attr">  template:</span></span><br><span class="line"><span class="attr">    metadata:</span></span><br><span class="line"><span class="attr">      labels:</span></span><br><span class="line"><span class="attr">        run:</span> <span class="string">mynginx</span></span><br><span class="line"><span class="attr">    spec:</span></span><br><span class="line"><span class="attr">      containers:</span></span><br><span class="line"><span class="attr">      - image:</span> <span class="string">reg.for-k8s.com/myproject/mynginx:latest</span></span><br><span class="line"><span class="attr">        imagePullPolicy:</span> <span class="string">Always</span></span><br><span class="line"><span class="attr">        name:</span> <span class="string">mynginx</span></span><br><span class="line"><span class="attr">      imagePullSecrets:</span></span><br><span class="line"><span class="attr">        - name:</span> <span class="string">registry-secret</span></span><br><span class="line"><span class="string">EOF</span></span><br><span class="line"></span><br><span class="line"><span class="string">$</span>  <span class="string">kubectl</span> <span class="string">apply</span> <span class="bullet">-f</span> <span class="string">daemonset.yaml</span></span><br><span class="line"><span class="string">service/mynginx-service</span> <span class="string">created</span></span><br><span class="line"><span class="string">daemonset.extensions/mynginx</span> <span class="string">create</span></span><br></pre></td></tr></table></figure>
+<figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="/2019/01/07/docker-harbor/15468562743522.jpg" alt="" title="">
+                </div>
+                <div class="image-caption"></div>
+            </figure>
+
+        </div>
+
+        <blockquote class="post-copyright">
+    
+    <div class="content">
+        
+<span class="post-time">
+    最后更新时间：<time datetime="2022-06-07T06:55:07.839Z" itemprop="dateUpdated">2022-06-07 14:55:07</time>
+</span><br>
+
+
+        
+        该文链接：<a href="/2019/01/07/docker-harbor/" target="_blank" rel="external">https://blog.sctux.cc/2019/01/07/docker-harbor/</a>
+        
+    </div>
+    
+    <footer>
+        <a href="https://blog.sctux.cc">
+            <img src="/img/avatar.jpg" alt="maoqiu.guo">
+            maoqiu.guo
+        </a>
+    </footer>
+</blockquote>
+
+        
+<div class="page-reward">
+    <a id="rewardBtn" href="javascript:;" class="page-reward-btn waves-effect waves-circle waves-light">赏</a>
+</div>
+
+
+
+        <div class="post-footer">
+            
+	<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/docker-registry/">docker-registry</a></li></ul>
+
+
+            
+<div class="page-share-wrap">
+    
+
+<div class="page-share" id="pageShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://blog.sctux.cc/2019/01/07/docker-harbor/&title=《基于Harbor搭建企业级私有镜像仓库》 — 运维人&pic=https://blog.sctux.cc/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://blog.sctux.cc/2019/01/07/docker-harbor/&title=《基于Harbor搭建企业级私有镜像仓库》 — 运维人&source=😊" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.sctux.cc/2019/01/07/docker-harbor/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《基于Harbor搭建企业级私有镜像仓库》 — 运维人&url=https://blog.sctux.cc/2019/01/07/docker-harbor/&via=https://blog.sctux.cc" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=https://blog.sctux.cc/2019/01/07/docker-harbor/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+
+    <a href="javascript:;" id="shareFab" class="page-share-fab waves-effect waves-circle">
+        <i class="icon icon-share-alt icon-lg"></i>
+    </a>
+</div>
+
+
+
+        </div>
+    </div>
+
+    
+<nav class="post-nav flex-row flex-justify-between">
+  
+    <div class="waves-block waves-effect prev">
+      <a href="/2019/03/19/Flask结合APScheduler实现定时任务框架平台/" id="post-prev" class="post-nav-link">
+        <div class="tips"><i class="icon icon-angle-left icon-lg icon-pr"></i> Prev</div>
+        <h4 class="title">如何让添加定时作业任务变得更加优雅</h4>
+      </a>
+    </div>
+  
+
+  
+    <div class="waves-block waves-effect next">
+      <a href="/2019/01/07/road-to-cka/" id="post-next" class="post-nav-link">
+        <div class="tips">Next <i class="icon icon-angle-right icon-lg icon-pl"></i></div>
+        <h4 class="title">CKA(Certified Kubernetes Adminsitrator)认证获取历程</h4>
+      </a>
+    </div>
+  
+</nav>
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Valine Comments -->
+    <div class="comments vcomment" id="comments"></div>
+    <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+    <script src="//unpkg.com/valine@latest/dist/Valine.min.js"></script>
+    <!-- Valine Comments script -->
+    <script>
+        var GUEST_INFO = ['nick','mail','link'];
+        var guest_info = 'nick,mail,link'.split(',').filter(function(item){
+          return GUEST_INFO.indexOf(item) > -1
+        });
+        new Valine({
+            el: '#comments',
+            notify: 'true' == 'true',
+            verify: 'true' == 'true',
+            appId: "lHxnnDHJXDgMoFpCbdx8A4q7-gzGzoHsz",
+            appKey: "W8H2NuO8chyDlCEQzionLuuV",
+            avatar: "monsterid",
+            placeholder: "来都来了，说点啥子吧~🌹 (友情提醒，留下正确的邮箱地址可以第一时间获取评论反馈)",
+            guest_info: guest_info.length == 0 ? GUEST_INFO : guest_info,
+            pageSize: "10"
+        })
+    </script>
+    <!-- Valine Comments end -->
+
+
+
+
+
+
+
+</article>
+
+<div id="reward" class="page-modal reward-lay">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <h3 class="reward-title">
+        <i class="icon icon-quote-left"></i>
+        谢谢大爷~
+        <i class="icon icon-quote-right"></i>
+    </h3>
+    <div class="reward-content">
+        
+        <div class="reward-code">
+            <img id="rewardCode" src="/img/wechat.jpg" alt="打赏二维码">
+        </div>
+        
+        <label class="reward-toggle">
+            <input id="rewardToggle" type="checkbox" class="reward-toggle-check" data-wechat="/img/wechat.jpg" data-alipay="/img/alipay.jpg">
+            <div class="reward-toggle-ctrol">
+                <span class="reward-toggle-item wechat">微信</span>
+                <span class="reward-toggle-label"></span>
+                <span class="reward-toggle-item alipay">支付宝</span>
+            </div>
+        </label>
+        
+    </div>
+</div>
+
+
+
+</div>
+
+        <footer class="footer">
+    <div class="top">
+        
+
+        <p>
+            
+            <span>博客内容遵循 <a rel="license" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh">知识共享 署名 - 非商业性 - 相同方式共享 4.0 国际协议</a></span>
+        </p>
+    </div>
+    <div class="bottom">
+        <p><span>maoqiu.guo &copy; 2013 - 2024</span>
+            <span>
+                
+                <a href="http://www.miitbeian.gov.cn/" target="_blank">蜀ICP备007号-1</a><br>
+                
+                Power by <a href="http://hexo.io/" target="_blank">Hexo</a> Theme <a href="https://github.com/yscoder/hexo-theme-indigo" target="_blank">indigo</a>
+            </span>
+        </p>
+    </div>
+</footer>
+
+    </main>
+    <div class="mask" id="mask"></div>
+<a href="javascript:;" id="gotop" class="waves-effect waves-circle waves-light"><span class="icon icon-lg icon-chevron-up"></span></a>
+
+
+
+<div class="global-share" id="globalShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://blog.sctux.cc/2019/01/07/docker-harbor/&title=《基于Harbor搭建企业级私有镜像仓库》 — 运维人&pic=https://blog.sctux.cc/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://blog.sctux.cc/2019/01/07/docker-harbor/&title=《基于Harbor搭建企业级私有镜像仓库》 — 运维人&source=😊" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.sctux.cc/2019/01/07/docker-harbor/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《基于Harbor搭建企业级私有镜像仓库》 — 运维人&url=https://blog.sctux.cc/2019/01/07/docker-harbor/&via=https://blog.sctux.cc" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=https://blog.sctux.cc/2019/01/07/docker-harbor/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+<div class="page-modal wx-share" id="wxShare">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <img src="//api.qrserver.com/v1/create-qr-code/?data=https://blog.sctux.cc/2019/01/07/docker-harbor/" alt="微信分享二维码">
+</div>
+
+
+
+
+    <script src="//cdn.bootcss.com/node-waves/0.7.4/waves.min.js"></script>
+<script>
+var BLOG = { ROOT: '/', SHARE: true, REWARD: true };
+
+
+</script>
+
+<script src="/js/main.min.js?v=1.7.2"></script>
+
+
+<div class="search-panel" id="search-panel">
+    <ul class="search-result" id="search-result"></ul>
+</div>
+<template id="search-tpl">
+<li class="item">
+    <a href="{path}" class="waves-block waves-effect">
+        <div class="title ellipsis" title="{title}">{title}</div>
+        <div class="flex-row flex-middle">
+            <div class="tags ellipsis">
+                {tags}
+            </div>
+            <time class="flex-col time">{date}</time>
+        </div>
+    </a>
+</li>
+</template>
+
+<script src="/js/search.min.js?v=1.7.2" async></script>
+
+
+
+
+
+
+
+
+<script>
+(function() {
+    var OriginTitile = document.title, titleTime;
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            document.title = '老弟，哪儿去啦😊?！';
+            clearTimeout(titleTime);
+        } else {
+            document.title = '(つェ⊂)咦!老弟来啦!';
+            titleTime = setTimeout(function() {
+                document.title = OriginTitile;
+            },2000);
+        }
+    });
+})();
+</script>
+
+
+
+</body>
+</html>

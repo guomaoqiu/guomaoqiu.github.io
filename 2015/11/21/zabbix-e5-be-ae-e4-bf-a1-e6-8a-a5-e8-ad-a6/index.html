@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.8.0">
+<script>(function(i,s,o,g,r,a,m){i["DaoVoiceObject"]=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;a.charset="utf-8";m.parentNode.insertBefore(a,m)})(window,document,"script",('https:' == document.location.protocol ? 'https:' : 'http:') + "//widget.daovoice.io/widget/9f77122a.js","daovoice")
+
+
+daovoice('init', {
+  app_id: "9f77122a",
+  user_id: "NO_89757", // 必填: 该用户在您系统上的唯一ID
+  email: "daovoice@example.com", // 选填:  该用户在您系统上的主邮箱
+  name: "道客船长", // 选填: 用户名
+  signed_up: 1449821660 // 选填: 用户的注册时间，用Unix时间戳表示
+});
+daovoice('update');
+
+</script>
+    
+
+    
+
+    
+
+
+
+    <meta charset="utf-8">
+    
+    
+    
+    
+    <title>Zabbix微信报警 | 运维人 | Devops、Linux、Kubernetes、Docker、Flask、Python、Shell、SRE</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    
+    <meta name="theme-color" content="#3F51B5">
+    
+    
+    <meta name="keywords" content="">
+    <meta name="description" content="一、注册微信公众号首先申请微信公众平台https://mp.weixin.qq.com/一个人最多申请5个公众号，申请完之后就可以根据腾讯的提示使用微信公众号了，然后用你自己的微信扫描关注微信号。 [                                                                                             meitu_">
+<meta name="keywords" content="DevOps,Linux,Kubernetes,Flask,Python,Shell,SRE">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Zabbix微信报警">
+<meta property="og:url" content="https://blog.sctux.cc/2015/11/21/zabbix-e5-be-ae-e4-bf-a1-e6-8a-a5-e8-ad-a6/index.html">
+<meta property="og:site_name" content="运维人">
+<meta property="og:description" content="一、注册微信公众号首先申请微信公众平台https://mp.weixin.qq.com/一个人最多申请5个公众号，申请完之后就可以根据腾讯的提示使用微信公众号了，然后用你自己的微信扫描关注微信号。 [                                                                                             meitu_">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/11/meitu_2.jpg">
+<meta property="og:image" content="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/11/meitu_3.jpg">
+<meta property="og:image" content="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/11/meitu_8.jpg">
+<meta property="og:image" content="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/11/Screenshot-from-2015-11-30-164029.png">
+<meta property="og:updated_time" content="2022-06-07T06:55:08.099Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Zabbix微信报警">
+<meta name="twitter:description" content="一、注册微信公众号首先申请微信公众平台https://mp.weixin.qq.com/一个人最多申请5个公众号，申请完之后就可以根据腾讯的提示使用微信公众号了，然后用你自己的微信扫描关注微信号。 [                                                                                             meitu_">
+<meta name="twitter:image" content="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/11/meitu_2.jpg">
+    
+    <link rel="shortcut icon" href="/favicon.ico">
+    <link rel="stylesheet" href="/css/style.css?v=1.7.2">
+    <script>window.lazyScripts=[]</script>
+
+    <!-- custom head -->
+    
+
+</head>
+
+<body>
+    <div id="loading" class="active"></div>
+
+    <aside id="menu">
+  <div class="inner flex-row-vertical">
+    <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menu-off">
+        <i class="icon icon-lg icon-close"></i>
+    </a>
+    <div class="brand-wrap" style="background-image:url(/img/brand.jpg)">
+      <div class="brand">
+        <a href="/" class="avatar waves-effect waves-circle waves-light">
+          <img src="/img/avatar.jpg">
+        </a>
+        <hgroup class="introduce">
+          <h5 class="nickname">maoqiu.guo</h5>
+          <a href="mailto:guomaoqiu@gmail.com" title="guomaoqiu@gmail.com" class="mail">guomaoqiu@gmail.com</a>
+        </hgroup>
+      </div>
+    </div>
+    <div class="scroll-wrap flex-col">
+      <ul class="nav">
+        
+            <li class="waves-block waves-effect">
+              <a href="/">
+                <i class="icon icon-lg icon-home"></i>
+                主页
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/archives">
+                <i class="icon icon-lg icon-archives"></i>
+                归档
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/tags">
+                <i class="icon icon-lg icon-tags"></i>
+                标签
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/categories">
+                <i class="icon icon-lg icon-th-list"></i>
+                分类
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://github.com/guomaoqiu" target="_blank">
+                <i class="icon icon-lg icon-github"></i>
+                Github
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/works">
+                <i class="icon icon-lg icon-hand-peace-o"></i>
+                作品
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="http://demo.sctux.cc" target="_blank">
+                <i class="icon icon-lg icon-link"></i>
+                DevOpsPlatform
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="http://resume.sctux.cc/" target="_blank">
+                <i class="icon icon-lg icon-heart"></i>
+                我的简历
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/about">
+                <i class="icon icon-lg icon-user"></i>
+                关于我
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://blog.sctux.cc/Skilltree.jpg" target="_blank">
+                <i class="icon icon-lg icon-tree"></i>
+                我的技能树
+              </a>
+            </li>
+        
+      </ul>
+    </div>
+  </div>
+</aside>
+
+    <main id="main">
+        <header class="top-header" id="header">
+    <div class="flex-row">
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light on" id="menu-toggle">
+          <i class="icon icon-lg icon-navicon"></i>
+        </a>
+        <div class="flex-col header-title ellipsis">Zabbix微信报警</div>
+        
+        <div class="search-wrap" id="search-wrap">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="back">
+                <i class="icon icon-lg icon-chevron-left"></i>
+            </a>
+            <input type="text" id="key" class="search-input" autocomplete="off" placeholder="输入感兴趣的关键字">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="search">
+                <i class="icon icon-lg icon-search"></i>
+            </a>
+        </div>
+        
+        
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menuShare">
+            <i class="icon icon-lg icon-share-alt"></i>
+        </a>
+        
+    </div>
+</header>
+<header class="content-header post-header">
+
+    <div class="container fade-scale">
+        <h1 class="title">Zabbix微信报警</h1>
+        <h5 class="subtitle">
+            
+                <time datetime="2015-11-21T07:25:35.000Z" itemprop="datePublished" class="page-time">
+  2015-11-21
+</time>
+
+
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/Monitor/">Monitor</a><ul class="article-category-list-child"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/Monitor/自动化运维/">自动化运维</a></li></ul></li></ul>
+
+            
+        </h5>
+    </div>
+
+    
+
+
+</header>
+
+
+<div class="container body-wrap">
+    
+    <aside class="post-widget">
+        <nav class="post-toc-wrap post-toc-shrink" id="post-toc">
+            <h4>TOC</h4>
+            <ol class="post-toc"><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#一、注册微信公众号"><span class="post-toc-number">1.</span> <span class="post-toc-text">一、注册微信公众号</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#二、下载并配置微信公众平台私有接口"><span class="post-toc-number">2.</span> <span class="post-toc-text">二、下载并配置微信公众平台私有接口</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#三、配置zabbix"><span class="post-toc-number">3.</span> <span class="post-toc-text">三、配置zabbix</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#四、测试"><span class="post-toc-number">4.</span> <span class="post-toc-text">四、测试</span></a></li></ol>
+        </nav>
+    </aside>
+
+
+<article id="post-zabbix-e5-be-ae-e4-bf-a1-e6-8a-a5-e8-ad-a6" class="post-article article-type-post fade" itemprop="blogPost">
+
+    <div class="post-card">
+        <h1 class="post-card-title">Zabbix微信报警</h1>
+        <div class="post-meta">
+            <time class="post-time" title="2015-11-21 15:25:35" datetime="2015-11-21T07:25:35.000Z" itemprop="datePublished">2015-11-21</time>
+
+            
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/Monitor/">Monitor</a><ul class="article-category-list-child"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/Monitor/自动化运维/">自动化运维</a></li></ul></li></ul>
+
+
+
+            
+
+        </div>
+        <div class="post-content" id="post-content" itemprop="postContent">
+            <h2 id="一、注册微信公众号"><a href="#一、注册微信公众号" class="headerlink" title="一、注册微信公众号"></a>一、注册微信公众号</h2><p>首先申请微信公众平台<a href="https://mp.weixin.qq.com/" target="_blank" rel="noopener">https://mp.weixin.qq.com/</a>一个人最多申请5个公众号，申请完之后就可以根据腾讯的提示使用微信公众号了，然后用你自己的微信扫描关注微信号。 [<figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/11/meitu_2.jpg" alt="meitu_1](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/11/meitu_1.jpg)](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/11/meitu_1.jpg) 通过扫描过后就可以看到已经有一个用户关注啦；于是我们这里需要查看用户的ID 点击 “用户管理”，然后点击一下用户的头像，这时候我们可以在浏览器的地址栏就可以看到一个这个，其中红色部分就是用户的微信ID啦，先记下这个ID https://mp.weixin.qq.com/cgi-bin/singlesendpage?t=message/send&action=index&tofakeid=250995555&token=94167798&lang=zh_CN ![meitu_2" title="">
+                </div>
+                <div class="image-caption">meitu_1](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/11/meitu_1.jpg)](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/11/meitu_1.jpg) 通过扫描过后就可以看到已经有一个用户关注啦；于是我们这里需要查看用户的ID 点击 “用户管理”，然后点击一下用户的头像，这时候我们可以在浏览器的地址栏就可以看到一个这个，其中红色部分就是用户的微信ID啦，先记下这个ID https://mp.weixin.qq.com/cgi-bin/singlesendpage?t=message/send&action=index&tofakeid=250995555&token=94167798&lang=zh_CN ![meitu_2</div>
+            </figure>  </p>
+<h2 id="二、下载并配置微信公众平台私有接口"><a href="#二、下载并配置微信公众平台私有接口" class="headerlink" title="二、下载并配置微信公众平台私有接口"></a>二、下载并配置微信公众平台私有接口</h2><p>1.获取代码</p>
+<p>git clone <a href="https://github.com/lealife/WeiXin-Private-API" target="_blank" rel="noopener">https://github.com/lealife/WeiXin-Private-API</a></p>
+<p>2.修改zabbix配置文件</p>
+<p>[root@Control-machine ~]# cp -r WeiXin-Private-API /usr/lib/zabbix/alertscripts/<br>[root@Control-machine ~]# cd /usr/lib/zabbix/alertscripts/<br>[root@Control-machine alertscripts]# chown zabbix:zabbix WeiXin-Private-API<br>[root@Control-machine alertscripts]# </p>
+<p>#修改test.php文件<br>[root@Control-machine alertscripts]# vim WeiXin-Private-API/test.php<br>&lt;?php<br>require “config.php”;<br>require “include/WeiXin.php”;<br>$weiXin = new WeiXin($G_CONFIG[‘weiXin’]);<br>$testFakeId = “$argv[1]“;<br>$msg=”$argv[3]“;<br>    print_r($weiXin-&gt;send($testFakeId, “$msg”));</p>
+<p>3.修改config.php文件</p>
+<p>[root@Control-machine alertscripts]# vim WeiXin-Private-API/config.php<br>&lt;?php<br>// 全局配置<br>$G_ROOT = dirname(__FILE__);<br>$G_CONFIG[“weiXin”] = array(<br>        ‘account’ =&gt; ‘你的微信公众登录号码’,<br>        ‘password’ =&gt; ‘你的微信公众登录密码’,<br>        ‘cookiePath’ =&gt; $G_ROOT. ‘/cache/cookie’, // cookie缓存文件路径<br>        ‘webTokenPath’ =&gt; $G_ROOT. ‘/cache/webToken’, // webToken缓存文件路径<br>);</p>
+<p>4.修改test.php文件</p>
+<p>[root@Control-machine alertscripts]# vim WeiXin-Private-API/test.php<br>&lt;?php<br>require “config.php”;<br>require “include/WeiXin.php”;<br>$weiXin = new WeiXin($G_CONFIG[‘weiXin’]);<br>$testFakeId = “$argv[1]“;<br>$msg=”$argv[3]“;<br>    print_r($weiXin-&gt;send($testFakeId, “$msg”));</p>
+<p>注意这里$msg=”$argv[3]“表示zabbix传入的第三个参数，因为在zabbix报警时会传入三个参数： 一是微信好友ID，二是报警信息的主题，三是报警信息的具体内容，这里跳过了报警信息主题，直接发送报警信息内容 5.创建微信报警脚本</p>
+<p>[root@Control-machine alertscripts]# vim weixin<br>/usr/bin/php /usr/lib/zabbix/alertscripts/WeiXin-Private-API/test.php “$1” “$2” “$3”<br>[root@Control-machine alertscripts]# chown zabbix:zabbix weixin<br>[root@Control-machine alertscripts]# chmod +x weixin </p>
+<p>6.测试报警</p>
+<p>[root@Control-machine alertscripts]# /usr/bin/php /usr/lib/zabbix/alertscripts/WeiXin-Private-API/test.php 250995555 “” “Test”<br>PHP Notice:  Undefined index: HTTP_USER_AGENT in /usr/lib/zabbix/alertscripts/WeiXin-Private-API/include/LeaWeiXinClient.php on line 33<br>PHP Notice:  curl_setopt(): CURLOPT_SSL_VERIFYHOST no longer accepts the value 1, value 2 will be used instead in /usr/lib/zabbix/alertscripts/WeiXin-Private-API/include/LeaWeiXinClient.php on line 32<br>PHP Notice:  Undefined index: HTTP_USER_AGENT in /usr/lib/zabbix/alertscripts/WeiXin-Private-API/include/LeaWeiXinClient.php on line 33<br>stdClass Object<br>(<br>    [base_resp] =&gt; stdClass Object<br>        (<br>            [ret] =&gt; 0<br>            [err_msg] =&gt; ok  #说明已经发送出去啦<br>        )</p>
+<p>)<br>[root@Control-machine alertscripts]# </p>
+<p>#以上PHP的提示信息可以忽略</p>
+<p>查看结果 <figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/11/meitu_3.jpg" alt="meitu_3" title="">
+                </div>
+                <div class="image-caption">meitu_3</div>
+            </figure></p>
+<h2 id="三、配置zabbix"><a href="#三、配置zabbix" class="headerlink" title="三、配置zabbix"></a>三、配置zabbix</h2><p>1.添加报警媒介 [<figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/11/meitu_8.jpg" alt="meitu_4](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/11/meitu_4.jpg)](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/11/meitu_4.jpg) 2.添加用户报警媒介，这里使用的是administrator [![meitu_5](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/11/meitu_5.jpg)](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/11/meitu_5.jpg) 3.添加报警动作 [![meitu_6](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/11/meitu_6.jpg)](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/11/meitu_6.jpg) 信息如下 [![meitu_8](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/11/meitu_8.jpg)" title="">
+                </div>
+                <div class="image-caption">meitu_4](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/11/meitu_4.jpg)](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/11/meitu_4.jpg) 2.添加用户报警媒介，这里使用的是administrator [![meitu_5](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/11/meitu_5.jpg)](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/11/meitu_5.jpg) 3.添加报警动作 [![meitu_6](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/11/meitu_6.jpg)](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/11/meitu_6.jpg) 信息如下 [![meitu_8](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/11/meitu_8.jpg)</div>
+            </figure> 修改操作条件，保持默认的也可以； 保存设置</p>
+<h2 id="四、测试"><a href="#四、测试" class="headerlink" title="四、测试"></a>四、测试</h2><p>我这里将监控mysql主从的脚本手动改一下，让其zabbix检测到并报警 手机微信查看报警信息 [<figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/11/Screenshot-from-2015-11-30-164029.png" alt="meitu_7](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/11/meitu_7.jpg)](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/11/meitu_7.jpg) 但是需要注意的是，如果公众号向我的微信发送消息超过48个小时我没有回复，那么公众号将不会主动发送消息。然后我们在微信，也就是说，我们在收到报警通知后在48个小时之内可以简单的回复一个字符，或者一段话即可 [![Screenshot from 2015-11-30 16:40:29](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/11/Screenshot-from-2015-11-30-164029.png)" title="">
+                </div>
+                <div class="image-caption">meitu_7](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/11/meitu_7.jpg)](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/11/meitu_7.jpg) 但是需要注意的是，如果公众号向我的微信发送消息超过48个小时我没有回复，那么公众号将不会主动发送消息。然后我们在微信，也就是说，我们在收到报警通知后在48个小时之内可以简单的回复一个字符，或者一段话即可 [![Screenshot from 2015-11-30 16:40:29](https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/11/Screenshot-from-2015-11-30-164029.png)</div>
+            </figure> 参考文章链接： <a href="http://blog.chinaunix.net/uid-30236771-id-5037842.html" target="_blank" rel="noopener">http://blog.chinaunix.net/uid-30236771-id-5037842.html</a></p>
+
+        </div>
+
+        <blockquote class="post-copyright">
+    
+    <div class="content">
+        
+<span class="post-time">
+    最后更新时间：<time datetime="2022-06-07T06:55:08.099Z" itemprop="dateUpdated">2022-06-07 14:55:08</time>
+</span><br>
+
+
+        
+        该文链接：<a href="/2015/11/21/zabbix-e5-be-ae-e4-bf-a1-e6-8a-a5-e8-ad-a6/" target="_blank" rel="external">https://blog.sctux.cc/2015/11/21/zabbix-e5-be-ae-e4-bf-a1-e6-8a-a5-e8-ad-a6/</a>
+        
+    </div>
+    
+    <footer>
+        <a href="https://blog.sctux.cc">
+            <img src="/img/avatar.jpg" alt="maoqiu.guo">
+            maoqiu.guo
+        </a>
+    </footer>
+</blockquote>
+
+        
+<div class="page-reward">
+    <a id="rewardBtn" href="javascript:;" class="page-reward-btn waves-effect waves-circle waves-light">赏</a>
+</div>
+
+
+
+        <div class="post-footer">
+            
+
+            
+<div class="page-share-wrap">
+    
+
+<div class="page-share" id="pageShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://blog.sctux.cc/2015/11/21/zabbix-e5-be-ae-e4-bf-a1-e6-8a-a5-e8-ad-a6/&title=《Zabbix微信报警》 — 运维人&pic=https://blog.sctux.cc/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://blog.sctux.cc/2015/11/21/zabbix-e5-be-ae-e4-bf-a1-e6-8a-a5-e8-ad-a6/&title=《Zabbix微信报警》 — 运维人&source=😊" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.sctux.cc/2015/11/21/zabbix-e5-be-ae-e4-bf-a1-e6-8a-a5-e8-ad-a6/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《Zabbix微信报警》 — 运维人&url=https://blog.sctux.cc/2015/11/21/zabbix-e5-be-ae-e4-bf-a1-e6-8a-a5-e8-ad-a6/&via=https://blog.sctux.cc" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=https://blog.sctux.cc/2015/11/21/zabbix-e5-be-ae-e4-bf-a1-e6-8a-a5-e8-ad-a6/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+
+    <a href="javascript:;" id="shareFab" class="page-share-fab waves-effect waves-circle">
+        <i class="icon icon-share-alt icon-lg"></i>
+    </a>
+</div>
+
+
+
+        </div>
+    </div>
+
+    
+<nav class="post-nav flex-row flex-justify-between">
+  
+    <div class="waves-block waves-effect prev">
+      <a href="/2016/01/07/e6-88-91-e7-9a-8451cto-e5-8d-9a-e5-ae-a2-e6-96-87-e7-ab-a0-e9-93-be-e6-8e-a5-e6-b1-87-e6-80-bb/" id="post-prev" class="post-nav-link">
+        <div class="tips"><i class="icon icon-angle-left icon-lg icon-pr"></i> Prev</div>
+        <h4 class="title">我的51CTO博客文章链接汇总</h4>
+      </a>
+    </div>
+  
+
+  
+    <div class="waves-block waves-effect next">
+      <a href="/2015/11/19/saltstack-e5-88-a9-e7-94-a8returners-e7-a8-8b-e5-ba-8f-e4-bf-9d-e5-ad-98-e6-89-a7-e8-a1-8c-e7-bb-93-e6-9e-9c-e5-88-b0mysql/" id="post-next" class="post-nav-link">
+        <div class="tips">Next <i class="icon icon-angle-right icon-lg icon-pl"></i></div>
+        <h4 class="title">Saltstack利用Returners程序保存执行结果到mysql</h4>
+      </a>
+    </div>
+  
+</nav>
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Valine Comments -->
+    <div class="comments vcomment" id="comments"></div>
+    <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+    <script src="//unpkg.com/valine@latest/dist/Valine.min.js"></script>
+    <!-- Valine Comments script -->
+    <script>
+        var GUEST_INFO = ['nick','mail','link'];
+        var guest_info = 'nick,mail,link'.split(',').filter(function(item){
+          return GUEST_INFO.indexOf(item) > -1
+        });
+        new Valine({
+            el: '#comments',
+            notify: 'true' == 'true',
+            verify: 'true' == 'true',
+            appId: "lHxnnDHJXDgMoFpCbdx8A4q7-gzGzoHsz",
+            appKey: "W8H2NuO8chyDlCEQzionLuuV",
+            avatar: "monsterid",
+            placeholder: "来都来了，说点啥子吧~🌹 (友情提醒，留下正确的邮箱地址可以第一时间获取评论反馈)",
+            guest_info: guest_info.length == 0 ? GUEST_INFO : guest_info,
+            pageSize: "10"
+        })
+    </script>
+    <!-- Valine Comments end -->
+
+
+
+
+
+
+
+</article>
+
+<div id="reward" class="page-modal reward-lay">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <h3 class="reward-title">
+        <i class="icon icon-quote-left"></i>
+        谢谢大爷~
+        <i class="icon icon-quote-right"></i>
+    </h3>
+    <div class="reward-content">
+        
+        <div class="reward-code">
+            <img id="rewardCode" src="/img/wechat.jpg" alt="打赏二维码">
+        </div>
+        
+        <label class="reward-toggle">
+            <input id="rewardToggle" type="checkbox" class="reward-toggle-check" data-wechat="/img/wechat.jpg" data-alipay="/img/alipay.jpg">
+            <div class="reward-toggle-ctrol">
+                <span class="reward-toggle-item wechat">微信</span>
+                <span class="reward-toggle-label"></span>
+                <span class="reward-toggle-item alipay">支付宝</span>
+            </div>
+        </label>
+        
+    </div>
+</div>
+
+
+
+</div>
+
+        <footer class="footer">
+    <div class="top">
+        
+
+        <p>
+            
+            <span>博客内容遵循 <a rel="license" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh">知识共享 署名 - 非商业性 - 相同方式共享 4.0 国际协议</a></span>
+        </p>
+    </div>
+    <div class="bottom">
+        <p><span>maoqiu.guo &copy; 2013 - 2024</span>
+            <span>
+                
+                <a href="http://www.miitbeian.gov.cn/" target="_blank">蜀ICP备007号-1</a><br>
+                
+                Power by <a href="http://hexo.io/" target="_blank">Hexo</a> Theme <a href="https://github.com/yscoder/hexo-theme-indigo" target="_blank">indigo</a>
+            </span>
+        </p>
+    </div>
+</footer>
+
+    </main>
+    <div class="mask" id="mask"></div>
+<a href="javascript:;" id="gotop" class="waves-effect waves-circle waves-light"><span class="icon icon-lg icon-chevron-up"></span></a>
+
+
+
+<div class="global-share" id="globalShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://blog.sctux.cc/2015/11/21/zabbix-e5-be-ae-e4-bf-a1-e6-8a-a5-e8-ad-a6/&title=《Zabbix微信报警》 — 运维人&pic=https://blog.sctux.cc/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://blog.sctux.cc/2015/11/21/zabbix-e5-be-ae-e4-bf-a1-e6-8a-a5-e8-ad-a6/&title=《Zabbix微信报警》 — 运维人&source=😊" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.sctux.cc/2015/11/21/zabbix-e5-be-ae-e4-bf-a1-e6-8a-a5-e8-ad-a6/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《Zabbix微信报警》 — 运维人&url=https://blog.sctux.cc/2015/11/21/zabbix-e5-be-ae-e4-bf-a1-e6-8a-a5-e8-ad-a6/&via=https://blog.sctux.cc" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=https://blog.sctux.cc/2015/11/21/zabbix-e5-be-ae-e4-bf-a1-e6-8a-a5-e8-ad-a6/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+<div class="page-modal wx-share" id="wxShare">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <img src="//api.qrserver.com/v1/create-qr-code/?data=https://blog.sctux.cc/2015/11/21/zabbix-e5-be-ae-e4-bf-a1-e6-8a-a5-e8-ad-a6/" alt="微信分享二维码">
+</div>
+
+
+
+
+    <script src="//cdn.bootcss.com/node-waves/0.7.4/waves.min.js"></script>
+<script>
+var BLOG = { ROOT: '/', SHARE: true, REWARD: true };
+
+
+</script>
+
+<script src="/js/main.min.js?v=1.7.2"></script>
+
+
+<div class="search-panel" id="search-panel">
+    <ul class="search-result" id="search-result"></ul>
+</div>
+<template id="search-tpl">
+<li class="item">
+    <a href="{path}" class="waves-block waves-effect">
+        <div class="title ellipsis" title="{title}">{title}</div>
+        <div class="flex-row flex-middle">
+            <div class="tags ellipsis">
+                {tags}
+            </div>
+            <time class="flex-col time">{date}</time>
+        </div>
+    </a>
+</li>
+</template>
+
+<script src="/js/search.min.js?v=1.7.2" async></script>
+
+
+
+
+
+
+
+
+<script>
+(function() {
+    var OriginTitile = document.title, titleTime;
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            document.title = '老弟，哪儿去啦😊?！';
+            clearTimeout(titleTime);
+        } else {
+            document.title = '(つェ⊂)咦!老弟来啦!';
+            titleTime = setTimeout(function() {
+                document.title = OriginTitile;
+            },2000);
+        }
+    });
+})();
+</script>
+
+
+
+</body>
+</html>

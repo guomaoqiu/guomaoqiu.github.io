@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.8.0">
+<script>(function(i,s,o,g,r,a,m){i["DaoVoiceObject"]=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;a.charset="utf-8";m.parentNode.insertBefore(a,m)})(window,document,"script",('https:' == document.location.protocol ? 'https:' : 'http:') + "//widget.daovoice.io/widget/9f77122a.js","daovoice")
+
+
+daovoice('init', {
+  app_id: "9f77122a",
+  user_id: "NO_89757", // 必填: 该用户在您系统上的唯一ID
+  email: "daovoice@example.com", // 选填:  该用户在您系统上的主邮箱
+  name: "道客船长", // 选填: 用户名
+  signed_up: 1449821660 // 选填: 用户的注册时间，用Unix时间戳表示
+});
+daovoice('update');
+
+</script>
+    
+
+    
+
+    
+
+
+
+    <meta charset="utf-8">
+    
+    
+    
+    
+    <title>理解kubernetes中Pod访问方式 | 运维人 | Devops、Linux、Kubernetes、Docker、Flask、Python、Shell、SRE</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    
+    <meta name="theme-color" content="#3F51B5">
+    
+    
+    <meta name="keywords" content="kubernetes,ClusterIP,NodePort,TargetPort,Port">
+    <meta name="description" content="概述Pod的IP是在docker0网段动态分配的，当发生重启，扩容等操作时，IP地址会随之变化。当某个Pod(frontend)需要去访问其依赖的另外一组Pod(backend)时，如果backend的IP发生变化时，如何保证fronted到backend的正常通信变的非常重要。由此，引出了Service的概念。这里docker0是一个网桥，docker daemon启动container时会根据">
+<meta name="keywords" content="kubernetes,ClusterIP,NodePort,TargetPort,Port">
+<meta property="og:type" content="article">
+<meta property="og:title" content="理解kubernetes中Pod访问方式">
+<meta property="og:url" content="https://blog.sctux.cc/2018/12/12/kubernetes_pod_access/index.html">
+<meta property="og:site_name" content="运维人">
+<meta property="og:description" content="概述Pod的IP是在docker0网段动态分配的，当发生重启，扩容等操作时，IP地址会随之变化。当某个Pod(frontend)需要去访问其依赖的另外一组Pod(backend)时，如果backend的IP发生变化时，如何保证fronted到backend的正常通信变的非常重要。由此，引出了Service的概念。这里docker0是一个网桥，docker daemon启动container时会根据">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2022-06-07T06:55:07.996Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="理解kubernetes中Pod访问方式">
+<meta name="twitter:description" content="概述Pod的IP是在docker0网段动态分配的，当发生重启，扩容等操作时，IP地址会随之变化。当某个Pod(frontend)需要去访问其依赖的另外一组Pod(backend)时，如果backend的IP发生变化时，如何保证fronted到backend的正常通信变的非常重要。由此，引出了Service的概念。这里docker0是一个网桥，docker daemon启动container时会根据">
+    
+    <link rel="shortcut icon" href="/favicon.ico">
+    <link rel="stylesheet" href="/css/style.css?v=1.7.2">
+    <script>window.lazyScripts=[]</script>
+
+    <!-- custom head -->
+    
+
+</head>
+
+<body>
+    <div id="loading" class="active"></div>
+
+    <aside id="menu">
+  <div class="inner flex-row-vertical">
+    <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menu-off">
+        <i class="icon icon-lg icon-close"></i>
+    </a>
+    <div class="brand-wrap" style="background-image:url(/img/brand.jpg)">
+      <div class="brand">
+        <a href="/" class="avatar waves-effect waves-circle waves-light">
+          <img src="/img/avatar.jpg">
+        </a>
+        <hgroup class="introduce">
+          <h5 class="nickname">maoqiu.guo</h5>
+          <a href="mailto:guomaoqiu@gmail.com" title="guomaoqiu@gmail.com" class="mail">guomaoqiu@gmail.com</a>
+        </hgroup>
+      </div>
+    </div>
+    <div class="scroll-wrap flex-col">
+      <ul class="nav">
+        
+            <li class="waves-block waves-effect">
+              <a href="/">
+                <i class="icon icon-lg icon-home"></i>
+                主页
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/archives">
+                <i class="icon icon-lg icon-archives"></i>
+                归档
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/tags">
+                <i class="icon icon-lg icon-tags"></i>
+                标签
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/categories">
+                <i class="icon icon-lg icon-th-list"></i>
+                分类
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://github.com/guomaoqiu" target="_blank">
+                <i class="icon icon-lg icon-github"></i>
+                Github
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/works">
+                <i class="icon icon-lg icon-hand-peace-o"></i>
+                作品
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="http://demo.sctux.cc" target="_blank">
+                <i class="icon icon-lg icon-link"></i>
+                DevOpsPlatform
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="http://resume.sctux.cc/" target="_blank">
+                <i class="icon icon-lg icon-heart"></i>
+                我的简历
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/about">
+                <i class="icon icon-lg icon-user"></i>
+                关于我
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://blog.sctux.cc/Skilltree.jpg" target="_blank">
+                <i class="icon icon-lg icon-tree"></i>
+                我的技能树
+              </a>
+            </li>
+        
+      </ul>
+    </div>
+  </div>
+</aside>
+
+    <main id="main">
+        <header class="top-header" id="header">
+    <div class="flex-row">
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light on" id="menu-toggle">
+          <i class="icon icon-lg icon-navicon"></i>
+        </a>
+        <div class="flex-col header-title ellipsis">理解kubernetes中Pod访问方式</div>
+        
+        <div class="search-wrap" id="search-wrap">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="back">
+                <i class="icon icon-lg icon-chevron-left"></i>
+            </a>
+            <input type="text" id="key" class="search-input" autocomplete="off" placeholder="输入感兴趣的关键字">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="search">
+                <i class="icon icon-lg icon-search"></i>
+            </a>
+        </div>
+        
+        
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menuShare">
+            <i class="icon icon-lg icon-share-alt"></i>
+        </a>
+        
+    </div>
+</header>
+<header class="content-header post-header">
+
+    <div class="container fade-scale">
+        <h1 class="title">理解kubernetes中Pod访问方式</h1>
+        <h5 class="subtitle">
+            
+                <time datetime="2018-12-12T10:39:11.000Z" itemprop="datePublished" class="page-time">
+  2018-12-12
+</time>
+
+
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/kubernetes/">kubernetes</a></li></ul>
+
+            
+        </h5>
+    </div>
+
+    
+
+
+</header>
+
+
+<div class="container body-wrap">
+    
+    <aside class="post-widget">
+        <nav class="post-toc-wrap post-toc-shrink" id="post-toc">
+            <h4>TOC</h4>
+            <ol class="post-toc"><li class="post-toc-item post-toc-level-1"><a class="post-toc-link" href="#概述"><span class="post-toc-number">1.</span> <span class="post-toc-text">概述</span></a></li><li class="post-toc-item post-toc-level-1"><a class="post-toc-link" href="#一、Create-service-type-ClusterIP"><span class="post-toc-number">2.</span> <span class="post-toc-text">一、Create service (type: ClusterIP)</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#1-通过命令行方式创建service-类型为clusterip"><span class="post-toc-number">2.0.1.</span> <span class="post-toc-text">1. 通过命令行方式创建service,类型为clusterip</span></a></li></ol></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#2-创建pod"><span class="post-toc-number">2.1.</span> <span class="post-toc-text">2.创建pod</span></a></li></ol><li class="post-toc-item post-toc-level-1"><a class="post-toc-link" href="#二、Create-service-type-NodePort"><span class="post-toc-number">3.</span> <span class="post-toc-text">二、Create service (type: NodePort)</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#1-通过命令行方式创建service-类型为nodeport"><span class="post-toc-number">3.1.</span> <span class="post-toc-text">1.通过命令行方式创建service,类型为nodeport</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#2-创建pod与之建立关系"><span class="post-toc-number">3.2.</span> <span class="post-toc-text">2.创建pod与之建立关系</span></a></li></ol></li><li class="post-toc-item post-toc-level-1"><a class="post-toc-link" href="#三、Create-service-type-HeadlessClusterIP"><span class="post-toc-number">4.</span> <span class="post-toc-text">三、Create service (type: HeadlessClusterIP)</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#1-通过命令行方式创建svc-类型为headlessCluserIP"><span class="post-toc-number">4.1.</span> <span class="post-toc-text">1.通过命令行方式创建svc,类型为headlessCluserIP</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#2-创建pod与之关联："><span class="post-toc-number">4.2.</span> <span class="post-toc-text">2. 创建pod与之关联：</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-5"><a class="post-toc-link" href="#由上可见-dns服务为service和pod生成不同格式的DNS记录"><span class="post-toc-number">4.2.0.0.1.</span> <span class="post-toc-text">由上可见 dns服务为service和pod生成不同格式的DNS记录</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-6"><a class="post-toc-link" href="#Service"><span class="post-toc-number">4.2.0.0.1.1.</span> <span class="post-toc-text">Service</span></a></li><li class="post-toc-item post-toc-level-6"><a class="post-toc-link" href="#Pod"><span class="post-toc-number">4.2.0.0.1.2.</span> <span class="post-toc-text">Pod</span></a></li></ol></li></ol></li></ol></li>
+        </nav>
+    </aside>
+
+
+<article id="post-kubernetes_pod_access" class="post-article article-type-post fade" itemprop="blogPost">
+
+    <div class="post-card">
+        <h1 class="post-card-title">理解kubernetes中Pod访问方式</h1>
+        <div class="post-meta">
+            <time class="post-time" title="2018-12-12 18:39:11" datetime="2018-12-12T10:39:11.000Z" itemprop="datePublished">2018-12-12</time>
+
+            
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/kubernetes/">kubernetes</a></li></ul>
+
+
+
+            
+
+        </div>
+        <div class="post-content" id="post-content" itemprop="postContent">
+            <h1 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h1><p>Pod的IP是在docker0网段动态分配的，当发生重启，扩容等操作时，IP地址会随之变化。当某个Pod(frontend)需要去访问其依赖的另外一组Pod(backend)时，如果backend的IP发生变化时，如何保证fronted到backend的正常通信变的非常重要。由此，引出了Service的概念。<br>这里docker0是一个网桥，docker daemon启动container时会根据docker0的网段来划粉container的IP地址Docker网络<br>在实际生产环境中，对Service的访问可能会有两种来源：Kubernetes集群内部的程序（Pod）和Kubernetes集群外部，为了满足上述的场景，Kubernetes service有以下三种类型：</p>
+<ul>
+<li>ClusterIP:提供一个集群内部的虚拟IP以供Pod访问。</li>
+<li>NodePort:在每个Node上打开一个端口以供外部访问。</li>
+<li>LoadBalancer:通过外部的负载均衡器来访问。</li>
+</ul>
+<p>那么它是怎么实现的，通过下面的示例来理解。(创建方式可以是通过yaml文件或者是命令行方式，这里为了理解我先用命令行方式创建，如果不合适的地方我们通过<code>kubectl edit (RESOURCE/NAME | -f FILENAME) [options]</code>这种方式先修改)</p>
+<p>其次，还需要理解<code>NodePort</code>,<code>TargetPort</code>以及<code>port</code>他们的区别:<br><strong>NodePort</strong><br>外部机器可访问的端口。<br>比如一个Web应用需要被其他用户访问，那么需要配置type=NodePort，而且配置nodePort=30001，那么其他机器就可以通过浏览器访问scheme://node:30001访问到该服务，例如<a href="http://node:30001。" target="_blank" rel="noopener">http://node:30001。</a><br>例如MySQL数据库可能不需要被外界访问，只需被内部服务访问，那么不必设置NodePort</p>
+<p><strong>TargetPort</strong><br>容器的端口（最根本的端口入口），与制作容器时暴露的端口一致（DockerFile中EXPOSE），例如docker.io官方的nginx暴露的是80端口。<br>docker.io官方的nginx容器的DockerFile参考<a href="https://github.com/nginxinc/docker-nginx" target="_blank" rel="noopener">https://github.com/nginxinc/docker-nginx</a></p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Service</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line"><span class="attr"> name:</span> <span class="string">nginx-service</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line"><span class="attr"> type:</span> <span class="string">NodePort</span>         <span class="comment"># 有配置NodePort，外部流量可访问k8s中的服务</span></span><br><span class="line"><span class="attr"> ports:</span></span><br><span class="line"><span class="attr"> - port:</span> <span class="number">30080</span>          <span class="comment"># 服务访问端口</span></span><br><span class="line"><span class="attr">   targetPort:</span> <span class="number">80</span>       <span class="comment"># 容器端口</span></span><br><span class="line"><span class="attr">   nodePort:</span> <span class="number">30001</span>      <span class="comment"># NodePort</span></span><br><span class="line"><span class="attr"> selector:</span></span><br><span class="line"><span class="attr">  name:</span> <span class="string">nginx-pod</span></span><br></pre></td></tr></table></figure>
+<p>　</p>
+<p><strong>port</strong><br>　kubernetes中的服务之间访问的端口，尽管mysql容器暴露了3306端口（参考<a href="">https://github.com/docker-library/mysql/</a>的DockerFile），但是集群内其他容器需要通过33306端口访问该服务，外部机器不能访问mysql服务，因为他没有配置NodePort类型</p>
+<figure class="highlight less"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">apiVersion</span>: v1</span><br><span class="line"><span class="attribute">kind</span>: Service</span><br><span class="line"><span class="attribute">metadata</span>:</span><br><span class="line"> <span class="attribute">name</span>: mysql-service</span><br><span class="line"><span class="attribute">spec</span>:</span><br><span class="line"> <span class="attribute">ports</span>:</span><br><span class="line"> - <span class="attribute">port</span>: <span class="number">33306</span></span><br><span class="line">   <span class="attribute">targetPort</span>: <span class="number">3306</span></span><br><span class="line"> <span class="attribute">selector</span>:</span><br><span class="line">  <span class="attribute">name</span>: mysql-pod</span><br></pre></td></tr></table></figure>
+<h1 id="一、Create-service-type-ClusterIP"><a href="#一、Create-service-type-ClusterIP" class="headerlink" title="一、Create service (type: ClusterIP)"></a>一、Create service (type: ClusterIP)</h1><p>此模式会提供一个集群内部的虚拟IP（与Pod不在同一网段)，以供集群内部的pod之间通信使用。<br>ClusterIP也是Kubernetes service的默认类型。</p>
+<p>为了实现图上的功能主要需要以下几个组件的协同工作</p>
+<p>apiserver 用户通过kubectl命令向apiserver发送创建service的命令，apiserver接收到请求以后将数据存储到etcd中。</p>
+<p>kube-proxy kubernetes的每个节点中都有一个叫做kube-proxy的进程，这个进程负责感知service，pod的变化，并将变化的信息写入本地的iptables中。</p>
+<p>iptables 使用NAT等技术将virtualIP的流量转至endpoint中。</p>
+<p>下面我们实际发布一个Service，能够更清晰的了解到Service是如何工作的。</p>
+<h3 id="1-通过命令行方式创建service-类型为clusterip"><a href="#1-通过命令行方式创建service-类型为clusterip" class="headerlink" title="1. 通过命令行方式创建service,类型为clusterip"></a>1. 通过命令行方式创建service,类型为clusterip</h3><figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl create<span class="built_in"> service </span>clusterip my-svc-cp <span class="attribute">--tcp</span>=8080:80</span><br><span class="line"></span><br><span class="line">$ kubectl describe service/my-svc-cp</span><br><span class="line">Name:              my-svc-cp</span><br><span class="line">Namespace:         default</span><br><span class="line">Labels:            <span class="attribute">app</span>=my-svc-cp</span><br><span class="line">Annotations:       &lt;none&gt;</span><br><span class="line">Selector:          <span class="attribute">app</span>=my-svc-cp</span><br><span class="line">Type:              ClusterIP          # 类型</span><br><span class="line">IP:                10.247.52.210</span><br><span class="line">Port:              80-8080  8080/TCP  # 映射到集群的端口</span><br><span class="line">TargetPort:        80/TCP             # 目标pod暴露端口</span><br><span class="line">Endpoints:         &lt;none&gt;             # 此时还没有后端容器</span><br><span class="line">Session Affinity:  None</span><br><span class="line">Events:            &lt;none&gt;</span><br><span class="line"></span><br><span class="line">$ kubectl <span class="builtin-name">get</span> svc -o wide</span><br><span class="line">my-svc-cp      ClusterIP   10.247.52.210   &lt;none&gt;        80/TCP    6s        <span class="attribute">app</span>=my-svc-cp</span><br><span class="line"></span><br><span class="line"><span class="comment"># 以上我创建了一个svc, 那么他是为pod服务的,</span></span><br><span class="line"><span class="comment"># 那么 pod跟service是通过`selector label`来做关联的, 所以我们还需要对这个svc做下调整</span></span><br><span class="line"></span><br><span class="line">$ kubectl <span class="builtin-name">edit</span> svc my-svc-cp</span><br><span class="line"><span class="comment"># Please edit the object below. Lines beginning with a '#' will be ignored,</span></span><br><span class="line"><span class="comment"># and an empty file will abort the edit. If an error occurs while saving this file will be</span></span><br><span class="line"><span class="comment"># reopened with the relevant failures.</span></span><br><span class="line"><span class="comment">#</span></span><br><span class="line">apiVersion: v1</span><br><span class="line">kind: Service</span><br><span class="line">metadata:</span><br><span class="line">  creationTimestamp: 2018-12-12T17:41:54Z</span><br><span class="line">  labels:</span><br><span class="line">    app: my-svc-cp</span><br><span class="line">  name: my-svc-cp</span><br><span class="line">  namespace: default</span><br><span class="line">  resourceVersion: <span class="string">"32742"</span></span><br><span class="line">  selfLink: /api/v1/namespaces/default/services/my-svc-cp</span><br><span class="line">  uid: 372f6f2c-fe35-11e8-b967-fa163e874e90</span><br><span class="line">spec:</span><br><span class="line">  clusterIP: 10.247.52.210</span><br><span class="line">  ports:</span><br><span class="line">  - name: 80-8080</span><br><span class="line">    port: 8080</span><br><span class="line">    protocol: TCP</span><br><span class="line">    targetPort: 80</span><br><span class="line">  selector:</span><br><span class="line">    app: my-svc-cp-pod  # 这里我修改了selector ，需要与pod name与之对应起来</span><br><span class="line">  sessionAffinity: None</span><br><span class="line">  type: ClusterIP</span><br><span class="line">status:</span><br><span class="line">  loadBalancer: &#123;&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment"># :wq 保存退出</span></span><br><span class="line"><span class="comment"># kubectl describe service/my-svc-cp 查看修改是否成功</span></span><br></pre></td></tr></table></figure>
+<h2 id="2-创建pod"><a href="#2-创建pod" class="headerlink" title="2.创建pod"></a>2.创建pod</h2><p>注意<code>selector label</code></p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">$</span> <span class="string">vim</span> <span class="string">my-svc-cp-pod.yaml</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Pod</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line"><span class="attr">  name:</span> <span class="string">my-svc-cp-pod</span></span><br><span class="line"><span class="attr">  labels:</span></span><br><span class="line"><span class="attr">    app:</span> <span class="string">my-svc-cp-pod</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line"><span class="attr">  containers:</span></span><br><span class="line"><span class="attr">  - image:</span> <span class="attr">nginx:latest</span></span><br><span class="line"><span class="attr">    imagePullPolicy:</span> <span class="string">Always</span></span><br><span class="line"><span class="attr">    name:</span> <span class="string">nginx</span></span><br><span class="line">  <span class="comment"># 注意这里的亲和性是为了将pod调度至有外网的node节点便于pull镜像</span></span><br><span class="line"><span class="attr">  affinity:</span></span><br><span class="line"><span class="attr">    nodeAffinity:</span></span><br><span class="line"><span class="attr">      requiredDuringSchedulingIgnoredDuringExecution:</span></span><br><span class="line"><span class="attr">        nodeSelectorTerms:</span></span><br><span class="line"><span class="attr">          - matchExpressions:</span></span><br><span class="line"><span class="attr">              - key:</span> <span class="string">kubernetes.io/hostname</span></span><br><span class="line"><span class="attr">                operator:</span> <span class="string">In</span></span><br><span class="line"><span class="attr">                values:</span></span><br><span class="line"><span class="bullet">                  -</span> <span class="number">192.168</span><span class="number">.253</span><span class="number">.183</span></span><br><span class="line"><span class="attr">  restartPolicy:</span> <span class="string">Always</span></span><br><span class="line"><span class="attr">  schedulerName:</span> <span class="string">default-scheduler</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 执行:</span></span><br><span class="line"><span class="string">$</span> <span class="string">kubectl</span> <span class="string">create</span> <span class="bullet">-f</span> <span class="string">my-svc-cp-pod.yaml</span></span><br><span class="line"></span><br><span class="line"><span class="string">$</span> <span class="string">kubectl</span> <span class="string">get</span> <span class="string">pods,svc,endpoints,deployment</span> <span class="bullet">-o</span> <span class="string">wide</span></span><br><span class="line"><span class="string">NAME</span>               <span class="string">READY</span>     <span class="string">STATUS</span>    <span class="string">RESTARTS</span>   <span class="string">AGE</span>       <span class="string">IP</span>            <span class="string">NODE</span></span><br><span class="line"><span class="string">po/my-svc-cp-pod</span>   <span class="number">1</span><span class="string">/1</span>       <span class="string">Running</span>   <span class="number">0</span>          <span class="number">36</span><span class="string">m</span>       <span class="number">172.16</span><span class="number">.0</span><span class="number">.36</span>   <span class="number">192.168</span><span class="number">.253</span><span class="number">.183</span></span><br><span class="line"></span><br><span class="line"><span class="string">NAME</span>             <span class="string">TYPE</span>        <span class="string">CLUSTER-IP</span>      <span class="string">EXTERNAL-IP</span>   <span class="string">PORT(S)</span>    <span class="string">AGE</span>   <span class="string">SELECTOR</span></span><br><span class="line"><span class="string">svc/kubernetes</span>   <span class="string">ClusterIP</span>   <span class="number">10.247</span><span class="number">.0</span><span class="number">.1</span>      <span class="string">&lt;none&gt;</span>        <span class="number">443</span><span class="string">/TCP</span>    <span class="number">1</span><span class="string">h</span>    <span class="string">&lt;none&gt;</span></span><br><span class="line"><span class="string">svc/my-svc-cp</span>    <span class="string">ClusterIP</span>   <span class="number">10.247</span><span class="number">.52</span><span class="number">.210</span>   <span class="string">&lt;none&gt;</span>        <span class="number">8080</span><span class="string">/TCP</span>   <span class="number">3</span><span class="string">m</span>    <span class="string">app=my-svc-cp-pod</span></span><br><span class="line"></span><br><span class="line"><span class="string">NAME</span>            <span class="string">ENDPOINTS</span>                                                      <span class="string">AGE</span></span><br><span class="line"><span class="string">ep/kubernetes</span>   <span class="number">192.168</span><span class="number">.103</span><span class="number">.50</span><span class="string">:5444,192.168.174.46:5444,192.168.236.124:5444</span>   <span class="number">1</span><span class="string">h</span></span><br><span class="line"><span class="string">ep/my-svc-cp</span>    <span class="number">172.16</span><span class="number">.0</span><span class="number">.36</span><span class="string">:80</span>                                                 <span class="number">3</span><span class="string">m</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 再次查看service是否关联到了pod</span></span><br><span class="line"><span class="string">$</span> <span class="string">kubectl</span> <span class="string">describe</span> <span class="string">ep/my-svc-cp</span></span><br><span class="line"><span class="attr">Name:</span>         <span class="string">my-svc-cp</span></span><br><span class="line"><span class="attr">Namespace:</span>    <span class="string">default</span></span><br><span class="line"><span class="attr">Labels:</span>       <span class="string">app=my-svc-cp</span></span><br><span class="line"><span class="attr">Annotations:</span>  <span class="string">&lt;none&gt;</span></span><br><span class="line"><span class="attr">Subsets:</span>					</span><br><span class="line"><span class="attr">  Addresses:</span>          <span class="number">172.16</span><span class="number">.0</span><span class="number">.36</span> <span class="comment"># 可见endpoints中已经有了后端的那个pod</span></span><br><span class="line"><span class="attr">  NotReadyAddresses:</span>  <span class="string">&lt;none&gt;</span></span><br><span class="line"><span class="attr">  Ports:</span></span><br><span class="line">    <span class="string">Name</span>     <span class="string">Port</span>  <span class="string">Protocol</span></span><br><span class="line"><span class="bullet">    -</span><span class="meta">---</span>     <span class="bullet">----</span>  <span class="bullet">--------</span></span><br><span class="line">    <span class="number">80</span><span class="bullet">-8080</span>  <span class="number">80</span>    <span class="string">TCP</span></span><br><span class="line"></span><br><span class="line"><span class="attr">Events:</span>  <span class="string">&lt;none&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 集群内部通过Cluster IP访问nginx服务</span></span><br><span class="line"><span class="comment"># 指定了端口映射到Cluster IP</span></span><br><span class="line"><span class="string">$</span> <span class="string">curl</span> <span class="bullet">-I</span> <span class="number">10.247</span><span class="number">.52</span><span class="number">.210</span><span class="string">:8080</span></span><br><span class="line"><span class="string">HTTP/1.1</span> <span class="number">200</span> <span class="string">OK</span></span><br><span class="line"><span class="attr">Server:</span> <span class="string">nginx/1.15.5</span></span><br><span class="line"><span class="attr">Date:</span> <span class="string">Wed,</span> <span class="number">12</span> <span class="string">Dec</span> <span class="number">2018</span> <span class="number">17</span><span class="string">:48:56</span> <span class="string">GMT</span></span><br><span class="line"><span class="attr">Content-Type:</span> <span class="string">text/html</span></span><br><span class="line"><span class="attr">Content-Length:</span> <span class="number">612</span></span><br><span class="line"><span class="attr">Last-Modified:</span> <span class="string">Tue,</span> <span class="number">02</span> <span class="string">Oct</span> <span class="number">2018</span> <span class="number">14</span><span class="string">:49:27</span> <span class="string">GMT</span></span><br><span class="line"><span class="attr">Connection:</span> <span class="string">keep-alive</span></span><br><span class="line"><span class="attr">ETag:</span> <span class="string">"5bb38577-264"</span></span><br><span class="line"><span class="attr">Accept-Ranges:</span> <span class="string">bytes</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 集群内部通过POD IP访问nginx服务</span></span><br><span class="line"><span class="comment"># 因为pod暴露的是80 默认不用加端口</span></span><br><span class="line"><span class="string">$</span> <span class="string">curl</span> <span class="bullet">-I</span> <span class="number">172.16</span><span class="number">.0</span><span class="number">.36</span></span><br><span class="line"><span class="string">HTTP/1.1</span> <span class="number">200</span> <span class="string">OK</span></span><br><span class="line"><span class="attr">Server:</span> <span class="string">nginx/1.15.5</span></span><br><span class="line"><span class="attr">Date:</span> <span class="string">Wed,</span> <span class="number">12</span> <span class="string">Dec</span> <span class="number">2018</span> <span class="number">17</span><span class="string">:47:52</span> <span class="string">GMT</span></span><br><span class="line"><span class="attr">Content-Type:</span> <span class="string">text/html</span></span><br><span class="line"><span class="attr">Content-Length:</span> <span class="number">612</span></span><br><span class="line"><span class="attr">Last-Modified:</span> <span class="string">Tue,</span> <span class="number">02</span> <span class="string">Oct</span> <span class="number">2018</span> <span class="number">14</span><span class="string">:49:27</span> <span class="string">GMT</span></span><br><span class="line"><span class="attr">Connection:</span> <span class="string">keep-alive</span></span><br><span class="line"><span class="attr">ETag:</span> <span class="string">"5bb38577-264"</span></span><br><span class="line"><span class="attr">Accept-Ranges:</span> <span class="string">bytes</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 通过这种方式也只是集群内部能够访问到，如果集群外部要访问我们的pod又该如何做呢？</span></span><br><span class="line"><span class="comment"># 下面继续</span></span><br></pre></td></tr></table></figure>
+<h1 id="二、Create-service-type-NodePort"><a href="#二、Create-service-type-NodePort" class="headerlink" title="二、Create service (type: NodePort)"></a>二、Create service (type: NodePort)</h1><h2 id="1-通过命令行方式创建service-类型为nodeport"><a href="#1-通过命令行方式创建service-类型为nodeport" class="headerlink" title="1.通过命令行方式创建service,类型为nodeport"></a>1.通过命令行方式创建service,类型为nodeport</h2><p>Cluster service 的 IP 地址是虚拟的，因此，只能从node节点上使用该IP 地址访问应用。为了从集群外访问应用，K8S 提供了使用 node 节点的IP 地址访问应用的方式。</p>
+<p>基本上，NodePort 服务与普通的 “ClusterIP” 服务 YAML 定义有两点区别。 首先，type 是 “NodePort”。还有一个称为 nodePort 的附加端口，指定在节点上打开哪个端口。 如果你不指定这个端口，它会选择一个随机端口。</p>
+<p>下图中是 32591. 该端口号的范围是 kube-apiserver 的启动参数 –service-node-port-range指定的，在当前测试环境中其值是 30000-32767。</p>
+<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl create<span class="built_in"> service </span>nodeport my-svc-np <span class="attribute">--tcp</span>=8080:80</span><br><span class="line"></span><br><span class="line">[root@linux-node1 ~]# kubectl describe<span class="built_in"> service </span>my-svc-np</span><br><span class="line">Name:                     my-svc-np</span><br><span class="line">Namespace:                default</span><br><span class="line">Labels:                   <span class="attribute">app</span>=my-svc-np</span><br><span class="line">Annotations:              &lt;none&gt;</span><br><span class="line">Selector:                 <span class="attribute">app</span>=my-svc-np</span><br><span class="line">Type:                     NodePort            # 类型</span><br><span class="line">IP:                       10.103.115.169      # 分配的ClusterIP</span><br><span class="line">Port:                     8080-80  8080/TCP   # 容器映射到node节点的端口</span><br><span class="line">TargetPort:               80/TCP              # 容器将要暴露的端口</span><br><span class="line">NodePort:                 8080-80  32591/TCP  # 附加端口</span><br><span class="line">Endpoints:                &lt;none&gt;		        # 此时后端没有pod</span><br><span class="line">Session Affinity:         None</span><br><span class="line">External Traffic Policy:  Cluster</span><br><span class="line">Events:                   &lt;none&gt;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment"># 有了svc我们就需要创建一个或者一组pod来跟这个svc建立连接</span></span><br><span class="line"><span class="comment"># 像前面一样我们需要更改这个svc的选择器：</span></span><br><span class="line">$ kubectl <span class="builtin-name">edit</span> svc my-svc-np</span><br><span class="line"><span class="built_in">..</span><span class="built_in">..</span><span class="built_in">..</span></span><br><span class="line"><span class="built_in">..</span><span class="built_in">..</span><span class="built_in">..</span></span><br><span class="line">  externalTrafficPolicy: Cluster</span><br><span class="line">  ports:</span><br><span class="line">  - name: 8080-80</span><br><span class="line">    nodePort: 32591</span><br><span class="line">    port: 8080</span><br><span class="line">    protocol: TCP</span><br><span class="line">    targetPort: 80</span><br><span class="line">  selector:</span><br><span class="line">    app: my-svc-np-pod  # 与即将创建的pod对应上</span><br><span class="line">  sessionAffinity: None</span><br><span class="line">  type: NodePort</span><br><span class="line">status:</span><br><span class="line">  loadBalancer: &#123;&#125;</span><br><span class="line"><span class="built_in">..</span><span class="built_in">..</span><span class="built_in">..</span></span><br><span class="line"><span class="built_in">..</span><span class="built_in">..</span><span class="built_in">..</span></span><br><span class="line"><span class="comment"># :wq保存退出</span></span><br></pre></td></tr></table></figure>
+<h2 id="2-创建pod与之建立关系"><a href="#2-创建pod与之建立关系" class="headerlink" title="2.创建pod与之建立关系"></a>2.创建pod与之建立关系</h2><figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 我这里通过命令行方式创建一个deployment的3个副本的nginx pod</span></span><br><span class="line"><span class="comment"># 1. 首先通过命令行生成yaml文件</span></span><br><span class="line"><span class="string">$</span> <span class="string">kubectl</span> <span class="string">run</span> <span class="string">nginx-deployment</span> <span class="bullet">--image=nginx</span> <span class="bullet">--replicas=3</span> <span class="bullet">--dry-run</span> <span class="bullet">-o</span> <span class="string">yaml</span> <span class="string">&gt; nginx-deployment.yaml</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string"># 2. 进行调整</span></span><br><span class="line"><span class="string">$ cat &gt;&gt; nginx-deployment.yaml &lt;&lt; EOF</span></span><br><span class="line"><span class="string"></span><span class="attr">apiVersion:</span> <span class="string">apps/v1beta1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Deployment</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line"><span class="attr">  creationTimestamp:</span> <span class="literal">null</span></span><br><span class="line"><span class="attr">  labels:</span></span><br><span class="line"><span class="attr">    run:</span> <span class="string">nginx-deployment</span></span><br><span class="line"><span class="attr">  name:</span> <span class="string">nginx-deployment</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line"><span class="attr">  replicas:</span> <span class="number">3</span></span><br><span class="line"><span class="attr">  selector:</span></span><br><span class="line"><span class="attr">    matchLabels:</span></span><br><span class="line"><span class="attr">      app:</span> <span class="string">my-svc-np-pod</span>    		<span class="comment"># 此处修改为svc selector相同</span></span><br><span class="line"><span class="attr">  strategy:</span> <span class="string">&#123;&#125;</span></span><br><span class="line"><span class="attr">  template:</span></span><br><span class="line"><span class="attr">    metadata:</span></span><br><span class="line"><span class="attr">      creationTimestamp:</span> <span class="literal">null</span></span><br><span class="line"><span class="attr">      labels:</span></span><br><span class="line"><span class="attr">        app:</span> <span class="string">my-svc-np-pod</span>		    <span class="comment"># 此处修改为svc selector相同</span></span><br><span class="line"><span class="attr">    spec:</span></span><br><span class="line"><span class="attr">      containers:</span></span><br><span class="line"><span class="attr">      - image:</span> <span class="string">nginx</span></span><br><span class="line"><span class="attr">        name:</span> <span class="string">nginx-deployment</span></span><br><span class="line"><span class="attr">        resources:</span> <span class="string">&#123;&#125;</span></span><br><span class="line"><span class="attr">status:</span> <span class="string">&#123;&#125;</span></span><br><span class="line"><span class="string">EOF</span></span><br><span class="line"><span class="comment"># 3. 执行</span></span><br><span class="line"><span class="string">$</span> <span class="string">kubectl</span> <span class="string">create</span> <span class="bullet">-f</span> <span class="string">nginx-deployment.yaml</span></span><br><span class="line"><span class="string">deployment.apps/nginx-deployment</span> <span class="string">created</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 4. 查看状态:</span></span><br><span class="line"><span class="string">$</span> <span class="string">kubectl</span> <span class="string">get</span> <span class="string">pod</span> <span class="bullet">-o</span> <span class="string">wide</span></span><br><span class="line"><span class="string">NAME</span>                                <span class="string">READY</span>     <span class="string">STATUS</span>    <span class="string">RESTARTS</span>   <span class="string">AGE</span>    <span class="string">IP</span>            <span class="string">NODE</span>      <span class="string">NOMINATED</span> <span class="string">NODE</span></span><br><span class="line"><span class="string">nginx-deployment-6794c779fb-8x92g</span>   <span class="number">1</span><span class="string">/1</span>       <span class="string">Running</span>   <span class="number">0</span>          <span class="number">4</span><span class="string">m</span>     <span class="number">10.244</span><span class="number">.1</span><span class="number">.19</span>   <span class="string">k8s-m2</span>    <span class="string">&lt;none&gt;</span></span><br><span class="line"><span class="string">nginx-deployment-6794c779fb-rf8qj</span>   <span class="number">1</span><span class="string">/1</span>       <span class="string">Running</span>   <span class="number">0</span>          <span class="number">4</span><span class="string">m</span>     <span class="number">10.244</span><span class="number">.0</span><span class="number">.19</span>   <span class="string">k8s-m3</span>    <span class="string">&lt;none&gt;</span></span><br><span class="line"><span class="string">nginx-deployment-6794c779fb-tdscx</span>   <span class="number">1</span><span class="string">/1</span>       <span class="string">Running</span>   <span class="number">0</span>          <span class="number">4</span><span class="string">m</span>     <span class="number">10.244</span><span class="number">.2</span><span class="number">.35</span>   <span class="string">k8s-m1</span>    <span class="string">&lt;none&gt;</span></span><br><span class="line"><span class="string">$</span> <span class="string">kubectl</span> <span class="string">describe</span> <span class="string">svc</span> <span class="string">my-svc-np</span></span><br><span class="line"><span class="attr">Name:</span>                     <span class="string">my-svc-np</span></span><br><span class="line"><span class="attr">Namespace:</span>                <span class="string">default</span></span><br><span class="line"><span class="attr">Labels:</span>                   <span class="string">app=my-svc-np</span></span><br><span class="line"><span class="attr">Annotations:</span>              <span class="string">&lt;none&gt;</span></span><br><span class="line"><span class="attr">Selector:</span>                 <span class="string">app=my-svc-np-pod</span></span><br><span class="line"><span class="attr">Type:</span>                     <span class="string">NodePort</span></span><br><span class="line"><span class="attr">IP:</span>                       <span class="number">10.103</span><span class="number">.115</span><span class="number">.169</span></span><br><span class="line"><span class="attr">Port:</span>                     <span class="number">8080</span><span class="bullet">-80</span>  <span class="number">8080</span><span class="string">/TCP</span></span><br><span class="line"><span class="attr">TargetPort:</span>               <span class="number">80</span><span class="string">/TCP</span></span><br><span class="line"><span class="attr">NodePort:</span>                 <span class="number">8080</span><span class="bullet">-80</span>  <span class="number">32591</span><span class="string">/TCP</span></span><br><span class="line"><span class="attr">Endpoints:</span>                <span class="number">10.244</span><span class="number">.0</span><span class="number">.19</span><span class="string">:80,10.244.1.19:80,10.244.2.35:80</span>   <span class="comment"># 可以看到我们的三个endpoint</span></span><br><span class="line"><span class="string">Session</span> <span class="attr">Affinity:</span>         <span class="string">None</span></span><br><span class="line"><span class="string">External</span> <span class="string">Traffic</span> <span class="attr">Policy:</span>  <span class="string">Cluster</span></span><br><span class="line"><span class="attr">Events:</span>                   <span class="string">&lt;none&gt;</span></span><br><span class="line"><span class="string">$</span> <span class="string">kubectl</span> <span class="string">get</span> <span class="string">svc</span> <span class="string">my-svc-np</span></span><br><span class="line"><span class="string">NAME</span>         <span class="string">TYPE</span>        <span class="string">CLUSTER-IP</span>       <span class="string">EXTERNAL-IP</span>   <span class="string">PORT(S)</span>          <span class="string">AGE</span></span><br><span class="line"><span class="string">my-svc-np</span>    <span class="string">NodePort</span>    <span class="number">10.103</span><span class="number">.115</span><span class="number">.169</span>   <span class="string">&lt;none&gt;</span>        <span class="number">8080</span><span class="string">:32591/TCP</span>   <span class="number">42</span><span class="string">m</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 5.如何访问?</span></span><br><span class="line"><span class="comment"># a.集群内部访问pod ip</span></span><br><span class="line"><span class="string">$</span> <span class="string">curl</span> <span class="bullet">-I</span> <span class="number">10.244</span><span class="number">.0</span><span class="number">.19</span></span><br><span class="line"><span class="string">HTTP/1.1</span> <span class="number">200</span> <span class="string">OK</span></span><br><span class="line"><span class="attr">Server:</span> <span class="string">nginx/1.15.7</span></span><br><span class="line"><span class="attr">Date:</span> <span class="string">Thu,</span> <span class="number">13</span> <span class="string">Dec</span> <span class="number">2018</span> <span class="number">08</span><span class="string">:43:25</span> <span class="string">GMT</span></span><br><span class="line"><span class="attr">Content-Type:</span> <span class="string">text/html</span></span><br><span class="line"><span class="attr">Content-Length:</span> <span class="number">612</span></span><br><span class="line"><span class="attr">Last-Modified:</span> <span class="string">Tue,</span> <span class="number">27</span> <span class="string">Nov</span> <span class="number">2018</span> <span class="number">12</span><span class="string">:31:56</span> <span class="string">GMT</span></span><br><span class="line"><span class="attr">Connection:</span> <span class="string">keep-alive</span></span><br><span class="line"><span class="attr">ETag:</span> <span class="string">"5bfd393c-264"</span></span><br><span class="line"><span class="attr">Accept-Ranges:</span> <span class="string">bytes</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># b.集群内部clusterip+端口</span></span><br><span class="line"><span class="string">$</span> <span class="string">curl</span> <span class="bullet">-I</span> <span class="number">10.103</span><span class="number">.115</span><span class="number">.169</span><span class="string">:8080</span></span><br><span class="line"><span class="string">HTTP/1.1</span> <span class="number">200</span> <span class="string">OK</span></span><br><span class="line"><span class="attr">Server:</span> <span class="string">nginx/1.15.7</span></span><br><span class="line"><span class="attr">Date:</span> <span class="string">Thu,</span> <span class="number">13</span> <span class="string">Dec</span> <span class="number">2018</span> <span class="number">08</span><span class="string">:42:53</span> <span class="string">GMT</span></span><br><span class="line"><span class="attr">Content-Type:</span> <span class="string">text/html</span></span><br><span class="line"><span class="attr">Content-Length:</span> <span class="number">612</span></span><br><span class="line"><span class="attr">Last-Modified:</span> <span class="string">Tue,</span> <span class="number">27</span> <span class="string">Nov</span> <span class="number">2018</span> <span class="number">12</span><span class="string">:31:56</span> <span class="string">GMT</span></span><br><span class="line"><span class="attr">Connection:</span> <span class="string">keep-alive</span></span><br><span class="line"><span class="attr">ETag:</span> <span class="string">"5bfd393c-264"</span></span><br><span class="line"><span class="attr">Accept-Ranges:</span> <span class="string">bytes</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># c.集群外部访问nodeip+附加端口</span></span><br><span class="line"><span class="string">curl</span> <span class="bullet">-I</span> <span class="number">192.168</span><span class="number">.56</span><span class="number">.111</span><span class="string">:32591</span></span><br><span class="line"><span class="string">HTTP/1.1</span> <span class="number">200</span> <span class="string">OK</span></span><br><span class="line"><span class="attr">Server:</span> <span class="string">nginx/1.15.7</span></span><br><span class="line"><span class="attr">Date:</span> <span class="string">Thu,</span> <span class="number">13</span> <span class="string">Dec</span> <span class="number">2018</span> <span class="number">08</span><span class="string">:45:39</span> <span class="string">GMT</span></span><br><span class="line"><span class="attr">Content-Type:</span> <span class="string">text/html</span></span><br><span class="line"><span class="attr">Content-Length:</span> <span class="number">612</span></span><br><span class="line"><span class="attr">Last-Modified:</span> <span class="string">Tue,</span> <span class="number">27</span> <span class="string">Nov</span> <span class="number">2018</span> <span class="number">12</span><span class="string">:31:56</span> <span class="string">GMT</span></span><br><span class="line"><span class="attr">Connection:</span> <span class="string">keep-alive</span></span><br><span class="line"><span class="attr">ETag:</span> <span class="string">"5bfd393c-264"</span></span><br><span class="line"><span class="attr">Accept-Ranges:</span> <span class="string">bytes</span></span><br></pre></td></tr></table></figure>
+<p>以上就是nodeport网络类型的简单实现</p>
+<h1 id="三、Create-service-type-HeadlessClusterIP"><a href="#三、Create-service-type-HeadlessClusterIP" class="headerlink" title="三、Create service (type: HeadlessClusterIP)"></a>三、Create service (type: HeadlessClusterIP)</h1><p>所谓的HeadlessClusterIP 就是我们在创建这种网络类型的时候将 spec.clusterIP 设置成 None,这样k8s就不会给service分配clusterIp了。但指定了selector，那么endpoints controller还是会创建Endpoints的，会创建一个新的DNS记录直接指向这个service描述的后端pod。否则，不会创建Endpoints记录。这种ClusterIP，kube-proxy 并不处理此类服务，因为没有load balancing或 proxy 代理设置，在访问服务的时候回返回后端的全部的Pods IP地址，主要用于开发者自己根据pods进行负载均衡器的开发(设置了selector)。</p>
+<p>下面通过实践理解</p>
+<h2 id="1-通过命令行方式创建svc-类型为headlessCluserIP"><a href="#1-通过命令行方式创建svc-类型为headlessCluserIP" class="headerlink" title="1.通过命令行方式创建svc,类型为headlessCluserIP"></a>1.通过命令行方式创建svc,类型为headlessCluserIP</h2><figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl create svc clusterip my-svc-headless <span class="attribute">--clusterip</span>=<span class="string">"None"</span> <span class="attribute">--tcp</span>=8080:80</span><br><span class="line">service/my-svc-headless created</span><br><span class="line"></span><br><span class="line">$ kubectl describe svc my-svc-headless</span><br><span class="line">Name:              my-svc-headless</span><br><span class="line">Namespace:         default</span><br><span class="line">Labels:            <span class="attribute">app</span>=my-svc-headless</span><br><span class="line">Annotations:       &lt;none&gt;</span><br><span class="line">Selector:          <span class="attribute">app</span>=my-svc-headless</span><br><span class="line">Type:              ClusterIP</span><br><span class="line">IP:                None</span><br><span class="line">Session Affinity:  None</span><br><span class="line">Events:            &lt;none&gt;</span><br></pre></td></tr></table></figure>
+<h2 id="2-创建pod与之关联："><a href="#2-创建pod与之关联：" class="headerlink" title="2. 创建pod与之关联："></a>2. 创建pod与之关联：</h2><figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">$</span> <span class="string">cat</span> <span class="string">nginx-deployment.yaml</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">apps/v1beta1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Deployment</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line"><span class="attr">  creationTimestamp:</span> <span class="literal">null</span></span><br><span class="line"><span class="attr">  labels:</span></span><br><span class="line"><span class="attr">    run:</span> <span class="string">nginx-deployment</span></span><br><span class="line"><span class="attr">  name:</span> <span class="string">nginx-deployment</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line"><span class="attr">  replicas:</span> <span class="number">3</span></span><br><span class="line"><span class="attr">  selector:</span></span><br><span class="line"><span class="attr">    matchLabels:</span></span><br><span class="line"><span class="attr">      app:</span> <span class="string">my-svc-headless</span> <span class="comment"># 对应到svc</span></span><br><span class="line"><span class="attr">  strategy:</span> <span class="string">&#123;&#125;</span></span><br><span class="line"><span class="attr">  template:</span></span><br><span class="line"><span class="attr">    metadata:</span></span><br><span class="line"><span class="attr">      creationTimestamp:</span> <span class="literal">null</span></span><br><span class="line"><span class="attr">      labels:</span></span><br><span class="line"><span class="attr">        app:</span> <span class="string">my-svc-headless</span> <span class="comment"># 对应到svc</span></span><br><span class="line"></span><br><span class="line"><span class="attr">    spec:</span></span><br><span class="line"><span class="attr">      containers:</span></span><br><span class="line"><span class="attr">      - image:</span> <span class="string">nginx</span></span><br><span class="line"><span class="attr">        name:</span> <span class="string">nginx-deployment</span></span><br><span class="line"><span class="attr">        resources:</span> <span class="string">&#123;&#125;</span></span><br><span class="line"><span class="attr">status:</span> <span class="string">&#123;&#125;</span></span><br><span class="line"></span><br><span class="line"><span class="string">$</span> <span class="string">kubectl</span> <span class="string">create</span> <span class="bullet">-f</span> <span class="string">nginx-deployment.yaml</span></span><br><span class="line"><span class="string">deployment.apps/nginx-deployment</span> <span class="string">created</span></span><br><span class="line"></span><br><span class="line"><span class="string">$</span> <span class="string">[root@k8s-m1</span> <span class="string">~]#</span> <span class="string">kubectl</span> <span class="string">get</span> <span class="string">pod</span> <span class="bullet">-o</span> <span class="string">wide</span> </span><br><span class="line"><span class="string">NAME</span>                                <span class="string">READY</span>   <span class="string">STATUS</span>    <span class="string">RESTARTS</span>   <span class="string">AGE</span>   <span class="string">IP</span>            <span class="string">NODE</span>      <span class="string">NOMINATED</span> <span class="string">NODE</span></span><br><span class="line"><span class="string">nginx-deployment-54bfc79477-b78c6</span>   <span class="number">1</span><span class="string">/1</span>     <span class="string">Running</span>   <span class="number">0</span>          <span class="number">40</span><span class="string">s</span>   <span class="number">10.244</span><span class="number">.1</span><span class="number">.21</span>   <span class="string">k8s-m2</span>    <span class="string">&lt;none&gt;</span></span><br><span class="line"><span class="string">nginx-deployment-54bfc79477-dvp2t</span>   <span class="number">1</span><span class="string">/1</span>     <span class="string">Running</span>   <span class="number">0</span>          <span class="number">40</span><span class="string">s</span>   <span class="number">10.244</span><span class="number">.0</span><span class="number">.22</span>   <span class="string">k8s-m3</span>    <span class="string">&lt;none&gt;</span></span><br><span class="line"><span class="string">nginx-deployment-54bfc79477-x6v7s</span>   <span class="number">1</span><span class="string">/1</span>     <span class="string">Running</span>   <span class="number">0</span>          <span class="number">40</span><span class="string">s</span>   <span class="number">10.244</span><span class="number">.2</span><span class="number">.38</span>   <span class="string">k8s-m1</span>    <span class="string">&lt;none&gt;</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="string">$</span> <span class="string">kubectl</span> <span class="string">describe</span> <span class="string">svc</span> <span class="string">my-svc-headless</span></span><br><span class="line"><span class="attr">Name:</span>              <span class="string">my-svc-headless</span></span><br><span class="line"><span class="attr">Namespace:</span>         <span class="string">default</span></span><br><span class="line"><span class="attr">Labels:</span>            <span class="string">app=my-svc-headless</span></span><br><span class="line"><span class="attr">Annotations:</span>       <span class="string">&lt;none&gt;</span></span><br><span class="line"><span class="attr">Selector:</span>          <span class="string">app=my-svc-headless</span></span><br><span class="line"><span class="attr">Type:</span>              <span class="string">ClusterIP</span></span><br><span class="line"><span class="attr">IP:</span>                <span class="string">None</span></span><br><span class="line"><span class="attr">Port:</span>              <span class="number">8080</span><span class="bullet">-80</span>  <span class="number">8080</span><span class="string">/TCP</span></span><br><span class="line"><span class="attr">TargetPort:</span>        <span class="number">80</span><span class="string">/TCP</span></span><br><span class="line"><span class="attr">Endpoints:</span>         <span class="number">10.244</span><span class="number">.0</span><span class="number">.20</span><span class="string">:80,10.244.1.20:80,10.244.2.36:80</span></span><br><span class="line"><span class="string">Session</span> <span class="attr">Affinity:</span>  <span class="string">None</span></span><br><span class="line"><span class="attr">Events:</span>            <span class="string">&lt;none&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 以上可以看出后端的pod列表已经加到该svc</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 我们看通过内部域名是否能够解析访问到pod</span></span><br><span class="line"><span class="comment"># 1.我们先获取到dns服务的IP</span></span><br><span class="line"><span class="comment">#kubectl get svc -n kube-system | grep dns</span></span><br><span class="line"><span class="string">kube-dns</span>               <span class="string">ClusterIP</span>   <span class="number">10.96</span><span class="number">.0</span><span class="number">.10</span>    <span class="string">&lt;none&gt;</span>    <span class="number">53</span><span class="string">/UDP,53/TCP</span>   <span class="number">13</span><span class="string">d</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 2.登录到pod 内部获取dns域</span></span><br><span class="line"><span class="string">$</span> <span class="string">kubectl</span> <span class="string">exec</span> <span class="bullet">-it</span> <span class="string">nginx-deployment-54bfc79477-b78c6</span> <span class="bullet">--</span> <span class="string">cat</span> <span class="string">/etc/resolv.conf</span></span><br><span class="line"><span class="string">nameserver</span> <span class="number">10.96</span><span class="number">.0</span><span class="number">.10</span></span><br><span class="line"><span class="string">search</span> <span class="string">default.svc.cluster.local</span> <span class="string">svc.cluster.local</span> <span class="string">cluster.local</span></span><br><span class="line"><span class="string">options</span> <span class="attr">ndots:5</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 3.指定dns服务器并查询该域名：`nginx-deployment.default.svc.cluster.local`</span></span><br><span class="line"><span class="string">$</span> <span class="string">dig</span> <span class="string">@10.96.0.10</span> <span class="string">my-svc-headless.default.svc.cluster.local</span></span><br><span class="line"></span><br><span class="line"><span class="string">;</span> <span class="string">&lt;&lt;&gt;&gt;</span> <span class="string">DiG</span> <span class="number">9.9</span><span class="number">.4</span><span class="bullet">-RedHat-9.9.4-72.el7</span> <span class="string">&lt;&lt;&gt;&gt;</span> <span class="string">@10.96.0.10</span> <span class="string">my-svc-headless.default.svc.cluster.local</span></span><br><span class="line"><span class="string">;</span> <span class="string">(1</span> <span class="string">server</span> <span class="string">found)</span></span><br><span class="line"><span class="string">;;</span> <span class="string">global</span> <span class="attr">options:</span> <span class="string">+cmd</span></span><br><span class="line"><span class="string">;;</span> <span class="string">Got</span> <span class="attr">answer:</span></span><br><span class="line"><span class="string">;;</span> <span class="bullet">-&gt;&gt;HEADER&lt;&lt;-</span> <span class="attr">opcode:</span> <span class="string">QUERY,</span> <span class="attr">status:</span> <span class="string">NOERROR,</span> <span class="attr">id:</span> <span class="number">41743</span></span><br><span class="line"><span class="string">;;</span> <span class="attr">flags:</span> <span class="string">qr</span> <span class="string">aa</span> <span class="string">rd</span> <span class="string">ra;</span> <span class="attr">QUERY:</span> <span class="number">1</span><span class="string">,</span> <span class="attr">ANSWER:</span> <span class="number">3</span><span class="string">,</span> <span class="attr">AUTHORITY:</span> <span class="number">0</span><span class="string">,</span> <span class="attr">ADDITIONAL:</span> <span class="number">0</span></span><br><span class="line"></span><br><span class="line"><span class="string">;;</span> <span class="string">QUESTION</span> <span class="attr">SECTION:</span></span><br><span class="line"><span class="string">;my-svc-headless.default.svc.cluster.local.</span> <span class="string">IN</span> <span class="string">A</span></span><br><span class="line"></span><br><span class="line"><span class="string">;;</span> <span class="string">ANSWER</span> <span class="attr">SECTION:</span></span><br><span class="line"><span class="string">my-svc-headless.default.svc.cluster.local.</span> <span class="number">30</span> <span class="string">IN</span> <span class="string">A</span> <span class="number">10.244</span><span class="number">.0</span><span class="number">.22</span></span><br><span class="line"><span class="string">my-svc-headless.default.svc.cluster.local.</span> <span class="number">30</span> <span class="string">IN</span> <span class="string">A</span> <span class="number">10.244</span><span class="number">.1</span><span class="number">.21</span></span><br><span class="line"><span class="string">my-svc-headless.default.svc.cluster.local.</span> <span class="number">30</span> <span class="string">IN</span> <span class="string">A</span> <span class="number">10.244</span><span class="number">.2</span><span class="number">.38</span></span><br><span class="line"></span><br><span class="line"><span class="string">;;</span> <span class="string">Query</span> <span class="attr">time:</span> <span class="number">29</span> <span class="string">msec</span></span><br><span class="line"><span class="string">;;</span> <span class="attr">SERVER:</span> <span class="number">10.96</span><span class="number">.0</span><span class="number">.10</span><span class="comment">#53(10.96.0.10)</span></span><br><span class="line"><span class="string">;;</span> <span class="attr">WHEN:</span> <span class="string">Thu</span> <span class="string">Dec</span> <span class="number">13</span> <span class="number">04</span><span class="string">:37:13</span> <span class="string">EST</span> <span class="number">2018</span></span><br><span class="line"><span class="string">;;</span> <span class="string">MSG</span> <span class="string">SIZE</span>  <span class="attr">rcvd:</span> <span class="number">107</span></span><br></pre></td></tr></table></figure>
+<h5 id="由上可见-dns服务为service和pod生成不同格式的DNS记录"><a href="#由上可见-dns服务为service和pod生成不同格式的DNS记录" class="headerlink" title="由上可见 dns服务为service和pod生成不同格式的DNS记录"></a>由上可见 dns服务为service和pod生成不同格式的DNS记录</h5><h6 id="Service"><a href="#Service" class="headerlink" title="Service"></a>Service</h6><ul>
+<li><p>A记录：生成my-svc.my-namespace.svc.cluster.local域名，解析成 IP 地址，分为两种情况：<br>1.普通 Service：解析成 ClusterIP<br>2.Headless Service：解析为指定 Pod的IP列表(上述示例就是headless)</p>
+</li>
+<li><p>SRV记录：为命名的端口（普通 Service 或 Headless Service）生成<code>_my-port-name._my-port-protocol.my-svc.my-namespace.svc.cluster.local</code>的域名</p>
+</li>
+</ul>
+<h6 id="Pod"><a href="#Pod" class="headerlink" title="Pod"></a>Pod</h6><ul>
+<li>A记录：生成域名 <code>pod-ip.my-namespace.pod.cluster.local</code></li>
+</ul>
+<p>上述示例个人理解是 这种无头ClusterIP类型 在其集群内部直接可以通过该域名去访问pod，<br>并且该域名也起到了通过dns做负载的能力。</p>
+<p>其他访问法方式可查阅官网学习,此篇博文主要是再次学习巩固一下知识~<br>诸如ingress这种访问方式之前也在学习实践过程中已经实现过了，感兴趣可以<a href="https://github.com/guomaoqiu/flask_kubernetes" target="_blank" rel="noopener">撩我</a></p>
+
+        </div>
+
+        <blockquote class="post-copyright">
+    
+    <div class="content">
+        
+<span class="post-time">
+    最后更新时间：<time datetime="2022-06-07T06:55:07.996Z" itemprop="dateUpdated">2022-06-07 14:55:07</time>
+</span><br>
+
+
+        
+        该文链接：<a href="/2018/12/12/kubernetes_pod_access/" target="_blank" rel="external">https://blog.sctux.cc/2018/12/12/kubernetes_pod_access/</a>
+        
+    </div>
+    
+    <footer>
+        <a href="https://blog.sctux.cc">
+            <img src="/img/avatar.jpg" alt="maoqiu.guo">
+            maoqiu.guo
+        </a>
+    </footer>
+</blockquote>
+
+        
+<div class="page-reward">
+    <a id="rewardBtn" href="javascript:;" class="page-reward-btn waves-effect waves-circle waves-light">赏</a>
+</div>
+
+
+
+        <div class="post-footer">
+            
+	<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/ClusterIP/">ClusterIP</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/NodePort/">NodePort</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Port/">Port</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/TargetPort/">TargetPort</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/kubernetes/">kubernetes</a></li></ul>
+
+
+            
+<div class="page-share-wrap">
+    
+
+<div class="page-share" id="pageShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://blog.sctux.cc/2018/12/12/kubernetes_pod_access/&title=《理解kubernetes中Pod访问方式》 — 运维人&pic=https://blog.sctux.cc/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://blog.sctux.cc/2018/12/12/kubernetes_pod_access/&title=《理解kubernetes中Pod访问方式》 — 运维人&source=😊" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.sctux.cc/2018/12/12/kubernetes_pod_access/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《理解kubernetes中Pod访问方式》 — 运维人&url=https://blog.sctux.cc/2018/12/12/kubernetes_pod_access/&via=https://blog.sctux.cc" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=https://blog.sctux.cc/2018/12/12/kubernetes_pod_access/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+
+    <a href="javascript:;" id="shareFab" class="page-share-fab waves-effect waves-circle">
+        <i class="icon icon-share-alt icon-lg"></i>
+    </a>
+</div>
+
+
+
+        </div>
+    </div>
+
+    
+<nav class="post-nav flex-row flex-justify-between">
+  
+    <div class="waves-block waves-effect prev">
+      <a href="/2018/12/13/kubernetes-logs/" id="post-prev" class="post-nav-link">
+        <div class="tips"><i class="icon icon-angle-left icon-lg icon-pr"></i> Prev</div>
+        <h4 class="title">管理Kubernetes日志</h4>
+      </a>
+    </div>
+  
+
+  
+    <div class="waves-block waves-effect next">
+      <a href="/2018/12/10/kubernetes-deployment-rollingupdate/" id="post-next" class="post-nav-link">
+        <div class="tips">Next <i class="icon icon-angle-right icon-lg icon-pl"></i></div>
+        <h4 class="title">Kubernetes中deployment升级回滚</h4>
+      </a>
+    </div>
+  
+</nav>
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Valine Comments -->
+    <div class="comments vcomment" id="comments"></div>
+    <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+    <script src="//unpkg.com/valine@latest/dist/Valine.min.js"></script>
+    <!-- Valine Comments script -->
+    <script>
+        var GUEST_INFO = ['nick','mail','link'];
+        var guest_info = 'nick,mail,link'.split(',').filter(function(item){
+          return GUEST_INFO.indexOf(item) > -1
+        });
+        new Valine({
+            el: '#comments',
+            notify: 'true' == 'true',
+            verify: 'true' == 'true',
+            appId: "lHxnnDHJXDgMoFpCbdx8A4q7-gzGzoHsz",
+            appKey: "W8H2NuO8chyDlCEQzionLuuV",
+            avatar: "monsterid",
+            placeholder: "来都来了，说点啥子吧~🌹 (友情提醒，留下正确的邮箱地址可以第一时间获取评论反馈)",
+            guest_info: guest_info.length == 0 ? GUEST_INFO : guest_info,
+            pageSize: "10"
+        })
+    </script>
+    <!-- Valine Comments end -->
+
+
+
+
+
+
+
+</article>
+
+<div id="reward" class="page-modal reward-lay">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <h3 class="reward-title">
+        <i class="icon icon-quote-left"></i>
+        谢谢大爷~
+        <i class="icon icon-quote-right"></i>
+    </h3>
+    <div class="reward-content">
+        
+        <div class="reward-code">
+            <img id="rewardCode" src="/img/wechat.jpg" alt="打赏二维码">
+        </div>
+        
+        <label class="reward-toggle">
+            <input id="rewardToggle" type="checkbox" class="reward-toggle-check" data-wechat="/img/wechat.jpg" data-alipay="/img/alipay.jpg">
+            <div class="reward-toggle-ctrol">
+                <span class="reward-toggle-item wechat">微信</span>
+                <span class="reward-toggle-label"></span>
+                <span class="reward-toggle-item alipay">支付宝</span>
+            </div>
+        </label>
+        
+    </div>
+</div>
+
+
+
+</div>
+
+        <footer class="footer">
+    <div class="top">
+        
+
+        <p>
+            
+            <span>博客内容遵循 <a rel="license" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh">知识共享 署名 - 非商业性 - 相同方式共享 4.0 国际协议</a></span>
+        </p>
+    </div>
+    <div class="bottom">
+        <p><span>maoqiu.guo &copy; 2013 - 2024</span>
+            <span>
+                
+                <a href="http://www.miitbeian.gov.cn/" target="_blank">蜀ICP备007号-1</a><br>
+                
+                Power by <a href="http://hexo.io/" target="_blank">Hexo</a> Theme <a href="https://github.com/yscoder/hexo-theme-indigo" target="_blank">indigo</a>
+            </span>
+        </p>
+    </div>
+</footer>
+
+    </main>
+    <div class="mask" id="mask"></div>
+<a href="javascript:;" id="gotop" class="waves-effect waves-circle waves-light"><span class="icon icon-lg icon-chevron-up"></span></a>
+
+
+
+<div class="global-share" id="globalShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://blog.sctux.cc/2018/12/12/kubernetes_pod_access/&title=《理解kubernetes中Pod访问方式》 — 运维人&pic=https://blog.sctux.cc/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://blog.sctux.cc/2018/12/12/kubernetes_pod_access/&title=《理解kubernetes中Pod访问方式》 — 运维人&source=😊" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.sctux.cc/2018/12/12/kubernetes_pod_access/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《理解kubernetes中Pod访问方式》 — 运维人&url=https://blog.sctux.cc/2018/12/12/kubernetes_pod_access/&via=https://blog.sctux.cc" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=https://blog.sctux.cc/2018/12/12/kubernetes_pod_access/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+<div class="page-modal wx-share" id="wxShare">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <img src="//api.qrserver.com/v1/create-qr-code/?data=https://blog.sctux.cc/2018/12/12/kubernetes_pod_access/" alt="微信分享二维码">
+</div>
+
+
+
+
+    <script src="//cdn.bootcss.com/node-waves/0.7.4/waves.min.js"></script>
+<script>
+var BLOG = { ROOT: '/', SHARE: true, REWARD: true };
+
+
+</script>
+
+<script src="/js/main.min.js?v=1.7.2"></script>
+
+
+<div class="search-panel" id="search-panel">
+    <ul class="search-result" id="search-result"></ul>
+</div>
+<template id="search-tpl">
+<li class="item">
+    <a href="{path}" class="waves-block waves-effect">
+        <div class="title ellipsis" title="{title}">{title}</div>
+        <div class="flex-row flex-middle">
+            <div class="tags ellipsis">
+                {tags}
+            </div>
+            <time class="flex-col time">{date}</time>
+        </div>
+    </a>
+</li>
+</template>
+
+<script src="/js/search.min.js?v=1.7.2" async></script>
+
+
+
+
+
+
+
+
+<script>
+(function() {
+    var OriginTitile = document.title, titleTime;
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            document.title = '老弟，哪儿去啦😊?！';
+            clearTimeout(titleTime);
+        } else {
+            document.title = '(つェ⊂)咦!老弟来啦!';
+            titleTime = setTimeout(function() {
+                document.title = OriginTitile;
+            },2000);
+        }
+    });
+})();
+</script>
+
+
+
+</body>
+</html>
