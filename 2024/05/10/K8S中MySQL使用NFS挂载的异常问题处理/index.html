@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.8.0">
+<script>(function(i,s,o,g,r,a,m){i["DaoVoiceObject"]=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;a.charset="utf-8";m.parentNode.insertBefore(a,m)})(window,document,"script",('https:' == document.location.protocol ? 'https:' : 'http:') + "//widget.daovoice.io/widget/9f77122a.js","daovoice")
+
+
+// daovoice('init', {
+//   app_id: "9f77122a",
+//   user_id: "NO_89757", // 必填: 该用户在您系统上的唯一ID
+//   email: "daovoice@example.com", // 选填:  该用户在您系统上的主邮箱
+//   name: "道客船长", // 选填: 用户名
+//   signed_up: 1449821660 // 选填: 用户的注册时间，用Unix时间戳表示
+// });
+// daovoice('update');
+
+</script>
+    
+<!-- Google Analytics -->
+<script>
+window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+ga('create', 'true', 'auto');
+ga('send', 'pageview');
+</script>
+<script async src="https://www.google-analytics.com/analytics.js"></script>
+<!-- End Google Analytics -->
+
+
+    
+<!-- Tencent Speed -->
+<script>var _speedMark = new Date()</script>
+<!-- End Tencent Speed -->
+<!-- Tencent Analysis -->
+<script async src="//tajs.qq.com/stats?sId=true"></script>
+<!-- End Tencent Analysis -->
+
+
+    
+
+
+
+    <meta charset="utf-8">
+    
+    
+    
+    
+    <title>K8S中MySQL使用NFS挂载的异常问题处理 | 运维人 | Devops、Linux、Kubernetes、Docker、Flask、Python、Shell、SRE</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    
+    <meta name="theme-color" content="#3F51B5">
+    
+    
+    <meta name="keywords" content="NFS">
+    <meta name="description" content="问题原因在k8s中使用nfs作为持久存储方式，根据不同环境对应不同名称空间的pod使用的存储类/存储卷 相对应，发现mysql8.0.23 在启动时挂载NFS会卡住的情况： 问题复现这里在某台宿主机上面创建了一个本地目录，然后按照默认方式： 1mount -t nfs   10.10.10.142:/data/bbb /tmp/cc 将nfs挂载到本地，然后映射到容器中去，所以这里跟k8s环境没多">
+<meta name="keywords" content="NFS">
+<meta property="og:type" content="article">
+<meta property="og:title" content="K8S中MySQL使用NFS挂载的异常问题处理">
+<meta property="og:url" content="https://blog.sctux.cc/2024/05/10/K8S中MySQL使用NFS挂载的异常问题处理/index.html">
+<meta property="og:site_name" content="运维人">
+<meta property="og:description" content="问题原因在k8s中使用nfs作为持久存储方式，根据不同环境对应不同名称空间的pod使用的存储类/存储卷 相对应，发现mysql8.0.23 在启动时挂载NFS会卡住的情况： 问题复现这里在某台宿主机上面创建了一个本地目录，然后按照默认方式： 1mount -t nfs   10.10.10.142:/data/bbb /tmp/cc 将nfs挂载到本地，然后映射到容器中去，所以这里跟k8s环境没多">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://blog.sctux.cc/2024/05/10/K8S中MySQL使用NFS挂载的异常问题处理/1.png">
+<meta property="og:image" content="https://blog.sctux.cc/2024/05/10/K8S中MySQL使用NFS挂载的异常问题处理/0.png">
+<meta property="og:image" content="https://blog.sctux.cc/2024/05/10/K8S中MySQL使用NFS挂载的异常问题处理/3.png">
+<meta property="og:image" content="https://blog.sctux.cc/2024/05/10/K8S中MySQL使用NFS挂载的异常问题处理/4.png">
+<meta property="og:image" content="https://blog.sctux.cc/2024/05/10/K8S中MySQL使用NFS挂载的异常问题处理/5.png">
+<meta property="og:image" content="https://blog.sctux.cc/2024/05/10/K8S中MySQL使用NFS挂载的异常问题处理/6.png">
+<meta property="og:image" content="https://blog.sctux.cc/2024/05/10/K8S中MySQL使用NFS挂载的异常问题处理/7.png">
+<meta property="og:image" content="https://blog.sctux.cc/2024/05/10/K8S中MySQL使用NFS挂载的异常问题处理/8.png">
+<meta property="og:image" content="https://blog.sctux.cc/2024/05/10/K8S中MySQL使用NFS挂载的异常问题处理/00.jpeg">
+<meta property="og:updated_time" content="2024-05-10T13:39:59.609Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="K8S中MySQL使用NFS挂载的异常问题处理">
+<meta name="twitter:description" content="问题原因在k8s中使用nfs作为持久存储方式，根据不同环境对应不同名称空间的pod使用的存储类/存储卷 相对应，发现mysql8.0.23 在启动时挂载NFS会卡住的情况： 问题复现这里在某台宿主机上面创建了一个本地目录，然后按照默认方式： 1mount -t nfs   10.10.10.142:/data/bbb /tmp/cc 将nfs挂载到本地，然后映射到容器中去，所以这里跟k8s环境没多">
+<meta name="twitter:image" content="https://blog.sctux.cc/2024/05/10/K8S中MySQL使用NFS挂载的异常问题处理/1.png">
+    
+    <link rel="shortcut icon" href="/favicon.ico">
+    <link rel="stylesheet" href="/css/style.css?v=1.7.2">
+    <script>window.lazyScripts=[]</script>
+
+    <!-- custom head -->
+    
+
+</head>
+
+<body>
+    <div id="loading" class="active"></div>
+
+    <aside id="menu">
+  <div class="inner flex-row-vertical">
+    <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menu-off">
+        <i class="icon icon-lg icon-close"></i>
+    </a>
+    <div class="brand-wrap" style="background-image:url(/img/brand.jpg)">
+      <div class="brand">
+        <a href="/" class="avatar waves-effect waves-circle waves-light">
+          <img src="/img/avatar.jpg">
+        </a>
+        <hgroup class="introduce">
+          <h5 class="nickname">maoqiu.guo</h5>
+          <a href="mailto:guomaoqiu@gmail.com" title="guomaoqiu@gmail.com" class="mail">guomaoqiu@gmail.com</a>
+        </hgroup>
+      </div>
+    </div>
+    <div class="scroll-wrap flex-col">
+      <ul class="nav">
+        
+            <li class="waves-block waves-effect">
+              <a href="/">
+                <i class="icon icon-lg icon-home"></i>
+                主页
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/archives">
+                <i class="icon icon-lg icon-archives"></i>
+                归档
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/tags">
+                <i class="icon icon-lg icon-tags"></i>
+                标签
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/categories">
+                <i class="icon icon-lg icon-th-list"></i>
+                分类
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://github.com/guomaoqiu" target="_blank">
+                <i class="icon icon-lg icon-github"></i>
+                Github
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/works">
+                <i class="icon icon-lg icon-hand-peace-o"></i>
+                作品
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="http://demo.sctux.cc" target="_blank">
+                <i class="icon icon-lg icon-link"></i>
+                DevOpsPlatform
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="http://resume.sctux.cc/" target="_blank">
+                <i class="icon icon-lg icon-heart"></i>
+                我的简历
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/about">
+                <i class="icon icon-lg icon-user"></i>
+                关于我
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://blog.sctux.cc/Skilltree.jpg" target="_blank">
+                <i class="icon icon-lg icon-tree"></i>
+                我的技能树
+              </a>
+            </li>
+        
+      </ul>
+    </div>
+  </div>
+</aside>
+
+    <main id="main">
+        <header class="top-header" id="header">
+    <div class="flex-row">
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light on" id="menu-toggle">
+          <i class="icon icon-lg icon-navicon"></i>
+        </a>
+        <div class="flex-col header-title ellipsis">K8S中MySQL使用NFS挂载的异常问题处理</div>
+        
+        <div class="search-wrap" id="search-wrap">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="back">
+                <i class="icon icon-lg icon-chevron-left"></i>
+            </a>
+            <input type="text" id="key" class="search-input" autocomplete="off" placeholder="输入感兴趣的关键字">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="search">
+                <i class="icon icon-lg icon-search"></i>
+            </a>
+        </div>
+        
+        
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menuShare">
+            <i class="icon icon-lg icon-share-alt"></i>
+        </a>
+        
+    </div>
+</header>
+<header class="content-header post-header">
+
+    <div class="container fade-scale">
+        <h1 class="title">K8S中MySQL使用NFS挂载的异常问题处理</h1>
+        <h5 class="subtitle">
+            
+                <time datetime="2024-05-10T12:58:02.000Z" itemprop="datePublished" class="page-time">
+  2024-05-10
+</time>
+
+
+            
+        </h5>
+    </div>
+
+    
+
+
+</header>
+
+
+<div class="container body-wrap">
+    
+    <aside class="post-widget">
+        <nav class="post-toc-wrap post-toc-shrink" id="post-toc">
+            <h4>TOC</h4>
+            <ol class="post-toc"><li class="post-toc-item post-toc-level-1"><a class="post-toc-link" href="#问题原因"><span class="post-toc-number">1.</span> <span class="post-toc-text">问题原因</span></a></li><li class="post-toc-item post-toc-level-1"><a class="post-toc-link" href="#问题复现"><span class="post-toc-number">2.</span> <span class="post-toc-text">问题复现</span></a></li><li class="post-toc-item post-toc-level-1"><a class="post-toc-link" href="#问题排查"><span class="post-toc-number">3.</span> <span class="post-toc-text">问题排查</span></a></li><li class="post-toc-item post-toc-level-1"><a class="post-toc-link" href="#问题处理"><span class="post-toc-number">4.</span> <span class="post-toc-text">问题处理</span></a></li></ol>
+        </nav>
+    </aside>
+
+
+<article id="post-K8S中MySQL使用NFS挂载的异常问题处理" class="post-article article-type-post fade" itemprop="blogPost">
+
+    <div class="post-card">
+        <h1 class="post-card-title">K8S中MySQL使用NFS挂载的异常问题处理</h1>
+        <div class="post-meta">
+            <time class="post-time" title="2024-05-10 20:58:02" datetime="2024-05-10T12:58:02.000Z" itemprop="datePublished">2024-05-10</time>
+
+            
+
+
+            
+
+        </div>
+        <div class="post-content" id="post-content" itemprop="postContent">
+            <h1 id="问题原因"><a href="#问题原因" class="headerlink" title="问题原因"></a>问题原因</h1><p>在k8s中使用nfs作为持久存储方式，根据不同环境对应不同名称空间的pod使用的存储类/存储卷 相对应，发现mysql8.0.23 在启动时挂载NFS会卡住的情况：</p>
+<h1 id="问题复现"><a href="#问题复现" class="headerlink" title="问题复现"></a>问题复现</h1><p>这里在某台宿主机上面创建了一个本地目录，然后按照默认方式：</p>
+<figure class="highlight elixir"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mount -t nfs   <span class="number">10.10</span>.<span class="number">10.142</span><span class="symbol">:/data/bbb</span> /tmp/cc</span><br></pre></td></tr></table></figure>
+<p>将nfs挂载到本地，然后映射到容器中去，所以这里跟k8s环境没多大联系，主要是nfs挂载问题：</p>
+<p> <img src="/2024/05/10/K8S中MySQL使用NFS挂载的异常问题处理/1.png" alt=""></p>
+<p>初始化一直卡着，而且在挂载目录发现只有这个文件：</p>
+<p> <img src="/2024/05/10/K8S中MySQL使用NFS挂载的异常问题处理/0.png" alt=""></p>
+<h1 id="问题排查"><a href="#问题排查" class="headerlink" title="问题排查"></a>问题排查</h1><p>检查一下nfs挂载的参数情况：</p>
+<figure class="highlight jboss-cli"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">mount -v  | grep nfs</span><br><span class="line"></span><br><span class="line">10.10.10.137:<span class="string">/data/nfs_share_137</span> on <span class="string">/tmp/fans</span> type nfs <span class="params">(rw,relatime,<span class="attr">vers</span>=3,<span class="attr">rsize</span>=1048576,<span class="attr">wsize</span>=1048576,<span class="attr">namlen</span>=255,hard,<span class="attr">proto</span>=tcp,<span class="attr">timeo</span>=600,<span class="attr">retrans</span>=2,<span class="attr">sec</span>=sys,<span class="attr">mountaddr</span>=10.10.10.137,<span class="attr">mountvers</span>=3,<span class="attr">mo</span>=udp,<span class="attr">local_lock</span>=none,<span class="attr">addr</span>=10.10.10.137)</span></span><br><span class="line"></span><br><span class="line">10.10.10.142:<span class="string">/data/bbb</span> on <span class="string">/tmp/cc</span> type nfs <span class="params">(rw,relatime,<span class="attr">vers</span>=3,<span class="attr">rsize</span>=1048576,<span class="attr">wsize</span>=1048576,<span class="attr">namlen</span>=255,hard,<span class="attr">proto</span>=tcp,<span class="attr">timeo</span>=600,<span class="attr">retrans</span>=2,<span class="attr">sec</span>=sys,<span class="attr">mountaddr</span>=10.10.10.142,<span class="attr">mountvers</span>=3,<span class="attr">mountport</span>=<span class="attr">569lock</span>=none,<span class="attr">addr</span>=10.10.10.142)</span></span><br></pre></td></tr></table></figure>
+<p>如上可以看出我们如果使用默认的方式直接挂载，它会有一些默认参数</p>
+<p>后面也是通过该容器运行的宿主机上的内核日志才发现，这个问题：<br> <figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="/2024/05/10/K8S中MySQL使用NFS挂载的异常问题处理/3.png" alt="" title="">
+                </div>
+                <div class="image-caption"></div>
+            </figure></p>
+<h1 id="问题处理"><a href="#问题处理" class="headerlink" title="问题处理"></a>问题处理</h1><p>这个错误提示实际上是NFS客户端无法获得文件锁定，而不是无法与NFS服务器建立联系。当NFS客户端无法获得文件锁定时，它会尝试向NFS服务器发送锁定请求，并等待服务器响应。如果NFS服务器没有响应，则可能会出现类似的错误提示。可能造成这个错误的原因如下：</p>
+<ol>
+<li>检查NFS服务器的负载情况，如果负载过高，则可能需要优化服务器配置或增加服务器数量。</li>
+<li>检查NFS客户端与服务器之间的网络连接，如果存在网络故障，则可能需要修复网络问题或更改网络配置。</li>
+<li>考虑使用NFS挂载选项来优化NFS客户端的行为，例如使用soft选项而不是hard选项，或者使用intr选项允许中断NFS操作。</li>
+<li>如果NFS客户端和服务器在不同的时区中运行，则可能需要使用noac选项来禁用NFS客户端的属性缓存，以确保文件锁定请求和响应的时间戳是正确的。</li>
+<li>如果您的NFS客户端和服务器运行的是不同的操作系统，则可能需要使用适当的挂载选项来确保文件锁定机制得到正确支持，例如使用nolock选项来禁用文件锁定机制。</li>
+</ol>
+<p>因为我们使用了kuboard, 无法全局对这个存储类做暂时不能影响业务，不能所有变更：<br> <figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="/2024/05/10/K8S中MySQL使用NFS挂载的异常问题处理/4.png" alt="" title="">
+                </div>
+                <div class="image-caption"></div>
+            </figure><br>这里只是单独这个mysql服务没有办法挂在使用，是由需要添加挂载参数：<br> <figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="/2024/05/10/K8S中MySQL使用NFS挂载的异常问题处理/5.png" alt="" title="">
+                </div>
+                <div class="image-caption"></div>
+            </figure></p>
+<p> 找到我们在页面上新建的pv:</p>
+ <figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"> <span class="string">kubectl</span> <span class="string">edit</span> <span class="string">pv</span> <span class="bullet">-n</span> <span class="string">testnet</span> <span class="string">pvc-b0de2c7f-49de-4e16-83cc-492de8292e5f</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment"># Please edit the object below. Lines beginning with a '#' will be ignored,</span></span><br><span class="line"><span class="comment"># and an empty file will abort the edit. If an error occurs while saving this file will be</span></span><br><span class="line"><span class="comment"># reopened with the relevant failures.</span></span><br><span class="line"><span class="comment">#</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">PersistentVolume</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line"><span class="attr">  annotations:</span></span><br><span class="line">    <span class="string">pv.kubernetes.io/provisioned-by:</span> <span class="string">nfs-testnet</span></span><br><span class="line"><span class="attr">  creationTimestamp:</span> <span class="string">"2023-07-20T16:29:30Z"</span></span><br><span class="line"><span class="attr">  finalizers:</span></span><br><span class="line"><span class="bullet">  -</span> <span class="string">kubernetes.io/pv-protection</span></span><br><span class="line"><span class="attr">  name:</span> <span class="string">pvc-b0de2c7f-49de-4e16-83cc-492de8292e5f</span></span><br><span class="line"><span class="attr">  resourceVersion:</span> <span class="string">"147600146"</span></span><br><span class="line"><span class="attr">  uid:</span> <span class="string">e9f111ac-2932-46a0-b6bc-876275dfa02f</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line"><span class="attr">  accessModes:</span></span><br><span class="line"><span class="bullet">  -</span> <span class="string">ReadWriteOnce</span></span><br><span class="line"><span class="attr">  capacity:</span></span><br><span class="line"><span class="attr">    storage:</span> <span class="number">2</span><span class="string">G</span></span><br><span class="line"><span class="attr">  claimRef:</span></span><br><span class="line"><span class="attr">    apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">    kind:</span> <span class="string">PersistentVolumeClaim</span></span><br><span class="line"><span class="attr">    name:</span> <span class="string">dassssssssssssssss</span></span><br><span class="line"><span class="attr">    namespace:</span> <span class="string">testnet</span></span><br><span class="line"><span class="attr">    resourceVersion:</span> <span class="string">"147600141"</span></span><br><span class="line"><span class="attr">    uid:</span> <span class="string">b0de2c7f-49de-4e16-83cc-492de8292e5f</span></span><br><span class="line"><span class="attr">  nfs:</span></span><br><span class="line"><span class="attr">    path:</span> <span class="string">/data/testnet-dassssssssssssssss-pvc-b0de2c7f-49de-4e16-83cc-492de8292e5f</span></span><br><span class="line"><span class="attr">    server:</span> <span class="number">10.10</span><span class="number">.10</span><span class="number">.142</span></span><br><span class="line"><span class="attr">  persistentVolumeReclaimPolicy:</span> <span class="string">Retain</span></span><br><span class="line"><span class="attr">  storageClassName:</span> <span class="string">testnet</span></span><br><span class="line"><span class="attr">  volumeMode:</span> <span class="string">Filesystem</span></span><br><span class="line"><span class="attr">status:</span></span><br><span class="line"><span class="attr">  phase:</span> <span class="string">Bound</span></span><br></pre></td></tr></table></figure>
+<p>然后我们在<code>volumeMode同级</code> 就可以定义挂载参数(具体参数：<a href="https://poe.com/s/FyTCOkthr3VREHU3mByA)：" target="_blank" rel="noopener">https://poe.com/s/FyTCOkthr3VREHU3mByA)：</a></p>
+<figure class="highlight asciidoc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">mountOptions:</span><br><span class="line"><span class="bullet">- </span>nolock</span><br><span class="line"><span class="bullet">- </span>timeo=120</span><br><span class="line"><span class="bullet">- </span>intr</span><br><span class="line"><span class="bullet">- </span>retrans=10</span><br></pre></td></tr></table></figure>
+<p>这样我们单独为MySQL服务创建的这个pvc就拥有了这些挂载参数，初始化，运行正常：<br> <figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="/2024/05/10/K8S中MySQL使用NFS挂载的异常问题处理/6.png" alt="" title="">
+                </div>
+                <div class="image-caption"></div>
+            </figure></p>
+<p>在这个pod运行的宿主机上 查看结果，可以看到我们修改pv后的参数已经生效，并且在nfs服务端可以看到我们的MySQL初始化文件已经生成：<br> <figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="/2024/05/10/K8S中MySQL使用NFS挂载的异常问题处理/7.png" alt="" title="">
+                </div>
+                <div class="image-caption"></div>
+            </figure><br> <figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="/2024/05/10/K8S中MySQL使用NFS挂载的异常问题处理/8.png" alt="" title="">
+                </div>
+                <div class="image-caption"></div>
+            </figure></p>
+<p>最终该挂载问题完美解决。</p>
+<p>对于特殊，不同的deployment 可能需要特殊处理，这里按照mysql的部署，记录一下顺序</p>
+<ol>
+<li>创建pvc</li>
+<li>修改默认pvc配置，增加nfs挂载参数</li>
+<li>启动pod</li>
+<li>检查挂载目录数据是否正常生成</li>
+<li><p>检查挂载选项是否已经增加</p>
+<p><img src="/2024/05/10/K8S中MySQL使用NFS挂载的异常问题处理/00.jpeg" alt=""></p>
+</li>
+</ol>
+
+        </div>
+
+        <blockquote class="post-copyright">
+    
+    <div class="content">
+        
+<span class="post-time">
+    最后更新时间：<time datetime="2024-05-10T13:39:59.609Z" itemprop="dateUpdated">2024-05-10 21:39:59</time>
+</span><br>
+
+
+        
+        该文链接：<a href="/2024/05/10/K8S中MySQL使用NFS挂载的异常问题处理/" target="_blank" rel="external">https://blog.sctux.cc/2024/05/10/K8S中MySQL使用NFS挂载的异常问题处理/</a>
+        
+    </div>
+    
+    <footer>
+        <a href="https://blog.sctux.cc">
+            <img src="/img/avatar.jpg" alt="maoqiu.guo">
+            maoqiu.guo
+        </a>
+    </footer>
+</blockquote>
+
+        
+<div class="page-reward">
+    <a id="rewardBtn" href="javascript:;" class="page-reward-btn waves-effect waves-circle waves-light">赏</a>
+</div>
+
+
+
+        <div class="post-footer">
+            
+	<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/NFS/">NFS</a></li></ul>
+
+
+            
+<div class="page-share-wrap">
+    
+
+<div class="page-share" id="pageShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://blog.sctux.cc/2024/05/10/K8S中MySQL使用NFS挂载的异常问题处理/&title=《K8S中MySQL使用NFS挂载的异常问题处理》 — 运维人&pic=https://blog.sctux.cc/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://blog.sctux.cc/2024/05/10/K8S中MySQL使用NFS挂载的异常问题处理/&title=《K8S中MySQL使用NFS挂载的异常问题处理》 — 运维人&source=😊" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.sctux.cc/2024/05/10/K8S中MySQL使用NFS挂载的异常问题处理/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《K8S中MySQL使用NFS挂载的异常问题处理》 — 运维人&url=https://blog.sctux.cc/2024/05/10/K8S中MySQL使用NFS挂载的异常问题处理/&via=https://blog.sctux.cc" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=https://blog.sctux.cc/2024/05/10/K8S中MySQL使用NFS挂载的异常问题处理/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+
+    <a href="javascript:;" id="shareFab" class="page-share-fab waves-effect waves-circle">
+        <i class="icon icon-share-alt icon-lg"></i>
+    </a>
+</div>
+
+
+
+        </div>
+    </div>
+
+    
+<nav class="post-nav flex-row flex-justify-between flex-row-reverse">
+  
+
+  
+    <div class="waves-block waves-effect next">
+      <a href="/2022/09/12/Prometheus-Consul实现企业级宿主机-容器监控告警/" id="post-next" class="post-nav-link">
+        <div class="tips">Next <i class="icon icon-angle-right icon-lg icon-pl"></i></div>
+        <h4 class="title">Prometheus+Consul实现企业级宿主机+容器监控告警</h4>
+      </a>
+    </div>
+  
+</nav>
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Valine Comments -->
+    <div class="comments vcomment" id="comments"></div>
+    <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+    <script src="//unpkg.com/valine@latest/dist/Valine.min.js"></script>
+    <!-- Valine Comments script -->
+    <script>
+        var GUEST_INFO = ['nick','mail','link'];
+        var guest_info = 'nick,mail,link'.split(',').filter(function(item){
+          return GUEST_INFO.indexOf(item) > -1
+        });
+        new Valine({
+            el: '#comments',
+            notify: 'true' == 'true',
+            verify: 'true' == 'true',
+            appId: "lHxnnDHJXDgMoFpCbdx8A4q7-gzGzoHsz",
+            appKey: "W8H2NuO8chyDlCEQzionLuuV",
+            avatar: "monsterid",
+            placeholder: "来都来了，说点啥子吧~🌹 (友情提醒，留下正确的邮箱地址可以第一时间获取评论反馈)",
+            guest_info: guest_info.length == 0 ? GUEST_INFO : guest_info,
+            pageSize: "10"
+        })
+    </script>
+    <!-- Valine Comments end -->
+
+
+
+
+
+
+
+</article>
+
+<div id="reward" class="page-modal reward-lay">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <h3 class="reward-title">
+        <i class="icon icon-quote-left"></i>
+        谢谢大爷~
+        <i class="icon icon-quote-right"></i>
+    </h3>
+    <div class="reward-content">
+        
+        <div class="reward-code">
+            <img id="rewardCode" src="/img/wechat.jpg" alt="打赏二维码">
+        </div>
+        
+        <label class="reward-toggle">
+            <input id="rewardToggle" type="checkbox" class="reward-toggle-check" data-wechat="/img/wechat.jpg" data-alipay="/img/alipay.jpg">
+            <div class="reward-toggle-ctrol">
+                <span class="reward-toggle-item wechat">微信</span>
+                <span class="reward-toggle-label"></span>
+                <span class="reward-toggle-item alipay">支付宝</span>
+            </div>
+        </label>
+        
+    </div>
+</div>
+
+
+
+</div>
+
+        <footer class="footer">
+    <div class="top">
+        
+
+        <p>
+            
+            <span>博客内容遵循 <a rel="license" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh">知识共享 署名 - 非商业性 - 相同方式共享 4.0 国际协议</a></span>
+        </p>
+    </div>
+    <div class="bottom">
+        <p><span>maoqiu.guo &copy; 2013 - 2024</span>
+            <span>
+                
+                <a href="http://www.miitbeian.gov.cn/" target="_blank">蜀ICP备007号-1</a><br>
+                
+                Power by <a href="http://hexo.io/" target="_blank">Hexo</a> Theme <a href="https://github.com/yscoder/hexo-theme-indigo" target="_blank">indigo</a>
+            </span>
+        </p>
+    </div>
+</footer>
+
+    </main>
+    <div class="mask" id="mask"></div>
+<a href="javascript:;" id="gotop" class="waves-effect waves-circle waves-light"><span class="icon icon-lg icon-chevron-up"></span></a>
+
+
+
+<div class="global-share" id="globalShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://blog.sctux.cc/2024/05/10/K8S中MySQL使用NFS挂载的异常问题处理/&title=《K8S中MySQL使用NFS挂载的异常问题处理》 — 运维人&pic=https://blog.sctux.cc/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://blog.sctux.cc/2024/05/10/K8S中MySQL使用NFS挂载的异常问题处理/&title=《K8S中MySQL使用NFS挂载的异常问题处理》 — 运维人&source=😊" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.sctux.cc/2024/05/10/K8S中MySQL使用NFS挂载的异常问题处理/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《K8S中MySQL使用NFS挂载的异常问题处理》 — 运维人&url=https://blog.sctux.cc/2024/05/10/K8S中MySQL使用NFS挂载的异常问题处理/&via=https://blog.sctux.cc" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=https://blog.sctux.cc/2024/05/10/K8S中MySQL使用NFS挂载的异常问题处理/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+<div class="page-modal wx-share" id="wxShare">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <img src="//api.qrserver.com/v1/create-qr-code/?data=https://blog.sctux.cc/2024/05/10/K8S中MySQL使用NFS挂载的异常问题处理/" alt="微信分享二维码">
+</div>
+
+
+
+
+    <script src="//cdn.bootcss.com/node-waves/0.7.4/waves.min.js"></script>
+<script>
+var BLOG = { ROOT: '/', SHARE: true, REWARD: true };
+
+
+</script>
+
+<script src="/js/main.min.js?v=1.7.2"></script>
+
+
+<div class="search-panel" id="search-panel">
+    <ul class="search-result" id="search-result"></ul>
+</div>
+<template id="search-tpl">
+<li class="item">
+    <a href="{path}" class="waves-block waves-effect">
+        <div class="title ellipsis" title="{title}">{title}</div>
+        <div class="flex-row flex-middle">
+            <div class="tags ellipsis">
+                {tags}
+            </div>
+            <time class="flex-col time">{date}</time>
+        </div>
+    </a>
+</li>
+</template>
+
+<script src="/js/search.min.js?v=1.7.2" async></script>
+
+
+
+
+
+
+
+
+<script>
+(function() {
+    var OriginTitile = document.title, titleTime;
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            document.title = '老弟，哪儿去啦😊?！';
+            clearTimeout(titleTime);
+        } else {
+            document.title = '(つェ⊂)咦!老弟来啦!';
+            titleTime = setTimeout(function() {
+                document.title = OriginTitile;
+            },2000);
+        }
+    });
+})();
+</script>
+
+
+
+</body>
+</html>
