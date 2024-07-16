@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.8.0">
+<script>(function(i,s,o,g,r,a,m){i["DaoVoiceObject"]=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;a.charset="utf-8";m.parentNode.insertBefore(a,m)})(window,document,"script",('https:' == document.location.protocol ? 'https:' : 'http:') + "//widget.daovoice.io/widget/9f77122a.js","daovoice")
+
+
+// daovoice('init', {
+//   app_id: "9f77122a",
+//   user_id: "NO_89757", // 必填: 该用户在您系统上的唯一ID
+//   email: "daovoice@example.com", // 选填:  该用户在您系统上的主邮箱
+//   name: "道客船长", // 选填: 用户名
+//   signed_up: 1449821660 // 选填: 用户的注册时间，用Unix时间戳表示
+// });
+// daovoice('update');
+
+</script>
+    
+<!-- Google Analytics -->
+<script>
+window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+ga('create', 'true', 'auto');
+ga('send', 'pageview');
+</script>
+<script async src="https://www.google-analytics.com/analytics.js"></script>
+<!-- End Google Analytics -->
+
+
+    
+<!-- Tencent Speed -->
+<script>var _speedMark = new Date()</script>
+<!-- End Tencent Speed -->
+<!-- Tencent Analysis -->
+<script async src="//tajs.qq.com/stats?sId=true"></script>
+<!-- End Tencent Analysis -->
+
+
+    
+
+
+
+    <meta charset="utf-8">
+    
+    
+    
+    
+    <title>如何利用ElastAlert2对ES中的日志创建告警 | 运维人 | Devops、Linux、Kubernetes、Docker、Flask、Python、Shell、SRE</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    
+    <meta name="theme-color" content="#3F51B5">
+    
+    
+    <meta name="keywords" content="">
+    <meta name="description" content="背景线上Api服务出现了5xx的请求错误，导致用户主动向团队报告， 由于API的接口比较多，也只是监控了部分，事后通过日志才发现的确用户侧在对某个接口访问时，频繁出现5xx告警，我这边也没有收到什么通知，目前先暂且不说出现5xx是什么造成的，而是在API接口响应状态的监控方面没有做到很到位， 所以需要对Nginx日志中的状态为5xx的请求监控告警，以便能快速响应，解决问题。 ElastAlert2">
+<meta name="keywords" content="DevOps,Linux,Kubernetes,Flask,Python,Shell,SRE">
+<meta property="og:type" content="article">
+<meta property="og:title" content="如何利用ElastAlert2对ES中的日志创建告警">
+<meta property="og:url" content="https://blog.sctux.cc/2024/07/16/如何利用ElastAlert2对ES中的日志创建告警/index.html">
+<meta property="og:site_name" content="运维人">
+<meta property="og:description" content="背景线上Api服务出现了5xx的请求错误，导致用户主动向团队报告， 由于API的接口比较多，也只是监控了部分，事后通过日志才发现的确用户侧在对某个接口访问时，频繁出现5xx告警，我这边也没有收到什么通知，目前先暂且不说出现5xx是什么造成的，而是在API接口响应状态的监控方面没有做到很到位， 所以需要对Nginx日志中的状态为5xx的请求监控告警，以便能快速响应，解决问题。 ElastAlert2">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://blog.sctux.cc/2024/07/16/如何利用ElastAlert2对ES中的日志创建告警/1.jpeg">
+<meta property="og:image" content="https://blog.sctux.cc/2024/07/16/如何利用ElastAlert2对ES中的日志创建告警/2.jpeg">
+<meta property="og:image" content="https://blog.sctux.cc/2024/07/16/如何利用ElastAlert2对ES中的日志创建告警/3.jpeg">
+<meta property="og:updated_time" content="2024-07-16T12:48:20.337Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="如何利用ElastAlert2对ES中的日志创建告警">
+<meta name="twitter:description" content="背景线上Api服务出现了5xx的请求错误，导致用户主动向团队报告， 由于API的接口比较多，也只是监控了部分，事后通过日志才发现的确用户侧在对某个接口访问时，频繁出现5xx告警，我这边也没有收到什么通知，目前先暂且不说出现5xx是什么造成的，而是在API接口响应状态的监控方面没有做到很到位， 所以需要对Nginx日志中的状态为5xx的请求监控告警，以便能快速响应，解决问题。 ElastAlert2">
+<meta name="twitter:image" content="https://blog.sctux.cc/2024/07/16/如何利用ElastAlert2对ES中的日志创建告警/1.jpeg">
+    
+    <link rel="shortcut icon" href="/favicon.ico">
+    <link rel="stylesheet" href="/css/style.css?v=1.7.2">
+    <script>window.lazyScripts=[]</script>
+
+    <!-- custom head -->
+    
+
+</head>
+
+<body>
+    <div id="loading" class="active"></div>
+
+    <aside id="menu">
+  <div class="inner flex-row-vertical">
+    <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menu-off">
+        <i class="icon icon-lg icon-close"></i>
+    </a>
+    <div class="brand-wrap" style="background-image:url(/img/brand.jpg)">
+      <div class="brand">
+        <a href="/" class="avatar waves-effect waves-circle waves-light">
+          <img src="/img/avatar.jpg">
+        </a>
+        <hgroup class="introduce">
+          <h5 class="nickname">maoqiu.guo</h5>
+          <a href="mailto:guomaoqiu@gmail.com" title="guomaoqiu@gmail.com" class="mail">guomaoqiu@gmail.com</a>
+        </hgroup>
+      </div>
+    </div>
+    <div class="scroll-wrap flex-col">
+      <ul class="nav">
+        
+            <li class="waves-block waves-effect">
+              <a href="/">
+                <i class="icon icon-lg icon-home"></i>
+                主页
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/archives">
+                <i class="icon icon-lg icon-archives"></i>
+                归档
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/tags">
+                <i class="icon icon-lg icon-tags"></i>
+                标签
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/categories">
+                <i class="icon icon-lg icon-th-list"></i>
+                分类
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://github.com/guomaoqiu" target="_blank">
+                <i class="icon icon-lg icon-github"></i>
+                Github
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/works">
+                <i class="icon icon-lg icon-hand-peace-o"></i>
+                作品
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="http://demo.sctux.cc" target="_blank">
+                <i class="icon icon-lg icon-link"></i>
+                DevOpsPlatform
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="http://resume.sctux.cc/" target="_blank">
+                <i class="icon icon-lg icon-heart"></i>
+                我的简历
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/about">
+                <i class="icon icon-lg icon-user"></i>
+                关于我
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://blog.sctux.cc/Skilltree.jpg" target="_blank">
+                <i class="icon icon-lg icon-tree"></i>
+                我的技能树
+              </a>
+            </li>
+        
+      </ul>
+    </div>
+  </div>
+</aside>
+
+    <main id="main">
+        <header class="top-header" id="header">
+    <div class="flex-row">
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light on" id="menu-toggle">
+          <i class="icon icon-lg icon-navicon"></i>
+        </a>
+        <div class="flex-col header-title ellipsis">如何利用ElastAlert2对ES中的日志创建告警</div>
+        
+        <div class="search-wrap" id="search-wrap">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="back">
+                <i class="icon icon-lg icon-chevron-left"></i>
+            </a>
+            <input type="text" id="key" class="search-input" autocomplete="off" placeholder="输入感兴趣的关键字">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="search">
+                <i class="icon icon-lg icon-search"></i>
+            </a>
+        </div>
+        
+        
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menuShare">
+            <i class="icon icon-lg icon-share-alt"></i>
+        </a>
+        
+    </div>
+</header>
+<header class="content-header post-header">
+
+    <div class="container fade-scale">
+        <h1 class="title">如何利用ElastAlert2对ES中的日志创建告警</h1>
+        <h5 class="subtitle">
+            
+                <time datetime="2024-07-16T09:56:39.000Z" itemprop="datePublished" class="page-time">
+  2024-07-16
+</time>
+
+
+            
+        </h5>
+    </div>
+
+    
+
+
+</header>
+
+
+<div class="container body-wrap">
+    
+    <aside class="post-widget">
+        <nav class="post-toc-wrap post-toc-shrink" id="post-toc">
+            <h4>TOC</h4>
+            <ol class="post-toc"><li class="post-toc-item post-toc-level-1"><a class="post-toc-link" href="#背景"><span class="post-toc-number">1.</span> <span class="post-toc-text">背景</span></a></li><li class="post-toc-item post-toc-level-1"><a class="post-toc-link" href="#ElastAlert2"><span class="post-toc-number">2.</span> <span class="post-toc-text">ElastAlert2</span></a></li><li class="post-toc-item post-toc-level-1"><a class="post-toc-link" href="#配置部署"><span class="post-toc-number">3.</span> <span class="post-toc-text">配置部署</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#配置文件配置"><span class="post-toc-number">3.0.1.</span> <span class="post-toc-text">配置文件配置</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#Rule规则配置"><span class="post-toc-number">3.0.2.</span> <span class="post-toc-text">Rule规则配置</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#部署运行"><span class="post-toc-number">3.0.3.</span> <span class="post-toc-text">部署运行</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#测试"><span class="post-toc-number">3.0.4.</span> <span class="post-toc-text">测试</span></a></li></ol></li></ol>
+        </nav>
+    </aside>
+
+
+<article id="post-如何利用ElastAlert2对ES中的日志创建告警" class="post-article article-type-post fade" itemprop="blogPost">
+
+    <div class="post-card">
+        <h1 class="post-card-title">如何利用ElastAlert2对ES中的日志创建告警</h1>
+        <div class="post-meta">
+            <time class="post-time" title="2024-07-16 17:56:39" datetime="2024-07-16T09:56:39.000Z" itemprop="datePublished">2024-07-16</time>
+
+            
+
+
+            
+
+        </div>
+        <div class="post-content" id="post-content" itemprop="postContent">
+            <h1 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h1><p>线上Api服务出现了5xx的请求错误，导致用户主动向团队报告， 由于API的接口比较多，也只是监控了部分，事后通过日志才发现的确用户侧在对某个接口访问时，频繁出现5xx告警，我这边也没有收到什么通知，目前先暂且不说出现5xx是什么造成的，而是在API接口响应状态的监控方面没有做到很到位， 所以需要对Nginx日志中的状态为5xx的请求监控告警，以便能快速响应，解决问题。</p>
+<h1 id="ElastAlert2"><a href="#ElastAlert2" class="headerlink" title="ElastAlert2"></a>ElastAlert2</h1><p>ElastAlert 2是一个简单的框架，用于对来自 Elasticsearch 和 OpenSearch 的数据的异常、尖峰或其他感兴趣的模式发出警报。</p>
+<p>官方文档：<a href="https://elastalert2.readthedocs.io/en/latest/" target="_blank" rel="noopener">https://elastalert2.readthedocs.io/en/latest/</a></p>
+<p>Github: <a href="https://github.com/jertel/elastalert2" target="_blank" rel="noopener">https://github.com/jertel/elastalert2</a></p>
+<h1 id="配置部署"><a href="#配置部署" class="headerlink" title="配置部署"></a>配置部署</h1><p>当然还是选择容器化方式运行，官方也提供得有镜像：<br><figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">docker</span> pull docker pull jertel/elastalert2</span><br></pre></td></tr></table></figure></p>
+<h3 id="配置文件配置"><a href="#配置文件配置" class="headerlink" title="配置文件配置"></a>配置文件配置</h3><p>可参考 <a href="https://github.com/jertel/elastalert2" target="_blank" rel="noopener">https://github.com/jertel/elastalert2</a>  目录中的examples/config.yaml.example</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">mkdir</span> <span class="bullet">-p</span> <span class="string">/opt/elastalert2/&#123;data,rules&#125;</span></span><br><span class="line"></span><br><span class="line"><span class="string">vim</span> <span class="string">/opt/elastalert2/config.yaml</span></span><br><span class="line"><span class="attr">rules_folder:</span> <span class="string">rules</span> <span class="comment"># 存放规则文件的目录，这个目录需要挂载到/opt/elastalert/下</span></span><br><span class="line"><span class="attr">run_every:</span></span><br><span class="line"><span class="attr">  minutes:</span> <span class="number">1</span></span><br><span class="line"><span class="attr">buffer_time:</span></span><br><span class="line"><span class="attr">  minutes:</span> <span class="number">15</span></span><br><span class="line"><span class="attr">es_host:</span> <span class="number">10.10</span><span class="number">.20</span><span class="number">.23</span></span><br><span class="line"><span class="attr">es_port:</span> <span class="number">9200</span></span><br><span class="line"><span class="attr">use_ssl:</span> <span class="literal">True</span></span><br><span class="line"><span class="attr">verify_certs:</span> <span class="literal">True</span></span><br><span class="line"><span class="attr">ca_certs:</span> <span class="string">/opt/elastalert/ca.crt</span> <span class="comment"># 如果集群启用了ssl记得要把ca证书挂在到容器的这个位置</span></span><br><span class="line"><span class="attr">ssl_show_warn:</span> <span class="literal">True</span></span><br><span class="line"><span class="attr">es_send_get_body_as:</span> <span class="string">GET</span></span><br><span class="line"><span class="attr">es_username:</span> <span class="comment"># YOUR ES USERNAME</span></span><br><span class="line"><span class="attr">es_password:</span> <span class="comment"># YOUR ES PASSWORD</span></span><br><span class="line"><span class="attr">writeback_index:</span> <span class="string">elastalert_status</span></span><br><span class="line"><span class="attr">alert_time_limit:</span></span><br><span class="line"><span class="attr">  days:</span> <span class="number">2</span></span><br></pre></td></tr></table></figure>
+<h3 id="Rule规则配置"><a href="#Rule规则配置" class="headerlink" title="Rule规则配置"></a>Rule规则配置</h3><p>我们网关服务器的Nginx日志是通过filebeat写到Elasticsearch的，也做好了index，其实在ELK 界面也可以看到这些状态数据，但是仅仅只是展示，没有告警，所以才有了这篇blog。</p>
+<p>创建一个针对 某个API域名的日志的状态监控文件：<br><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br></pre></td><td class="code"><pre><span class="line">vim  /opt/elastalert2/rules/mainnet-api.xxxxx.yaml</span><br><span class="line"><span class="comment">#rule名字,必须唯一</span></span><br><span class="line">name: The number of times this request responds <span class="keyword">with</span> a <span class="keyword">status</span> code <span class="keyword">of</span> <span class="number">5</span>xx <span class="keyword">in</span> the <span class="keyword">log</span> <span class="keyword">is</span> greater <span class="keyword">than</span> <span class="number">5</span> times <span class="keyword">within</span> <span class="number">1</span> <span class="keyword">minute</span>, please pay attention(mainnet-api.xxxxx)!</span><br><span class="line"></span><br><span class="line"><span class="comment">#类型,官方提供多种类型</span></span><br><span class="line"><span class="keyword">type</span>: frequency</span><br><span class="line"></span><br><span class="line"><span class="comment">#ES索引,支持通配符</span></span><br><span class="line"><span class="keyword">index</span>: proxy-mainnet-api.xxxxx.log-*</span><br><span class="line"></span><br><span class="line"><span class="comment">#在timeframe时间内,匹配到多少个结果便告警</span></span><br><span class="line">num_events: <span class="number">1</span></span><br><span class="line"></span><br><span class="line"><span class="comment">#监控周期.默认是minutes: 1</span></span><br><span class="line">timeframe:</span><br><span class="line">  seconds: <span class="number">5</span></span><br><span class="line"></span><br><span class="line"><span class="comment">#匹配模式.这里我匹配的是500—599的所有可能会出现的状态码</span></span><br><span class="line">filter:</span><br><span class="line">- <span class="keyword">range</span>:</span><br><span class="line">    <span class="keyword">status</span>:</span><br><span class="line">      <span class="keyword">from</span>: <span class="number">500</span></span><br><span class="line">      <span class="keyword">to</span>: <span class="number">599</span></span><br><span class="line"><span class="comment"># 自定义发送格式(start)</span></span><br><span class="line"><span class="comment"># 说明： 以下可以自定义发送的内容，如果什么都不指定，会发送ElastAlert2自定义的格式内容，为了内容简介，我这里就只是定义了这些内容：</span></span><br><span class="line"></span><br><span class="line">alert_text_type: alert_text_only</span><br><span class="line">alert_text: <span class="string">" </span></span><br><span class="line"><span class="string">  响应状态码: &#123;&#125; \n</span></span><br><span class="line"><span class="string">  发生时间UTC: &#123;&#125; \n</span></span><br><span class="line"><span class="string">  ES Index: &#123;&#125; \n</span></span><br><span class="line"><span class="string">  num_hits: &#123;&#125; \n</span></span><br><span class="line"><span class="string">  请求URL: https://mainnet-api.xxxxx&#123;&#125; \n</span></span><br><span class="line"><span class="string">  ClientIP: &#123;&#125; \n</span></span><br><span class="line"><span class="string">  num_matches: &#123;&#125; \n</span></span><br><span class="line"><span class="string">  http_user_agent: &#123;&#125;</span></span><br><span class="line"><span class="string">"</span></span><br><span class="line">alert_text_args:</span><br><span class="line">    - <span class="keyword">status</span></span><br><span class="line">    - <span class="string">"@timestamp"</span></span><br><span class="line">    - _index</span><br><span class="line">    - num_hits</span><br><span class="line">    - request_uri</span><br><span class="line">    - http_x_forwarded_for</span><br><span class="line">    - num_matches</span><br><span class="line">    - http_user_agent</span><br><span class="line"></span><br><span class="line"><span class="comment"># 自定义发送格式(end)</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment"># 这里选择使用的是Discord来接收通知，ElastAlert2其实很强大，支持很多渠道的告警</span></span><br><span class="line"><span class="comment"># 这里发现并不能同时多个渠道发送告警消息</span></span><br><span class="line"><span class="comment"># 如果需要多个告警渠道，可以写一个类似于AlertCenter的服务，通过这个服务整合后发送到不同的渠道，这里这是个思路，目前先满足需求</span></span><br><span class="line">alert:</span><br><span class="line">- <span class="string">"discord"</span></span><br><span class="line">discord_webhook_url: <span class="string">"xxxxxxx"</span></span><br><span class="line">discord_emoji_title: <span class="string">":lock:"</span></span><br><span class="line">discord_embed_color: <span class="number">0xE24D42</span></span><br><span class="line">discord_embed_footer: <span class="string">"Message sent by from api status moniotor(for @)"</span></span><br><span class="line">discord_embed_icon_url: <span class="string">"https://humancoders-formations.s3.amazonaws.com/uploads/course/logo/38/thumb_bigger_formation-elasticsearch.png"</span></span><br></pre></td></tr></table></figure></p>
+<h3 id="部署运行"><a href="#部署运行" class="headerlink" title="部署运行"></a>部署运行</h3><p>上面已经准备好了所需要的文件：<br><figure class="highlight elixir"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">root<span class="variable">@ip</span>-<span class="number">10</span>-<span class="number">10</span>-<span class="number">10</span>-<span class="number">11</span><span class="symbol">:/opt/elastalert2</span><span class="comment"># tree -L 2</span></span><br><span class="line">.</span><br><span class="line">├── ca.crt</span><br><span class="line">├── config.yaml</span><br><span class="line">├── data</span><br><span class="line">└── rules</span><br><span class="line">    ├── mainnet-api.xxxxx.yml</span><br><span class="line"></span><br><span class="line"><span class="number">2</span> directories, <span class="number">3</span> files</span><br></pre></td></tr></table></figure></p>
+<p>docker 方式运行：<br><figure class="highlight vim"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line">docker run -d --name=elastalert2 \</span><br><span class="line">	--env=TZ=Asia/Shanghai \</span><br><span class="line">	--volume=/<span class="keyword">opt</span>/elastalert2/dat<span class="variable">a:</span>/<span class="keyword">opt</span>/elastalert/data \</span><br><span class="line">	--volume=/<span class="keyword">opt</span>/elastalert2/config.yam<span class="variable">l:</span>/<span class="keyword">opt</span>/elastalert/config.yaml \</span><br><span class="line">	--volume=/<span class="keyword">opt</span>/elastalert2/rule<span class="variable">s:</span>/<span class="keyword">opt</span>/elastalert/rules \</span><br><span class="line">	--volume=/<span class="keyword">opt</span>/elastalert2/<span class="keyword">ca</span>.<span class="keyword">cr</span><span class="variable">t:</span>/<span class="keyword">opt</span>/elastalert/<span class="keyword">ca</span>.crt \</span><br><span class="line">	--restart=always \</span><br><span class="line">	jertel/elastalert2 </span><br><span class="line"></span><br><span class="line">root@ip-<span class="number">10</span>-<span class="number">10</span>-<span class="number">10</span>-<span class="number">11</span>:/<span class="keyword">opt</span>/elastalert2# docker logs -<span class="keyword">f</span> wonderful_tharp</span><br><span class="line">Reading Elastic <span class="number">7</span> <span class="built_in">index</span> mapping<span class="variable">s:</span></span><br><span class="line">Reading <span class="built_in">index</span> mapping <span class="string">'es_mappings/7/silence.json'</span></span><br><span class="line">Reading <span class="built_in">index</span> mapping <span class="string">'es_mappings/7/elastalert_status.json'</span></span><br><span class="line">Reading <span class="built_in">index</span> mapping <span class="string">'es_mappings/7/elastalert.json'</span></span><br><span class="line">Reading <span class="built_in">index</span> mapping <span class="string">'es_mappings/7/past_elastalert.json'</span></span><br><span class="line">Reading <span class="built_in">index</span> mapping <span class="string">'es_mappings/7/elastalert_error.json'</span></span><br><span class="line">Index elastalert_status already <span class="built_in">exists</span>. Skipping <span class="built_in">index</span> creation.</span><br><span class="line">WARNING:<span class="keyword">py</span>.warning<span class="variable">s:</span>/usr/local/lib/<span class="keyword">python3</span>.<span class="number">12</span>/site-packages/elasticsearch/connection/base.<span class="keyword">py</span>:<span class="number">193</span>: ElasticsearchDeprecationWarnin<span class="variable">g:</span> Camel case format name dateOptionalTime <span class="keyword">is</span> deprecated <span class="built_in">and</span> will <span class="keyword">be</span> removed in <span class="keyword">a</span> future <span class="keyword">version</span>. Use snake case name date_optional_time instead.</span><br><span class="line">  warnings.warn(message, category=ElasticsearchDeprecationWarning)</span><br><span class="line"></span><br><span class="line">Reading Elastic <span class="number">7</span> <span class="built_in">index</span> mapping<span class="variable">s:</span></span><br><span class="line">Reading <span class="built_in">index</span> mapping <span class="string">'es_mappings/7/silence.json'</span></span><br><span class="line">Reading <span class="built_in">index</span> mapping <span class="string">'es_mappings/7/elastalert_status.json'</span></span><br><span class="line">Reading <span class="built_in">index</span> mapping <span class="string">'es_mappings/7/elastalert.json'</span></span><br><span class="line">Reading <span class="built_in">index</span> mapping <span class="string">'es_mappings/7/past_elastalert.json'</span></span><br><span class="line">Reading <span class="built_in">index</span> mapping <span class="string">'es_mappings/7/elastalert_error.json'</span></span><br><span class="line">Index elastalert_status already <span class="built_in">exists</span>. Skipping <span class="built_in">index</span> creation.</span><br></pre></td></tr></table></figure></p>
+<p>如果没有报错就说明运行正常，此时从kibana， 他会自动生成告警所需要的index:<br><figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="/2024/07/16/如何利用ElastAlert2对ES中的日志创建告警/1.jpeg" alt="" title="">
+                </div>
+                <div class="image-caption"></div>
+            </figure></p>
+<h3 id="测试"><a href="#测试" class="headerlink" title="测试"></a>测试</h3><p>当运行起来后，此时就是是时间监控日志文件的一个状态</p>
+<p>在网关服务器上面echo一段带有status 为500的message 到 日志文件中：<br><figure class="highlight accesslog"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">echo '''&#123;<span class="string">"@timestamp"</span>:<span class="string">"2024-07-16T20:28:10+08:00"</span>,<span class="string">"server_addr"</span>:<span class="string">"110.10.30.187"</span>,<span class="string">"remote_addr"</span>:<span class="string">"10.10.10.248"</span>,<span class="string">"http_x_forwarded_for"</span>:<span class="string">"172.104.86.126, 172.68.119.188"</span>,<span class="string">"scheme"</span>:<span class="string">"http"</span>,<span class="string">"request_method"</span>:<span class="string">"<span class="keyword">POST</span>"</span>,<span class="string">"request_uri"</span>: <span class="string">"Alert_Test"</span>,<span class="string">"request_length"</span>: <span class="string">"953"</span>,<span class="string">"uri"</span>: <span class="string">"/api/v1/alerttest"</span>, <span class="string">"request_time"</span>:<span class="number">0</span>.<span class="number">002</span>,<span class="string">"body_bytes_sent"</span>:<span class="number">0</span>,<span class="string">"bytes_sent"</span>:<span class="number">335</span>,<span class="string">"status"</span>:<span class="string">"500"</span>,<span class="string">"upstream_time"</span>:<span class="string">"0.002"</span>,<span class="string">"upstream_host"</span>:<span class="string">"10.10.10.139:31333"</span>,<span class="string">"upstream_status"</span>:<span class="string">"200"</span>,<span class="string">"host"</span>:<span class="string">"mainnet-api.xxxxxx"</span>,<span class="string">"http_referer"</span>:<span class="string">"https://test.xyz/"</span>,<span class="string">"http_user_agent"</span>:<span class="string">"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"</span>&#125;''' &gt;&gt; mainnet-api.xxxxxx.log</span><br></pre></td></tr></table></figure></p>
+<p>此时查看 index已经记录到这条告警消息</p>
+<figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="/2024/07/16/如何利用ElastAlert2对ES中的日志创建告警/2.jpeg" alt="" title="">
+                </div>
+                <div class="image-caption"></div>
+            </figure>
+<p>同时，Discord也收到了告警通知</p>
+<figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="/2024/07/16/如何利用ElastAlert2对ES中的日志创建告警/3.jpeg" alt="" title="">
+                </div>
+                <div class="image-caption"></div>
+            </figure>
+<p>最后，因为我们跑了k8s,下面直接把相关文件用configmap方式挂载进去，运行一个Deployment副本即可。</p>
+<ul>
+<li><p>elastalert-config.yaml</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">data:</span></span><br><span class="line">  <span class="string">config.yaml:</span> <span class="string">|-</span></span><br><span class="line"><span class="attr">    rules_folder:</span> <span class="string">rules</span></span><br><span class="line"><span class="attr">    run_every:</span></span><br><span class="line"><span class="attr">      minutes:</span> <span class="number">1</span></span><br><span class="line"><span class="attr">    buffer_time:</span></span><br><span class="line"><span class="attr">      minutes:</span> <span class="number">15</span></span><br><span class="line"><span class="attr">    es_host:</span> <span class="number">10.10</span><span class="number">.20</span><span class="number">.23</span></span><br><span class="line"><span class="attr">    es_port:</span> <span class="number">9200</span></span><br><span class="line"><span class="attr">    use_ssl:</span> <span class="literal">True</span></span><br><span class="line"><span class="attr">    verify_certs:</span> <span class="literal">True</span></span><br><span class="line"><span class="attr">    ca_certs:</span> <span class="string">/opt/elastalert/ca.crt</span></span><br><span class="line"><span class="attr">    ssl_show_warn:</span> <span class="literal">True</span></span><br><span class="line"><span class="attr">    es_send_get_body_as:</span> <span class="string">GET</span></span><br><span class="line"><span class="attr">    es_username:</span> <span class="string">elastic</span></span><br><span class="line"><span class="attr">    es_password:</span> <span class="string">A2VdKUHHFoUmlyekVFgd</span></span><br><span class="line"><span class="attr">    writeback_index:</span> <span class="string">elastalert_status</span></span><br><span class="line"><span class="attr">    alert_time_limit:</span></span><br><span class="line"><span class="attr">      days:</span> <span class="number">2</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line"><span class="attr">  name:</span> <span class="string">elastalert-config</span></span><br><span class="line"><span class="attr">  namespace:</span> <span class="string">monitor</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>ealstalert-rules.yaml</p>
+<figure class="highlight taggerscript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">apiVersion: v1</span><br><span class="line">data:</span><br><span class="line">  mainnet-api.xxxxxx.yml: "#rule名字,必须唯一<span class="symbol">\n</span>name: The number of times this</span><br><span class="line">    request responds with a status code of 5xx in the log is greater than 5 times</span><br><span class="line">    within 1 minute, please pay attention(mainnet-api.xxxxx)!<span class="symbol">\n</span><span class="symbol">\n</span>#类型,官方提供多种类型<span class="symbol">\n</span>type:</span><br><span class="line">    frequency<span class="symbol">\n</span><span class="symbol">\n</span>#ES索引,支持通配符<span class="symbol">\n</span>index: proxy-mainnet-api.xxxxx.log-*<span class="symbol">\n</span><span class="symbol">\n</span>#在timeframe时间内,匹配到多少个结果便告警<span class="symbol">\n</span>num_events:</span><br><span class="line">    1<span class="symbol">\n</span><span class="symbol">\n</span>#监控周期.默认是minutes: 1<span class="symbol">\n</span>timeframe:<span class="symbol">\n</span>  seconds: 5  <span class="symbol">\n</span>  <span class="symbol">\n</span>#匹配模式.<span class="symbol">\n</span>filter:<span class="symbol">\n</span>- range:<span class="symbol">\n</span></span><br><span class="line">    <span class="symbol">\ </span>  status:<span class="symbol">\n</span>      from: 500<span class="symbol">\n</span>      to: 599<span class="symbol">\n</span>      <span class="symbol">\n</span>alert_text_type: alert_text_only<span class="symbol">\n</span>alert_text:</span><br><span class="line">    <span class="symbol">\"</span> <span class="symbol">\n</span>  响应状态码: &#123;&#125; <span class="symbol">\\</span>n<span class="symbol">\n</span>  发生时间UTC: &#123;&#125; <span class="symbol">\\</span>n<span class="symbol">\n</span>  ES Index: &#123;&#125; <span class="symbol">\\</span>n<span class="symbol">\n</span>  num_hits: &#123;&#125; <span class="symbol">\\</span>n<span class="symbol">\n</span></span><br><span class="line">    <span class="symbol">\ </span>请求URL: https://mainnet-api.xxxxx.org&#123;&#125; <span class="symbol">\\</span>n<span class="symbol">\n</span>  ClientIP: &#123;&#125; <span class="symbol">\\</span>n<span class="symbol">\n</span>  num_matches:</span><br><span class="line">    &#123;&#125; <span class="symbol">\\</span>n<span class="symbol">\n</span>  http_user_agent: &#123;&#125;<span class="symbol">\n</span><span class="symbol">\"</span><span class="symbol">\n</span>alert_text_args:<span class="symbol">\n</span>    - status<span class="symbol">\n</span>    - <span class="symbol">\"</span>@timestamp<span class="symbol">\"</span><span class="symbol">\n</span></span><br><span class="line">    <span class="symbol">\ </span>  - _index<span class="symbol">\n</span>    - num_hits<span class="symbol">\n</span>    - request_uri<span class="symbol">\n</span>    - http_x_forwarded_for<span class="symbol">\n</span></span><br><span class="line">    <span class="symbol">\ </span>  - num_matches<span class="symbol">\n</span>    - http_user_agent<span class="symbol">\n</span>      <span class="symbol">\n</span>      <span class="symbol">\n</span>alert:<span class="symbol">\n</span>- <span class="symbol">\"</span>discord<span class="symbol">\"</span><span class="symbol">\n</span>#discord_webhook_url:</span><br><span class="line">    <span class="symbol">\"</span>DISCORD_WEBHOOK_URL"<span class="symbol">\n</span>discord_webhook_url:</span><br><span class="line">    <span class="symbol">\"</span>https://https://discord.com/api/webhooks/1196752947493752933/VRQ01W1pT0PHpl55z0hayqsyjWzt3bzXUMSA4-_5W56fn9j5Nl1zDQT7ZtU_CQWnnlYH<span class="symbol">\"</span><span class="symbol">\n</span>discord_emoji_title:</span><br><span class="line">    <span class="symbol">\"</span>:lock:<span class="symbol">\"</span><span class="symbol">\n</span>discord_embed_color: 0xE24D42<span class="symbol">\n</span>discord_embed_footer: <span class="symbol">\"</span>Message sent</span><br><span class="line">    by from api status moniotor(for @Ops-NoardGuo)<span class="symbol">\"</span><span class="symbol">\n</span>discord_embed_icon_url: <span class="symbol">\"</span>https://humancoders-formations.s3.amazonaws.com/uploads/course/logo/38/thumb_bigger_formation-elasticsearch.png<span class="symbol">\"</span></span><br><span class="line">kind: ConfigMap</span><br><span class="line">metadata:</span><br><span class="line">  name: ealstalert-rules</span><br><span class="line">  namespace: monitor</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>ca.crt<br>略</p>
+</li>
+<li><p>elastalert-deployment.yaml</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">apps/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Deployment</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line"><span class="attr">  annotations:</span></span><br><span class="line">    <span class="string">k8s.kuboard.cn/displayName:</span> <span class="string">elastalert</span></span><br><span class="line"><span class="attr">  labels:</span></span><br><span class="line">    <span class="string">k8s.kuboard.cn/name:</span> <span class="string">elastalert</span></span><br><span class="line"><span class="attr">  name:</span> <span class="string">elastalert</span></span><br><span class="line"><span class="attr">  namespace:</span> <span class="string">monitor</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line"><span class="attr">  progressDeadlineSeconds:</span> <span class="number">600</span></span><br><span class="line"><span class="attr">  replicas:</span> <span class="number">1</span></span><br><span class="line"><span class="attr">  revisionHistoryLimit:</span> <span class="number">10</span></span><br><span class="line"><span class="attr">  selector:</span></span><br><span class="line"><span class="attr">    matchLabels:</span></span><br><span class="line">      <span class="string">k8s.kuboard.cn/name:</span> <span class="string">elastalert</span></span><br><span class="line"><span class="attr">  strategy:</span></span><br><span class="line"><span class="attr">    rollingUpdate:</span></span><br><span class="line"><span class="attr">      maxSurge:</span> <span class="number">25</span><span class="string">%</span></span><br><span class="line"><span class="attr">      maxUnavailable:</span> <span class="number">25</span><span class="string">%</span></span><br><span class="line"><span class="attr">    type:</span> <span class="string">RollingUpdate</span></span><br><span class="line"><span class="attr">  template:</span></span><br><span class="line"><span class="attr">    metadata:</span></span><br><span class="line"><span class="attr">      labels:</span></span><br><span class="line">        <span class="string">k8s.kuboard.cn/name:</span> <span class="string">elastalert</span></span><br><span class="line"><span class="attr">    spec:</span></span><br><span class="line"><span class="attr">      containers:</span></span><br><span class="line"><span class="attr">        - image:</span> <span class="string">jertel/elastalert2</span></span><br><span class="line"><span class="attr">          imagePullPolicy:</span> <span class="string">IfNotPresent</span></span><br><span class="line"><span class="attr">          name:</span> <span class="string">elastalert</span></span><br><span class="line"><span class="attr">          resources:</span> <span class="string">&#123;&#125;</span></span><br><span class="line"><span class="attr">          terminationMessagePath:</span> <span class="string">/dev/termination-log</span></span><br><span class="line"><span class="attr">          terminationMessagePolicy:</span> <span class="string">File</span></span><br><span class="line"><span class="attr">          volumeMounts:</span></span><br><span class="line"><span class="attr">            - mountPath:</span> <span class="string">/opt/elastalert/config.yaml</span></span><br><span class="line"><span class="attr">              name:</span> <span class="string">volume-ps74r</span></span><br><span class="line"><span class="attr">              subPath:</span> <span class="string">config.yaml</span></span><br><span class="line"><span class="attr">            - mountPath:</span> <span class="string">/opt/elastalert/rules/</span></span><br><span class="line"><span class="attr">              name:</span> <span class="string">rules</span></span><br><span class="line"><span class="attr">            - mountPath:</span> <span class="string">/opt/elastalert/ca.crt</span></span><br><span class="line"><span class="attr">              name:</span> <span class="string">volume-zmdx7</span></span><br><span class="line"><span class="attr">              subPath:</span> <span class="string">ca.crt</span></span><br><span class="line"><span class="attr">      dnsPolicy:</span> <span class="string">ClusterFirst</span></span><br><span class="line"><span class="attr">      restartPolicy:</span> <span class="string">Always</span></span><br><span class="line"><span class="attr">      schedulerName:</span> <span class="string">default-scheduler</span></span><br><span class="line"><span class="attr">      securityContext:</span> <span class="string">&#123;&#125;</span></span><br><span class="line"><span class="attr">      terminationGracePeriodSeconds:</span> <span class="number">30</span></span><br><span class="line"><span class="attr">      volumes:</span></span><br><span class="line"><span class="attr">        - configMap:</span></span><br><span class="line"><span class="attr">            defaultMode:</span> <span class="number">420</span></span><br><span class="line"><span class="attr">            name:</span> <span class="string">elastalert-config</span></span><br><span class="line"><span class="attr">          name:</span> <span class="string">volume-ps74r</span></span><br><span class="line"><span class="attr">        - configMap:</span></span><br><span class="line"><span class="attr">            defaultMode:</span> <span class="number">420</span></span><br><span class="line"><span class="attr">            items:</span></span><br><span class="line"><span class="attr">              - key:</span> <span class="string">mainnet-api.xxxxx.yml</span></span><br><span class="line"><span class="attr">                path:</span> <span class="string">mainnet-api.xxxxx.yml</span></span><br><span class="line"><span class="attr">            name:</span> <span class="string">ealstalert-rules</span></span><br><span class="line"><span class="attr">          name:</span> <span class="string">rules</span></span><br><span class="line"><span class="attr">        - configMap:</span></span><br><span class="line"><span class="attr">            defaultMode:</span> <span class="number">420</span></span><br><span class="line"><span class="attr">            name:</span> <span class="string">elasticsearch-ca.crt</span></span><br><span class="line"><span class="attr">          name:</span> <span class="string">volume-zmdx7</span></span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<p>至此告警功能已经实现，以上只是一个大体的思路，不仅仅监控的可以是状态码，应该是你能想到的，他能提供的都可以监控起来。</p>
+<p>好啦，我要去看5xx的报错原因了😀</p>
+
+        </div>
+
+        <blockquote class="post-copyright">
+    
+    <div class="content">
+        
+<span class="post-time">
+    最后更新时间：<time datetime="2024-07-16T12:48:20.337Z" itemprop="dateUpdated">2024-07-16 20:48:20</time>
+</span><br>
+
+
+        
+        该文链接：<a href="/2024/07/16/如何利用ElastAlert2对ES中的日志创建告警/" target="_blank" rel="external">https://blog.sctux.cc/2024/07/16/如何利用ElastAlert2对ES中的日志创建告警/</a>
+        
+    </div>
+    
+    <footer>
+        <a href="https://blog.sctux.cc">
+            <img src="/img/avatar.jpg" alt="maoqiu.guo">
+            maoqiu.guo
+        </a>
+    </footer>
+</blockquote>
+
+        
+<div class="page-reward">
+    <a id="rewardBtn" href="javascript:;" class="page-reward-btn waves-effect waves-circle waves-light">赏</a>
+</div>
+
+
+
+        <div class="post-footer">
+            
+
+            
+<div class="page-share-wrap">
+    
+
+<div class="page-share" id="pageShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://blog.sctux.cc/2024/07/16/如何利用ElastAlert2对ES中的日志创建告警/&title=《如何利用ElastAlert2对ES中的日志创建告警》 — 运维人&pic=https://blog.sctux.cc/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://blog.sctux.cc/2024/07/16/如何利用ElastAlert2对ES中的日志创建告警/&title=《如何利用ElastAlert2对ES中的日志创建告警》 — 运维人&source=😊" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.sctux.cc/2024/07/16/如何利用ElastAlert2对ES中的日志创建告警/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《如何利用ElastAlert2对ES中的日志创建告警》 — 运维人&url=https://blog.sctux.cc/2024/07/16/如何利用ElastAlert2对ES中的日志创建告警/&via=https://blog.sctux.cc" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=https://blog.sctux.cc/2024/07/16/如何利用ElastAlert2对ES中的日志创建告警/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+
+    <a href="javascript:;" id="shareFab" class="page-share-fab waves-effect waves-circle">
+        <i class="icon icon-share-alt icon-lg"></i>
+    </a>
+</div>
+
+
+
+        </div>
+    </div>
+
+    
+<nav class="post-nav flex-row flex-justify-between flex-row-reverse">
+  
+
+  
+    <div class="waves-block waves-effect next">
+      <a href="/2024/05/10/K8S中MySQL使用NFS挂载的异常问题处理/" id="post-next" class="post-nav-link">
+        <div class="tips">Next <i class="icon icon-angle-right icon-lg icon-pl"></i></div>
+        <h4 class="title">K8S中MySQL使用NFS挂载的异常问题处理</h4>
+      </a>
+    </div>
+  
+</nav>
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Valine Comments -->
+    <div class="comments vcomment" id="comments"></div>
+    <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+    <script src="//unpkg.com/valine@latest/dist/Valine.min.js"></script>
+    <!-- Valine Comments script -->
+    <script>
+        var GUEST_INFO = ['nick','mail','link'];
+        var guest_info = 'nick,mail,link'.split(',').filter(function(item){
+          return GUEST_INFO.indexOf(item) > -1
+        });
+        new Valine({
+            el: '#comments',
+            notify: 'true' == 'true',
+            verify: 'true' == 'true',
+            appId: "lHxnnDHJXDgMoFpCbdx8A4q7-gzGzoHsz",
+            appKey: "W8H2NuO8chyDlCEQzionLuuV",
+            avatar: "monsterid",
+            placeholder: "来都来了，说点啥子吧~🌹 (友情提醒，留下正确的邮箱地址可以第一时间获取评论反馈)",
+            guest_info: guest_info.length == 0 ? GUEST_INFO : guest_info,
+            pageSize: "10"
+        })
+    </script>
+    <!-- Valine Comments end -->
+
+
+
+
+
+
+
+</article>
+
+<div id="reward" class="page-modal reward-lay">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <h3 class="reward-title">
+        <i class="icon icon-quote-left"></i>
+        谢谢大爷~
+        <i class="icon icon-quote-right"></i>
+    </h3>
+    <div class="reward-content">
+        
+        <div class="reward-code">
+            <img id="rewardCode" src="/img/wechat.jpg" alt="打赏二维码">
+        </div>
+        
+        <label class="reward-toggle">
+            <input id="rewardToggle" type="checkbox" class="reward-toggle-check" data-wechat="/img/wechat.jpg" data-alipay="/img/alipay.jpg">
+            <div class="reward-toggle-ctrol">
+                <span class="reward-toggle-item wechat">微信</span>
+                <span class="reward-toggle-label"></span>
+                <span class="reward-toggle-item alipay">支付宝</span>
+            </div>
+        </label>
+        
+    </div>
+</div>
+
+
+
+</div>
+
+        <footer class="footer">
+    <div class="top">
+        
+
+        <p>
+            
+            <span>博客内容遵循 <a rel="license" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh">知识共享 署名 - 非商业性 - 相同方式共享 4.0 国际协议</a></span>
+        </p>
+    </div>
+    <div class="bottom">
+        <p><span>maoqiu.guo &copy; 2013 - 2024</span>
+            <span>
+                
+                <a href="http://www.miitbeian.gov.cn/" target="_blank">蜀ICP备007号-1</a><br>
+                
+                Power by <a href="http://hexo.io/" target="_blank">Hexo</a> Theme <a href="https://github.com/yscoder/hexo-theme-indigo" target="_blank">indigo</a>
+            </span>
+        </p>
+    </div>
+</footer>
+
+    </main>
+    <div class="mask" id="mask"></div>
+<a href="javascript:;" id="gotop" class="waves-effect waves-circle waves-light"><span class="icon icon-lg icon-chevron-up"></span></a>
+
+
+
+<div class="global-share" id="globalShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://blog.sctux.cc/2024/07/16/如何利用ElastAlert2对ES中的日志创建告警/&title=《如何利用ElastAlert2对ES中的日志创建告警》 — 运维人&pic=https://blog.sctux.cc/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://blog.sctux.cc/2024/07/16/如何利用ElastAlert2对ES中的日志创建告警/&title=《如何利用ElastAlert2对ES中的日志创建告警》 — 运维人&source=😊" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.sctux.cc/2024/07/16/如何利用ElastAlert2对ES中的日志创建告警/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《如何利用ElastAlert2对ES中的日志创建告警》 — 运维人&url=https://blog.sctux.cc/2024/07/16/如何利用ElastAlert2对ES中的日志创建告警/&via=https://blog.sctux.cc" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=https://blog.sctux.cc/2024/07/16/如何利用ElastAlert2对ES中的日志创建告警/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+<div class="page-modal wx-share" id="wxShare">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <img src="//api.qrserver.com/v1/create-qr-code/?data=https://blog.sctux.cc/2024/07/16/如何利用ElastAlert2对ES中的日志创建告警/" alt="微信分享二维码">
+</div>
+
+
+
+
+    <script src="//cdn.bootcss.com/node-waves/0.7.4/waves.min.js"></script>
+<script>
+var BLOG = { ROOT: '/', SHARE: true, REWARD: true };
+
+
+</script>
+
+<script src="/js/main.min.js?v=1.7.2"></script>
+
+
+<div class="search-panel" id="search-panel">
+    <ul class="search-result" id="search-result"></ul>
+</div>
+<template id="search-tpl">
+<li class="item">
+    <a href="{path}" class="waves-block waves-effect">
+        <div class="title ellipsis" title="{title}">{title}</div>
+        <div class="flex-row flex-middle">
+            <div class="tags ellipsis">
+                {tags}
+            </div>
+            <time class="flex-col time">{date}</time>
+        </div>
+    </a>
+</li>
+</template>
+
+<script src="/js/search.min.js?v=1.7.2" async></script>
+
+
+
+
+
+
+
+
+<script>
+(function() {
+    var OriginTitile = document.title, titleTime;
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            document.title = '老弟，哪儿去啦😊?！';
+            clearTimeout(titleTime);
+        } else {
+            document.title = '(つェ⊂)咦!老弟来啦!';
+            titleTime = setTimeout(function() {
+                document.title = OriginTitile;
+            },2000);
+        }
+    });
+})();
+</script>
+
+
+
+</body>
+</html>
