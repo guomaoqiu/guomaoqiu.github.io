@@ -60,8 +60,9 @@ ga('send', 'pageview');
 <meta property="og:locale" content="zh-CN">
 <meta property="og:image" content="https://blog.sctux.cc/2024/07/16/如何利用ElastAlert2对ES中的日志创建告警/1.jpeg">
 <meta property="og:image" content="https://blog.sctux.cc/2024/07/16/如何利用ElastAlert2对ES中的日志创建告警/2.jpeg">
+<meta property="og:image" content="https://blog.sctux.cc/2024/07/16/如何利用ElastAlert2对ES中的日志创建告警/4.png">
 <meta property="og:image" content="https://blog.sctux.cc/2024/07/16/如何利用ElastAlert2对ES中的日志创建告警/3.jpeg">
-<meta property="og:updated_time" content="2024-07-16T13:10:51.227Z">
+<meta property="og:updated_time" content="2024-07-16T13:21:52.055Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="如何利用ElastAlert2对ES中的日志创建告警">
 <meta name="twitter:description" content="背景线上Api服务出现了5xx的请求错误，导致用户主动向团队报告， 由于API的接口比较多，也只是监控了部分，事后通过日志才发现的确用户侧在对某个接口访问时，频繁出现5xx告警，我这边也没有收到什么通知，目前先暂且不说出现5xx是什么造成的，而是在API接口响应状态的监控方面没有做到很到位， 所以需要对Nginx日志中的状态为5xx的请求监控告警，以便能快速响应，解决问题。 ElastAlert2">
@@ -263,11 +264,18 @@ ga('send', 'pageview');
             </figure></p>
 <h3 id="测试"><a href="#测试" class="headerlink" title="测试"></a>测试</h3><p>当运行起来后，此时就是是时间监控日志文件的一个状态</p>
 <p>在网关服务器上面echo一段带有status 为500的message 到 日志文件中：<br><figure class="highlight accesslog"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">echo '''&#123;<span class="string">"@timestamp"</span>:<span class="string">"2024-07-16T20:28:10+08:00"</span>,<span class="string">"server_addr"</span>:<span class="string">"110.10.30.187"</span>,<span class="string">"remote_addr"</span>:<span class="string">"10.10.10.248"</span>,<span class="string">"http_x_forwarded_for"</span>:<span class="string">"172.104.86.126, 172.68.119.188"</span>,<span class="string">"scheme"</span>:<span class="string">"http"</span>,<span class="string">"request_method"</span>:<span class="string">"<span class="keyword">POST</span>"</span>,<span class="string">"request_uri"</span>: <span class="string">"Alert_Test"</span>,<span class="string">"request_length"</span>: <span class="string">"953"</span>,<span class="string">"uri"</span>: <span class="string">"/api/v1/alerttest"</span>, <span class="string">"request_time"</span>:<span class="number">0</span>.<span class="number">002</span>,<span class="string">"body_bytes_sent"</span>:<span class="number">0</span>,<span class="string">"bytes_sent"</span>:<span class="number">335</span>,<span class="string">"status"</span>:<span class="string">"500"</span>,<span class="string">"upstream_time"</span>:<span class="string">"0.002"</span>,<span class="string">"upstream_host"</span>:<span class="string">"10.10.10.139:31333"</span>,<span class="string">"upstream_status"</span>:<span class="string">"200"</span>,<span class="string">"host"</span>:<span class="string">"mainnet-api.xxxxxx"</span>,<span class="string">"http_referer"</span>:<span class="string">"https://test.xyz/"</span>,<span class="string">"http_user_agent"</span>:<span class="string">"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"</span>&#125;''' &gt;&gt; mainnet-api.xxxxxx.log</span><br></pre></td></tr></table></figure></p>
-<p>此时查看 index已经记录到这条告警消息</p>
+<p>此时查看 index已经记录到这条告警消息, 通过查询索引也找到了这个请求</p>
 <figure class="image-bubble">
                 <div class="img-lightbox">
                     <div class="overlay"></div>
                     <img src="/2024/07/16/如何利用ElastAlert2对ES中的日志创建告警/2.jpeg" alt="" title="">
+                </div>
+                <div class="image-caption"></div>
+            </figure>
+<figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="/2024/07/16/如何利用ElastAlert2对ES中的日志创建告警/4.png" alt="" title="">
                 </div>
                 <div class="image-caption"></div>
             </figure>
@@ -303,7 +311,7 @@ ga('send', 'pageview');
     <div class="content">
         
 <span class="post-time">
-    最后更新时间：<time datetime="2024-07-16T13:10:51.227Z" itemprop="dateUpdated">2024-07-16 21:10:51</time>
+    最后更新时间：<time datetime="2024-07-16T13:21:52.055Z" itemprop="dateUpdated">2024-07-16 21:21:52</time>
 </span><br>
 
 
