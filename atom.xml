@@ -696,9 +696,9 @@
     
     <category term="kubernets" scheme="https://blog.sctux.cc/tags/kubernets/"/>
     
-    <category term="Storage" scheme="https://blog.sctux.cc/tags/Storage/"/>
-    
     <category term="持久化存储" scheme="https://blog.sctux.cc/tags/%E6%8C%81%E4%B9%85%E5%8C%96%E5%AD%98%E5%82%A8/"/>
+    
+    <category term="Storage" scheme="https://blog.sctux.cc/tags/Storage/"/>
     
     <category term="NFS PV静态供给" scheme="https://blog.sctux.cc/tags/NFS-PV%E9%9D%99%E6%80%81%E4%BE%9B%E7%BB%99/"/>
     
@@ -748,11 +748,11 @@
     <category term="kubernetes" scheme="https://blog.sctux.cc/categories/kubernetes/"/>
     
     
-    <category term="持久化存储" scheme="https://blog.sctux.cc/tags/%E6%8C%81%E4%B9%85%E5%8C%96%E5%AD%98%E5%82%A8/"/>
-    
     <category term="StatefulSet" scheme="https://blog.sctux.cc/tags/StatefulSet/"/>
     
     <category term="有状态" scheme="https://blog.sctux.cc/tags/%E6%9C%89%E7%8A%B6%E6%80%81/"/>
+    
+    <category term="持久化存储" scheme="https://blog.sctux.cc/tags/%E6%8C%81%E4%B9%85%E5%8C%96%E5%AD%98%E5%82%A8/"/>
     
   </entry>
   
