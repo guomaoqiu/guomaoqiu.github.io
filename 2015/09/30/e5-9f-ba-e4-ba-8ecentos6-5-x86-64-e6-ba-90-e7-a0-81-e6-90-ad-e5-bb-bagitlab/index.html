@@ -1,0 +1,246 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>基于CentOS6.5 X86_64 源码搭建GitLab | 运维人</title><meta name="author" content="maoqiu.guo"><meta name="copyright" content="maoqiu.guo"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="系统：CentOS6.5 X86_64 已完成初始化：防火墙、SELinux 关闭、不必要服务停止，不必要用户删除……… 1.添加epel源 wget -O &#x2F;etc&#x2F;pki&#x2F;rpm-gpg&#x2F;RPM-GPG-KEY-EPEL-6 https:&#x2F;&#x2F;www.fedoraproject.org&#x2F;static&#x2F;0608B895.txt &amp;&amp; rpm –import &#x2F;etc&#x2F;pki&#x2F;rpm">
+<meta property="og:type" content="article">
+<meta property="og:title" content="基于CentOS6.5 X86_64 源码搭建GitLab">
+<meta property="og:url" content="https://blog.sctux.cc/2015/09/30/e5-9f-ba-e4-ba-8ecentos6-5-x86-64-e6-ba-90-e7-a0-81-e6-90-ad-e5-bb-bagitlab/index.html">
+<meta property="og:site_name" content="运维人">
+<meta property="og:description" content="系统：CentOS6.5 X86_64 已完成初始化：防火墙、SELinux 关闭、不必要服务停止，不必要用户删除……… 1.添加epel源 wget -O &#x2F;etc&#x2F;pki&#x2F;rpm-gpg&#x2F;RPM-GPG-KEY-EPEL-6 https:&#x2F;&#x2F;www.fedoraproject.org&#x2F;static&#x2F;0608B895.txt &amp;&amp; rpm –import &#x2F;etc&#x2F;pki&#x2F;rpm">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://images.unsplash.com/photo-1620712943543-bcc4688e7485?w=800&h=400">
+<meta property="article:published_time" content="2015-09-30T07:31:43.000Z">
+<meta property="article:modified_time" content="2025-03-19T14:00:09.939Z">
+<meta property="article:author" content="maoqiu.guo">
+<meta property="article:tag" content="git">
+<meta property="article:tag" content="gitlab">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://images.unsplash.com/photo-1620712943543-bcc4688e7485?w=800&h=400"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "基于CentOS6.5 X86_64 源码搭建GitLab",
+  "url": "https://blog.sctux.cc/2015/09/30/e5-9f-ba-e4-ba-8ecentos6-5-x86-64-e6-ba-90-e7-a0-81-e6-90-ad-e5-bb-bagitlab/",
+  "image": "https://images.unsplash.com/photo-1620712943543-bcc4688e7485?w=800&h=400",
+  "datePublished": "2015-09-30T07:31:43.000Z",
+  "dateModified": "2025-03-19T14:00:09.939Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "maoqiu.guo",
+      "url": "https://blog.sctux.cc"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="https://blog.sctux.cc/2015/09/30/e5-9f-ba-e4-ba-8ecentos6-5-x86-64-e6-ba-90-e7-a0-81-e6-90-ad-e5-bb-bagitlab/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: {"defaultEncoding":2,"translateDelay":0,"msgToTraditionalChinese":"繁","msgToSimplifiedChinese":"簡"},
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":true},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '基于CentOS6.5 X86_64 源码搭建GitLab',
+  isHighlightShrink: false,
+  isToc: false,
+  pageType: 'post'
+}</script><meta name="generator" content="Hexo 7.3.0">
+<style>.github-emoji { position: relative; display: inline-block; width: 1.2em; min-height: 1.2em; overflow: hidden; vertical-align: top; color: transparent; }  .github-emoji > span { position: relative; z-index: 10; }  .github-emoji img, .github-emoji .fancybox { margin: 0 !important; padding: 0 !important; border: none !important; outline: none !important; text-decoration: none !important; user-select: none !important; cursor: auto !important; }  .github-emoji img { height: 1.2em !important; width: 1.2em !important; position: absolute !important; left: 50% !important; top: 50% !important; transform: translate(-50%, -50%) !important; user-select: none !important; cursor: auto !important; } .github-emoji-fallback { color: inherit; } .github-emoji-fallback img { opacity: 0 !important; }</style>
+<link rel="alternate" href="/atom.xml" title="运维人" type="application/atom+xml">
+</head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/avatar.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">99</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">92</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">30</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/works/"><i class="fa-fw fas fa-folder-open"></i><span> 作品</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于我</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="not-top-img" id="page-header"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">运维人</span></a><a class="nav-page-title" href="/"><span class="site-name">基于CentOS6.5 X86_64 源码搭建GitLab</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/works/"><i class="fa-fw fas fa-folder-open"></i><span> 作品</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于我</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav></header><main class="layout" id="content-inner"><div id="post"><div id="post-info"><h1 class="post-title">基于CentOS6.5 X86_64 源码搭建GitLab</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2015-09-30T07:31:43.000Z" title="发表于 2015-09-30 15:31:43">2015-09-30</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2025-03-19T14:00:09.939Z" title="更新于 2025-03-19 22:00:09">2025-03-19</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/Web%E7%9B%B8%E5%85%B3/">Web相关</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div><article class="container post-content" id="article-container"><p>系统：CentOS6.5 X86_64 已完成初始化：防火墙、SELinux 关闭、不必要服务停止，不必要用户删除……… 1.添加epel源</p>
+<p>wget -O /etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-6 <a href="https://www.fedoraproject.org/static/0608B895.txt">https://www.fedoraproject.org/static/0608B895.txt</a> &amp;&amp; rpm –import /etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-6</p>
+<p>#查看Key是否安装成功<br>rpm -qa gpg*</p>
+<p>&nbsp; 2.安装epel源</p>
+<p>rpm -Uvh <a href="http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm">http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm</a></p>
+<p>&nbsp; 3.添加PUIAS源</p>
+<p>wget -O /etc/yum.repos.d/PUIAS_6_computational.repo <a href="https://gitlab.com/gitlab-org/gitlab-recipes/raw/master/install/centos/PUIAS/_6/_computational.repo">https://gitlab.com/gitlab-org/gitlab-recipes/raw/master/install/centos/PUIAS\_6\_computational.repo</a></p>
+<p>&nbsp; 4.下载并安装gpg-key</p>
+<p>wget -O /etc/pki/rpm-gpg/RPM-GPG-KEY-puias <a href="http://springdale.math.ias.edu/data/puias/6/x86_64/os/RPM-GPG-KEY-puias">http://springdale.math.ias.edu/data/puias/6/x86_64/os/RPM-GPG-KEY-puias</a> &amp;&amp; rpm –import /etc/pki/rpm-gpg/RPM-GPG-KEY-puias</p>
+<p>#查看源是否添加成功[如果不成功，执行：yum-config-manager –enable epel –enable PUIAS_6_computational]<br>yum repolist</p>
+<p>&nbsp; 5.安装整个搭建gitlab的相关的依赖包</p>
+<p>yum -y groupinstall ‘Development Tools’<br>yum -y install readline readline-devel ncurses-devel gdbm-devel glibc-devel tcl-devel openssl-devel curl-devel expat-devel db4-devel byacc sqlite-devel libyaml libyaml-devel libffi libffi-devel libxml2 libxml2-devel libxslt libxslt-devel libicu libicu-devel system-config-firewall-tui redis sudo wget crontabs logwatch logrotate perl-Time-HiRes git cmake libcom_err-devel.i686 libcom_err-devel.x86_64 nodejs</p>
+<p>&nbsp; 6.配置默认编辑器</p>
+<p>yum -y install vim-enhanced<br>update-alternatives –set editor /usr/bin/vim.basic<br>ln -s /usr/bin/vim /usr/bin/edito</p>
+<p>#reStructuredText markup语法支持，需要安装依赖包：<br>yum install -y python-docutils</p>
+<p>&nbsp; 7.安装git(git&gt;=1.7.10 如果低于我们可以从新编译安装)</p>
+<p>yum install zlib-devel perl-CPAN gettext curl-devel expat-devel gettext-devel openssl-devel<br>mkdir /tmp/git &amp;&amp; cd /tmp/git<br>curl –progress <a href="https://www.kernel.org/pub/software/scm/git/git-2.1.3.tar.gz">https://www.kernel.org/pub/software/scm/git/git-2.1.3.tar.gz</a> | tar xz<br>cd git-2.1.3/ &amp;&amp; ./configure –prefix=/usr/local/git &amp;&amp; make &amp;&amp; make install</p>
+<p>&nbsp; 8.安装ruby(如果系统中Ruby的版本是2.0以前的那么请移除，GitLab只支持Ruby 2.0+版本)</p>
+<p>yum remove ruby</p>
+<p>mkdir /tmp/ruby &amp;&amp; cd /tmp/ruby<br>curl –progress <a href="ftp://ftp.ruby-lang.org/pub/ruby/2.1/ruby-2.1.2.tar.gz">ftp://ftp.ruby-lang.org/pub/ruby/2.1/ruby-2.1.2.tar.gz</a> | tar xz<br>cd ruby-2.1.2<br>./configure –prefix=/usr/local/ –disable-install-rdoc<br>make<br>make install<br>#记得检查ruby的版本是否是最新<br>ruby –version</p>
+<p>&nbsp; 9.安装Bundler Gem(由于`<a href="http://rubygems.org/%60%E5%B7%B2%E8%A2%AB%E5%A2%99%EF%BC%8C%E8%BF%99%E9%87%8C%E6%9B%BF%E6%8D%A2%E6%BA%90%E4%B8%BA/%60https://ruby.taobao.org/%60">http://rubygems.org\`已被墙，这里替换源为\`https://ruby.taobao.org\`</a>)</p>
+<p># 添加淘宝源并且移除官方源<br>gem sources -a <a href="https://ruby.taobao.org/">https://ruby.taobao.org</a><br>gem sources -r <a href="https://rubygems.org/">https://rubygems.org/</a></p>
+<p>&nbsp; 10.安装Bundler</p>
+<p>gem install bundler -v’1.5.2’ –no-doc</p>
+<p>&nbsp; 11.System Users为GitLab创建用户</p>
+<p>adduser –system –shell /bin/bash –comment ‘GitLab’ –create-home –home-dir /home/git/ git</p>
+<p>&nbsp; 12.编辑sudoers文件，将ruby和git的程序路径添加到PATH中，使git用户作为root来使用gem命令</p>
+<p>sed -ie ‘s@Defaults\    secure_path\ \=\ \/sbin\:\/bin\:\/usr\/sbin\:\/usr\/bin@Defaults\    secure_path\ \=\ \/sbin\:\/bin\:\/usr\/sbin\:\/usr\/bin\:/usr\/local\/bin@g’ /etc/sudoers</p>
+<p>&nbsp; 13.安装mysql</p>
+<p>yum install -y mysql mysql-devel mysql-server<br>service mysqld start</p>
+<p>#为gitlab创建数据库<br>#创建用户<br>mysql -e “CREATE USER ‘git‘@’localhost’ IDENTIFIED BY ‘xxxxx’;”</p>
+<p>#创建数据库<br>mysql -e “CREATE DATABASE IF NOT EXISTS \`gitlabhq_production\` DEFAULT CHARACTER SET \`utf8\` COLLATE \`utf8_unicode_ci\`;”</p>
+<p>#授权<br>mysql -e “GRANT SELECT, LOCK TABLES, INSERT, UPDATE, DELETE, CREATE, DROP, INDEX, ALTER ON \`gitlabhq_production\`.* TO ‘git‘@’localhost’;”</p>
+<p>#用git用户尝试登陆验证是否成功<br>sudo -u git -H mysql -u git -pxxxxxx  -e ‘show databases;’</p>
+<p>#记得要给root用户密码哦。</p>
+<p>&nbsp; 14.安装redis(已经在前面的依赖包安装时安装了)</p>
+<p>chkconfig redis on</p>
+<p>#配置Redis使用sockets<br>cp /etc/redis.conf /etc/redis.conf.orig</p>
+<p># 关闭Redis 监听于TCP<br>sed ‘s/^port .*/port 0/‘ /etc/redis.conf.orig | sudo tee /etc/redis.conf</p>
+<p>#启用Redis socket<br>echo ‘unixsocket /var/run/redis/redis.sock’ | sudo tee -a /etc/redis.conf<br>echo -e ‘unixsocketperm 0770’ | sudo tee -a /etc/redis.conf</p>
+<p>#设置socket目录属主（组）为redis<br>chown redis:redis /var/run/redis<br>chmod 755 /var/run/redis</p>
+<p>#将git用户添加至redis组<br>usermod -aG redis git</p>
+<p>#启动redis服务<br>service redis start</p>
+<p>&nbsp; 15.安装gitlab，以及相关配置</p>
+<p>cd /home/git/<br>sudo -u git -H git clone <a href="http://git.oschina.net/Yxnt/gitlab">http://git.oschina.net/Yxnt/gitlab</a></p>
+<p># 配置gitlab<br>cd /home/git/gitlab &amp;&amp; sudo -u git -H cp config/gitlab.yml.example config/gitlab.yml</p>
+<p>#访问地址为本机IP<br>sudo -u git -H sed -ie “s/host: .*/host: `hostname –all-ip-addresses`/g” config/gitlab.yml</p>
+<p>#创建satellites目录<br>sudo -u git -H mkdir /home/git/gitlab-satellites &amp;&amp; chmod u+rwx,g=rx,o-rwx /home/git/gitlab-satellites</p>
+<p>#确认gitlab可以写入tmp/pids、tmp/sockets以及public/uploads/目录<br>chmod -R u+rwX tmp/pids/ &amp;&amp; chmod -R u+rwX tmp/sockets/ &amp;&amp; chmod -R u+rwX  public/uploads</p>
+<p>#复制Unicorn配置文件<br>sudo -u git -H cp config/unicorn.rb.example config/unicorn.rb</p>
+<p>#复制Rack attack配置文件<br>sudo -u git -H cp config/initializers/rack_attack.rb.example config/initializers/rack_attack.rb</p>
+<p>#配置Git 全局设置<br>sudo -u git -H git config –global user.name “GitLab”<br>sudo -u git -H git config –global user.email “<a href="mailto:example@example.com">example@example.com</a>“<br>sudo -u git -H git config –global core.autocrlf input</p>
+<p>#配置Redis连接设置<br>sudo -u git -H cp config/resque.yml.example config/resque.yml<br>sudo -u git -H sed -ie “s/develo.*/development:\ unix:\/var\/run\/redis\/redis.sock/g” config/resque.yml</p>
+<p>#配置Gitlab 数据库设置（注意这里的socket文件位置，不同版本的mysql位置不一样)<br>sudo -u git cp config/database.yml.mysql config/database.yml<br>sudo -u git sed -ie “12s/password: \“secure password\“/password: $MYSQL_PASS/g” config/database.yml<br>sudo -u git sed -ie “13,14s/#\ //g” config/database.yml<br>sudo -u git sed -ie “14s@socket: \/tmp\/mysql.sock@socket: \/var\/lib/mysql\/mysql.sock@g” config/database.yml</p>
+<p>#确定database.yml文件只为git用户可读<br>sudo -u git -H chmod o-rwx config/database.yml</p>
+<p>&nbsp; 16.安装Gems</p>
+<p>cd /home/git/gitlab</p>
+<p>#更换配置文件中的ruby源<br>sudo -u git -H sed -ie “s@source\ \“http:\/\/rubygems.org\“@source\ \“http:\/\/ruby.taobao.org\“@g” ../gitlab-shell/Gemfile</p>
+<p>#安装<br>sudo -u git -H bundle install –deployment –without development test postgres aws</p>
+<p>&nbsp; 17.安装,配置gitlab-shell</p>
+<p>cd /home/git/gitlab/<br>sudo -u git -H bundle exec rake gitlab<span class="github-emoji"><span>🐚</span><img src="https://github.githubassets.com/images/icons/emoji/unicode/1f41a.png?v8" aria-hidden="true" onerror="this.parent.classList.add('github-emoji-fallback')"></span>install[v2.6.3] REDIS_URL=unix:/var/run/redis/redis.sock RAILS_ENV=production</p>
+<p>#配置(在安装过程中其实gitlab-shell配置已经自动生成了，但是有必要检查核实一下里面的配置，尤其是gitlab_url)<br>cp /home/git/gitlab-shell/config.yml /home/git/gitlab-shell/config.yml.bak</p>
+<p>&nbsp; 18.初始化数据并且激活高级特性</p>
+<p>#这里会提示输入yes/no，输入yes即可（我这里直接传递一个yes过去）<br>echo yes| sudo -u git -H bundle exec rake gitlab:setup RAILS_ENV=production<br>#这里会生成一个账户和密码：<br>#login………root<br>#password……5iveL!fe 这个密码可以更改： sudo -u git -H bundle exec rake gitlab:setup RAILS_ENV=production GITLAB_ROOT_PASSWORD=YOUR_NETPASSWORD</p>
+<p>#生成js.css等文件（如果没有这一步的话，你在访问时网页css等是乱的）<br>cd /home/git/gitlab<br>bundle exec rake assets:precompile RAILS_ENV=production</p>
+<p>&nbsp; 19.安装gitlab启动管理脚本</p>
+<p>wget -O /etc/init.d/gitlab <a href="https://gitlab.com/gitlab-org/gitlab-recipes/raw/master/init/sysvinit/centos/gitlab-unicorn">https://gitlab.com/gitlab-org/gitlab-recipes/raw/master/init/sysvinit/centos/gitlab-unicorn</a><br>chmod +x /etc/init.d/gitlab<br>chkconfig –add gitlab<br>chkconfig gitlab on</p>
+<p>#设置gitlab服务的日志滚动<br>cp lib/support/logrotate/gitlab /etc/logrotate.d/gitlab</p>
+<p>&nbsp; 20.检查应用程序状态</p>
+<p>sudo -u git -H bundle exec rake gitlab:env:info RAILS_ENV=production<br>#执行该命令 如果顺利的话，会将关于gitlab的 相关详细信息展示出来</p>
+<p>和下图差不多 <a href="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/09/gitlab-information.png"><img src="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/09/gitlab-information.png" alt="gitlab-information"></a> &nbsp; 21.启动gitlab</p>
+<p>#启动gitlab<br>service gitlab start</p>
+<p>&nbsp; 22.安装nginx ，将访问请求反代到后端的8080端口</p>
+<p>yum install -y nginx &amp;&amp; chkconfig nginx on</p>
+<p>#删除nginx中的这个默认配置文件<br>rm -rf /etc/nginx/conf.d/default.conf</p>
+<p>#获取gitlab的nginx模板配置文件<br>wget -O /etc/nginx/conf.d/gitlab.conf <a href="https://gitlab.com/gitlab-org/gitlab-ce/raw/master/lib/support/nginx/gitlab">https://gitlab.com/gitlab-org/gitlab-ce/raw/master/lib/support/nginx/gitlab</a></p>
+<p>#对模板文件的一些修改<br>sed -ie “38s/.*/server\ localhost:8080;/g” /etc/nginx/conf.d/gitlab.conf<br>sed -ie “s/YOUR_SERVER_FQDN/`hostname`/g” /etc/nginx/conf.d/gitlab.conf<br>sed -ie “52d” /etc/nginx/conf.d/gitlab.conf</p>
+<p>#将用户nginx加入到git组(这步非常的关键)<br>usermod -a -G git nginx<br>chmod g+rx /home/git/</p>
+<p>#启动nginx<br>service nginx start</p>
+<p>&nbsp; ok ，至此gitlab的安装已经结束。我们通过<a href="http://your-server-ip/">http://YOUR-SERVER-IP/</a> 就可以访问到你的gitlab平台了 <a href="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/09/gitlab-login.png"><img src="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/09/gitlab-login.png" alt="gitlab-login"></a></p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://blog.sctux.cc">maoqiu.guo</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://blog.sctux.cc/2015/09/30/e5-9f-ba-e4-ba-8ecentos6-5-x86-64-e6-ba-90-e7-a0-81-e6-90-ad-e5-bb-bagitlab/">https://blog.sctux.cc/2015/09/30/e5-9f-ba-e4-ba-8ecentos6-5-x86-64-e6-ba-90-e7-a0-81-e6-90-ad-e5-bb-bagitlab/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="https://blog.sctux.cc" target="_blank">运维人</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/git/">git</a><a class="post-meta__tags" href="/tags/gitlab/">gitlab</a></div></div><div class="post-reward"><div class="reward-button"><i class="fas fa-qrcode"></i>赞助</div><div class="reward-main"><ul class="reward-all"><li class="reward-item"><a href="/img/wechat.png" target="_blank"><img class="post-qr-code-img" src="/img/wechat.png" alt="wechat"/></a><div class="post-qr-code-desc">wechat</div></li><li class="reward-item"><a href="/img/zhifubao.png" target="_blank"><img class="post-qr-code-img" src="/img/zhifubao.png" alt="alipay"/></a><div class="post-qr-code-desc">alipay</div></li></ul></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/2015/10/16/e6-a3-80-e6-9f-a5-e6-96-87-e4-bb-b6-e6-97-b6-e9-97-b4-e6-88-b3-ef-bc-8c-e5-af-b9-e6-af-94-e6-97-b6-e9-97-b4-e7-9a-84shell-e8-84-9a-e6-9c-ac/" title="检查文件时间戳，对比时间的Shell脚本"><img class="cover" src="https://images.unsplash.com/photo-1666775532270-4b3cb6154331?w=800&amp;h=400" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="info"><div class="info-1"><div class="info-item-1">上一篇</div><div class="info-item-2">检查文件时间戳，对比时间的Shell脚本</div></div><div class="info-2"><div class="info-item-1">应开发需求，有些锁文件生成之后不会在固定时间内删除，造成程序的计划任务会卡死，于是需要一个检查对比locks文件的脚本来实时检测这个目录下的*.locks文件 12345678910111213141516171819202122232425262728293031#!/bin/bashwhile truedo#获取当前时间curren_time=\`date +%H:%M:%S\`  #--time-stype=FORMATls -l --time-style=+%H:%M:%S /xxxxxx/*.locks &gt;/tmp/locks 2&gt;/dev/nullwhile read -r linedo#文件内容file_time=\`echo $line | awk -F ' ' '{print $6}'\`  #文件绝对路径及名称File=\`echo $line | awk -F ' ' '{print $7}'\`#转换成Unix时间戳date1=\`date -d "$curren_time" +%s\`date2=\`date -d "$file_time" ...</div></div></div></a><a class="pagination-related" href="/2015/09/19/e9-80-9a-e8-bf-87inode-e5-88-a0-e9-99-a4linux-e4-b8-8b-e7-9a-84-e6-96-87-e4-bb-b6/" title="通过Inode删除linux下的文件"><img class="cover" src="https://images.unsplash.com/photo-1535223289827-42f1e9919769?w=800&amp;h=400" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">通过Inode删除linux下的文件</div></div><div class="info-2"><div class="info-item-1">由于某些原因在我们linux系统上面总会出现一些乱码文件，或者不能正常输入的文件名，当遇到这些无法正常输入的文件名要删除的时候就需要使用文件对应的inode号对文件进行删除。 inode的原理这里就不再说了，具体说明参见：http://www.ruanyifeng.com/blog/2011/12/inode.html 下面这个目录下的文件是我在网上下载的一个网页模板，里面包含了一个不能rm 的文件：  那从何得知 -?+?.txt 这个文件的inode号呢，ls&nbsp; 命令有个参数 -i   -i, –inode                print the index number of each file  上图中：291606&nbsp; 这个号码就是 这个文件的inode 号啦。然后我们结合find命令就可以将它删除啦   </div></div></div></a></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/avatar.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">maoqiu.guo</div><div class="author-info-description">Happiness is not something ready-made. It comes from your own actions💪🏻.</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">99</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">92</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">30</div></a></div><a id="card-info-btn" href="https://github.com/xxxxxx"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons"><a class="social-icon" href="https://github.com/guomaoqiu" target="_blank" title="Github"><i class="fab fa-github" style="color: #24292e;"></i></a><a class="social-icon" href="mailto:guomaoqiu@icloud.com" target="_blank" title="Email"><i class="fas fa-envelope" style="color: #4a7dbe;"></i></a></div></div><div class="sticky_layout"><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2025/08/27/%E6%B1%82%E8%81%8C%E5%B8%96/" title="求职-系统运维/SRE方向"><img src="https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&amp;h=400" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="求职-系统运维/SRE方向"/></a><div class="content"><a class="title" href="/2025/08/27/%E6%B1%82%E8%81%8C%E5%B8%96/" title="求职-系统运维/SRE方向">求职-系统运维/SRE方向</a><time datetime="2025-08-26T16:01:01.000Z" title="发表于 2025-08-27 00:01:01">2025-08-27</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2024/07/23/Docker%E6%9E%84%E5%BB%BA%E6%97%A5%E5%BF%97%E6%94%B6%E9%9B%86%E5%B9%B3%E5%8F%B0EFK-TLS/" title="Docker构建日志收集平台EFK(TLS)"><img src="https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800&amp;h=400" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Docker构建日志收集平台EFK(TLS)"/></a><div class="content"><a class="title" href="/2024/07/23/Docker%E6%9E%84%E5%BB%BA%E6%97%A5%E5%BF%97%E6%94%B6%E9%9B%86%E5%B9%B3%E5%8F%B0EFK-TLS/" title="Docker构建日志收集平台EFK(TLS)">Docker构建日志收集平台EFK(TLS)</a><time datetime="2024-07-23T01:56:27.000Z" title="发表于 2024-07-23 09:56:27">2024-07-23</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2024/07/16/%E5%A6%82%E4%BD%95%E5%88%A9%E7%94%A8ElastAlert2%E5%AF%B9ES%E4%B8%AD%E7%9A%84%E6%97%A5%E5%BF%97%E5%88%9B%E5%BB%BA%E5%91%8A%E8%AD%A6/" title="如何利用ElastAlert2对ES中的日志创建告警"><img src="https://images.unsplash.com/photo-1555949963-aa79dcee981c?w=800&amp;h=400" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="如何利用ElastAlert2对ES中的日志创建告警"/></a><div class="content"><a class="title" href="/2024/07/16/%E5%A6%82%E4%BD%95%E5%88%A9%E7%94%A8ElastAlert2%E5%AF%B9ES%E4%B8%AD%E7%9A%84%E6%97%A5%E5%BF%97%E5%88%9B%E5%BB%BA%E5%91%8A%E8%AD%A6/" title="如何利用ElastAlert2对ES中的日志创建告警">如何利用ElastAlert2对ES中的日志创建告警</a><time datetime="2024-07-16T09:56:39.000Z" title="发表于 2024-07-16 17:56:39">2024-07-16</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2024/05/10/K8S%E4%B8%ADMySQL%E4%BD%BF%E7%94%A8NFS%E6%8C%82%E8%BD%BD%E7%9A%84%E5%BC%82%E5%B8%B8%E9%97%AE%E9%A2%98%E5%A4%84%E7%90%86/" title="K8S中MySQL使用NFS挂载的异常问题处理"><img src="https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&amp;h=400" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="K8S中MySQL使用NFS挂载的异常问题处理"/></a><div class="content"><a class="title" href="/2024/05/10/K8S%E4%B8%ADMySQL%E4%BD%BF%E7%94%A8NFS%E6%8C%82%E8%BD%BD%E7%9A%84%E5%BC%82%E5%B8%B8%E9%97%AE%E9%A2%98%E5%A4%84%E7%90%86/" title="K8S中MySQL使用NFS挂载的异常问题处理">K8S中MySQL使用NFS挂载的异常问题处理</a><time datetime="2024-05-10T12:58:02.000Z" title="发表于 2024-05-10 20:58:02">2024-05-10</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2022/09/12/Prometheus-Consul%E5%AE%9E%E7%8E%B0%E4%BC%81%E4%B8%9A%E7%BA%A7%E5%AE%BF%E4%B8%BB%E6%9C%BA-%E5%AE%B9%E5%99%A8%E7%9B%91%E6%8E%A7%E5%91%8A%E8%AD%A6/" title="Prometheus+Consul实现企业级宿主机+容器监控告警"><img src="https://images.unsplash.com/photo-1629909613654-28e377c5b8bc?w=800&amp;h=400" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Prometheus+Consul实现企业级宿主机+容器监控告警"/></a><div class="content"><a class="title" href="/2022/09/12/Prometheus-Consul%E5%AE%9E%E7%8E%B0%E4%BC%81%E4%B8%9A%E7%BA%A7%E5%AE%BF%E4%B8%BB%E6%9C%BA-%E5%AE%B9%E5%99%A8%E7%9B%91%E6%8E%A7%E5%91%8A%E8%AD%A6/" title="Prometheus+Consul实现企业级宿主机+容器监控告警">Prometheus+Consul实现企业级宿主机+容器监控告警</a><time datetime="2022-09-12T06:45:26.000Z" title="发表于 2022-09-12 14:45:26">2022-09-12</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2022/06/22/%E5%9F%BA%E4%BA%8E%E5%AE%B9%E5%99%A8%E5%8C%96%E9%83%A8%E7%BD%B2Nacos%E9%9B%86%E7%BE%A4/" title="基于容器化部署Nacos集群"><img src="https://images.unsplash.com/photo-1563207153-f403bf289096?w=800&amp;h=400" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="基于容器化部署Nacos集群"/></a><div class="content"><a class="title" href="/2022/06/22/%E5%9F%BA%E4%BA%8E%E5%AE%B9%E5%99%A8%E5%8C%96%E9%83%A8%E7%BD%B2Nacos%E9%9B%86%E7%BE%A4/" title="基于容器化部署Nacos集群">基于容器化部署Nacos集群</a><time datetime="2022-06-22T14:41:33.000Z" title="发表于 2022-06-22 22:41:33">2022-06-22</time></div></div></div></div></div></div></main><footer id="footer"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2013 - 2025 By maoqiu.guo</span><span class="framework-info"><span>框架 </span><a href="https://hexo.io">Hexo 7.3.0</a><span class="footer-separator">|</span><span>主题 </span><a href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.4.3</a></span></div><div class="footer_custom_text">Hi, welcome to my <a href="https://blog.sctux.cc/">blog</a>!</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="translateLink" type="button" title="简繁转换">繁</button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="/js/tw_cn.js"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
