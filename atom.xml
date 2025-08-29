@@ -6,11 +6,11 @@
   <link href="https://blog.sctux.cc/atom.xml" rel="self"/>
   
   <link href="https://blog.sctux.cc/"/>
-  <updated>2025-08-26T16:13:39.752Z</updated>
+  <updated>2025-08-29T05:04:31.965Z</updated>
   <id>https://blog.sctux.cc/</id>
   
   <author>
-    <name>maoqiu.guo</name>
+    <name>NoardGuo-Ops</name>
     
   </author>
   
@@ -18,10 +18,10 @@
   
   <entry>
     <title>求职-系统运维/SRE方向</title>
-    <link href="https://blog.sctux.cc/2025/08/27/%E6%B1%82%E8%81%8C%E5%B8%96/"/>
-    <id>https://blog.sctux.cc/2025/08/27/%E6%B1%82%E8%81%8C%E5%B8%96/</id>
-    <published>2025-08-26T16:01:01.000Z</published>
-    <updated>2025-08-26T16:13:39.752Z</updated>
+    <link href="https://blog.sctux.cc/2025/08/29/%E6%B1%82%E8%81%8C%E5%B8%96/"/>
+    <id>https://blog.sctux.cc/2025/08/29/%E6%B1%82%E8%81%8C%E5%B8%96/</id>
+    <published>2025-08-28T16:01:01.000Z</published>
+    <updated>2025-08-29T05:04:31.965Z</updated>
     
     <content type="html"><![CDATA[<p>各位朋友，大家好！</p><p>我于今年7月底正式离职，结束了上一段工作旅程。目前正在寻找下一份系统运维或SRE相关的工作，希望能借助大家的力量。</p><p>我有10年左右的运维经验，熟悉Linux、网络、Kubernetes、监控和自动化开发。在过去的工作中，我负责维护系统的稳定运行，处理过一些故障，也参与从传统架构到云原生架构的迁移和转型。我可能不是最顶尖的大牛，但我相信自己有很强的责任心、学习能力和团队协作精神，能脚踏实地地完成任务。</p><p>我非常渴望能加入一个优秀的团队，与大家共同成长，为公司创造价值。</p><p>如果您所在团队有招聘需求，或者有相关的信息，恳请您不吝推荐或联系我。感激不尽！</p><p>我的联系方式：</p><ul><li>微信：[NoardGuo-Ops]</li><li>TG: [@noardguo_devops]</li><li>DiscordID: [737149651186221131]</li></ul><p>[NoardGuo 2025-08-27 00:01:01]</p>]]></content>
     
@@ -697,9 +697,9 @@
     
     <category term="kubernets" scheme="https://blog.sctux.cc/tags/kubernets/"/>
     
-    <category term="Storage" scheme="https://blog.sctux.cc/tags/Storage/"/>
-    
     <category term="持久化存储" scheme="https://blog.sctux.cc/tags/%E6%8C%81%E4%B9%85%E5%8C%96%E5%AD%98%E5%82%A8/"/>
+    
+    <category term="Storage" scheme="https://blog.sctux.cc/tags/Storage/"/>
     
     <category term="NFS PV静态供给" scheme="https://blog.sctux.cc/tags/NFS-PV%E9%9D%99%E6%80%81%E4%BE%9B%E7%BB%99/"/>
     
@@ -749,11 +749,11 @@
     <category term="kubernetes" scheme="https://blog.sctux.cc/categories/kubernetes/"/>
     
     
-    <category term="持久化存储" scheme="https://blog.sctux.cc/tags/%E6%8C%81%E4%B9%85%E5%8C%96%E5%AD%98%E5%82%A8/"/>
-    
     <category term="StatefulSet" scheme="https://blog.sctux.cc/tags/StatefulSet/"/>
     
     <category term="有状态" scheme="https://blog.sctux.cc/tags/%E6%9C%89%E7%8A%B6%E6%80%81/"/>
+    
+    <category term="持久化存储" scheme="https://blog.sctux.cc/tags/%E6%8C%81%E4%B9%85%E5%8C%96%E5%AD%98%E5%82%A8/"/>
     
   </entry>
   
