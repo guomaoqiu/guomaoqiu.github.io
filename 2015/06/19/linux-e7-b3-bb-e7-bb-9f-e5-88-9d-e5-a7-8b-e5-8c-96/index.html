@@ -1,0 +1,223 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>Linux系统初始化脚本 | OpsThoughts</title><meta name="author" content="NoardGuo-Ops"><meta name="copyright" content="NoardGuo-Ops"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="我们在安装好操作系统后一般都需要对系统做一些针对于自己环境的情况做一下系统初始化，这个我们一般用shell脚本来跑一遍，把相关的参数、配置调整一下就好了。使用下面这个脚本就可以初始化我们系统啦。 #!&#x2F;bin&#x2F;bash#Version 1.9#Auth: guomaoqiu#For CentOS_mini#Made on 2015-06-19 echo “   “echo “###########">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Linux系统初始化脚本">
+<meta property="og:url" content="https://blog.sctux.cc/2015/06/19/linux-e7-b3-bb-e7-bb-9f-e5-88-9d-e5-a7-8b-e5-8c-96/index.html">
+<meta property="og:site_name" content="OpsThoughts">
+<meta property="og:description" content="我们在安装好操作系统后一般都需要对系统做一些针对于自己环境的情况做一下系统初始化，这个我们一般用shell脚本来跑一遍，把相关的参数、配置调整一下就好了。使用下面这个脚本就可以初始化我们系统啦。 #!&#x2F;bin&#x2F;bash#Version 1.9#Auth: guomaoqiu#For CentOS_mini#Made on 2015-06-19 echo “   “echo “###########">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=800&h=400">
+<meta property="article:published_time" content="2015-06-19T12:06:31.000Z">
+<meta property="article:modified_time" content="2025-09-01T01:59:08.921Z">
+<meta property="article:author" content="NoardGuo-Ops">
+<meta property="article:tag" content="DevOps,Linux,Kubernetes,Flask,Python,Shell,SRE">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=800&h=400"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Linux系统初始化脚本",
+  "url": "https://blog.sctux.cc/2015/06/19/linux-e7-b3-bb-e7-bb-9f-e5-88-9d-e5-a7-8b-e5-8c-96/",
+  "image": "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=800&h=400",
+  "datePublished": "2015-06-19T12:06:31.000Z",
+  "dateModified": "2025-09-01T01:59:08.921Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "NoardGuo-Ops",
+      "url": "https://blog.sctux.cc"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="https://blog.sctux.cc/2015/06/19/linux-e7-b3-bb-e7-bb-9f-e5-88-9d-e5-a7-8b-e5-8c-96/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//fonts.googleapis.com" crossorigin=""/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/node-snackbar/dist/snackbar.min.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Titillium+Web&amp;display=swap" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"languages":{"hits_empty":"未找到符合您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: {"defaultEncoding":1,"translateDelay":0,"msgToTraditionalChinese":"繁","msgToSimplifiedChinese":"簡"},
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":true},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: {"chs_to_cht":"已切换为繁体中文","cht_to_chs":"已切换为简体中文","day_to_night":"已切换为深色模式","night_to_day":"已切换为浅色模式","bgLight":"#49b1f5","bgDark":"#1f1f1f","position":"bottom-left"},
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Linux系统初始化脚本',
+  isHighlightShrink: false,
+  isToc: false,
+  pageType: 'post'
+}</script><meta name="generator" content="Hexo 7.3.0">
+<style>.github-emoji { position: relative; display: inline-block; width: 1.2em; min-height: 1.2em; overflow: hidden; vertical-align: top; color: transparent; }  .github-emoji > span { position: relative; z-index: 10; }  .github-emoji img, .github-emoji .fancybox { margin: 0 !important; padding: 0 !important; border: none !important; outline: none !important; text-decoration: none !important; user-select: none !important; cursor: auto !important; }  .github-emoji img { height: 1.2em !important; width: 1.2em !important; position: absolute !important; left: 50% !important; top: 50% !important; transform: translate(-50%, -50%) !important; user-select: none !important; cursor: auto !important; } .github-emoji-fallback { color: inherit; } .github-emoji-fallback img { opacity: 0 !important; }</style>
+<link rel="alternate" href="/atom.xml" title="OpsThoughts" type="application/atom+xml">
+</head><body><div id="loading-box"><div class="loading-left-bg"></div><div class="loading-right-bg"></div><div class="spinner-box"><div class="configure-border-1"><div class="configure-core"></div></div><div class="configure-border-2"><div class="configure-core"></div></div><div class="loading-word">加载中...</div></div></div><script>(()=>{
+  const $loadingBox = document.getElementById('loading-box')
+  const $body = document.body
+  const preloader = {
+    endLoading: () => {
+      if ($loadingBox.classList.contains('loaded')) return
+      $body.style.overflow = ''
+      $loadingBox.classList.add('loaded')
+    },
+    initLoading: () => {
+      $body.style.overflow = 'hidden'
+      $loadingBox.classList.remove('loaded')
+    }
+  }
+
+  preloader.initLoading()
+
+  if (document.readyState === 'complete') {
+    preloader.endLoading()
+  } else {
+    window.addEventListener('load', preloader.endLoading)
+    document.addEventListener('DOMContentLoaded', preloader.endLoading)
+    // Add timeout protection: force end after 7 seconds
+    setTimeout(preloader.endLoading, 7000)
+  }
+
+  if (false) {
+    btf.addGlobalFn('pjaxSend', preloader.initLoading, 'preloader_init')
+    btf.addGlobalFn('pjaxComplete', preloader.endLoading, 'preloader_end')
+  }
+})()</script><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/avatar.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">100</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">93</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">30</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/works/"><i class="fa-fw fas fa-folder-open"></i><span> 作品</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于我</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=800&amp;h=400);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">OpsThoughts</span></a><a class="nav-page-title" href="/"><span class="site-name">Linux系统初始化脚本</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div id="search-button"><span class="site-page social-icon search"><i class="fas fa-search fa-fw"></i><span> 搜索</span></span></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/works/"><i class="fa-fw fas fa-folder-open"></i><span> 作品</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于我</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">Linux系统初始化脚本</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2015-06-19T12:06:31.000Z" title="发表于 2015-06-19 20:06:31">2015-06-19</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2025-09-01T01:59:08.921Z" title="更新于 2025-09-01 09:59:08">2025-09-01</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/Shell/">Shell</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><p>我们在安装好操作系统后一般都需要对系统做一些针对于自己环境的情况做一下系统初始化，这个我们一般用shell脚本来跑一遍，把相关的参数、配置调整一下就好了。使用下面这个脚本就可以初始化我们系统啦。</p>
+<p>#!/bin/bash<br>#Version 1.9<br>#Auth: guomaoqiu<br>#For CentOS_mini<br>#Made on 2015-06-19</p>
+<p>echo “   “<br>echo “#############################################################################”<br>echo “#  Initialize for the CentOS 6.4/6.5 mini_installed.                        #”<br>echo “#                                                                           #”<br>echo “#  Please affirm this OS connected net already before running this script ! #”<br>echo “#                                                                           #”<br>echo “#  must first connect to the Internet. because yum need it.                  #”<br>echo “#############################################################################”<br>echo “   “</p>
+<p>format() {<br>          #echo -e “\033[42;37m ########### Finished ########### \033[0m”<br>          sleep 5<br>          echo -e “\033[42;37m ########### Finished ########### \033[0m”<br>          echo “  “<br>         }</p>
+<p>##########################################################################<br># Set time 时区/时间同步设置<br>echo “Set time.”	<br>/bin/cp -f /usr/share/zoneinfo/Asia/Shanghai /etc/localtime &amp;&gt; /dev/null<br>yum -y install ntpdate &amp;&gt; /dev/null<br>ntpdate  0.centos.pool.ntp.org &amp;&gt; /dev/null<br>hwclock -w<br>format</p>
+<p>####################################################################################<br>#Set network 网卡开机自启动<br>#sed -i “s/ONBOOT=no/ONBOOT=yes/g”  /etc/sysconfig/network-scripts/ifcfg-eth0<br>#sed -i “s/NM_CONTROLLED=no/NM_CONTROLLED=no/g”/etc/sysconfig/network-scripts/ifcfg-eth0<br>#/etc/init.d/network restart &amp;&gt;/dev/null<br>#echo “==================================” &gt;&gt; $LOG<br>#format</p>
+<p>##########################################################################<br># Create Log 创建该脚本运行记录日志<br>echo “Create log file.”<br>DATE1=`date +”%F %H:%M”`<br>LOG=/var/log/sysinitinfo.log<br>echo $DATE1 &gt;&gt; $LOG<br>echo “——————————————“ &gt;&gt; $LOG<br>echo “For CentOS_mini” &gt;&gt; $LOG<br>echo “==================================” &gt;&gt; $LOG<br>echo “Set timezone is Shanghai” &gt;&gt; $LOG<br>echo “Finished ntpdate” &gt;&gt; $LOG<br>echo “==================================” &gt;&gt; $LOG<br>format</p>
+<p>###########################################################################<br># Disabled Selinux 禁用Selinux<br>echo “Disabled SELinux.”<br>sed -i ‘s/^SELINUX=enforcing/SELINUX=disabled/‘ /etc/sysconfig/selinux<br>echo “==================================================”<br>echo “Disabled SELinux.” &gt;&gt; $LOG<br>echo “==================================” &gt;&gt; $LOG<br>format</p>
+<p>###########################################################################<br># Stop iptables 禁用iptables<br>echo “Stop iptables.”<br>service iptables stop &amp;&gt; /dev/null<br>chkconfig –level 35 iptables off<br>echo “Stop iptables.” &gt;&gt; $LOG<br>echo “==================================” &gt;&gt; $LOG<br>format</p>
+<p>###########################################################################<br># Disable ipv6 禁用IPV6<br>echo “Disable ipv6.”<br>echo “alias net-pf-10 off” &gt;&gt; /etc/modprobe.conf<br>echo “alias ipv6 off” &gt;&gt; /etc/modprobe.conf<br>chkconfig –level 35 ip6tables off<br>echo “Disable ipv6.”&gt;&gt; $LOG<br>echo “==================================” &gt;&gt; $LOG<br>format</p>
+<p>##########################################################################<br>#Set history commands  设置命令历史记录参数<br>echo “Set history commands.”<br>echo “HISTFILESIZE=4000” &gt;&gt; /etc/bashrc<br>echo “HISTSIZE=4000” &gt;&gt; /etc/bashrc<br>echo “HISTTIMEFORMAT=’%F/%T’” &gt;&gt; /etc/bashrc<br>source /etc/bashrc<br>echo “==================================” &gt;&gt; $LOG<br>format</p>
+<p>##########################################################################<br># Epel 升级epel源<br>echo “Install epel”<br>rpm -Uvh <a href="http://download.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm">http://download.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm</a> &amp;&gt; /dev/null<br>sed -i “s/^#base/base/g” /etc/yum.repos.d/epel.repo<br>sed -i “s/^mirr/#mirr/g” /etc/yum.repos.d/epel.repo<br>echo “==================================================”<br>echo “Install epel” &gt;&gt; $LOG<br>echo “==================================” &gt;&gt; $LOG<br>format</p>
+<p>##########################################################################<br>#Yum install Development tools  安装开发包组及必备软件<br>echo “Install Development tools(It will be a moment,wait……)”<br>yum groupinstall -y “Development tools” &amp;&gt; /dev/null<br>yum groupinstall -y “Server Platform Development” &amp;&gt; /dev/null<br>yum groupinstall -y “Desktop Platform Development” &amp;&gt; /dev/null<br>yum groupinstall -y “chinese-support” &amp;&gt;/dev/null<br>for I in bind-utils lrzsz wget gcc gcc-c++ vim htop ;do<br>	yum install -y $I<br>done<br>echo “==================================================”<br>echo “Install Development tools” &gt;&gt; $LOG<br>echo “==================================” &gt;&gt; $LOG<br>format</p>
+<p>##########################################################################<br># Yum update bash and openssl  升级bash/openssl<br>echo “Update bash and openssl”<br>yum -y update bash &amp;&gt; /dev/null<br>yum -y update openssl &amp;&gt; /dev/null<br>echo “==================================================”<br>echo “Update bash and openssl” &gt;&gt; $LOG<br>echo “==================================” &gt;&gt; $LOG<br>format</p>
+<p>###########################################################################<br># Set ssh 设置ssh登录策略<br>echo “Disabled EmptyPassword.”<br>echo “Disabled SSH-DNS.”<br>echo “Set timeout is 6m.”<br>sed -i “s/^#PermitEmptyPasswords/PermitEmptyPasswords/“ /etc/ssh/sshd_config<br>sed -i “s/^#LoginGraceTime 2m/LoginGraceTime 6m/“ /etc/ssh/sshd_config<br>echo “UseDNS no” &gt;&gt; /etc/ssh/sshd_config<br>echo “==================================================”<br>echo “Disabled EmptyPassword.” &gt;&gt; $LOG<br>echo “Disabled SSH-DNS.” &gt;&gt; $LOG<br>echo “Set timeout is 6m.” &gt;&gt; $LOG<br>echo “==================================” &gt;&gt; $LOG<br>format</p>
+<p>###########################################################################<br># Set default init 3  设置系统默认初始化<br>echo “Default init 3.”<br>sed -i ‘s/^id:5:initdefault:/id:3:initdefault:/‘ /etc/inittab<br>echo “==================================================”<br>echo “Default init 3.” &gt;&gt; $LOG<br>echo “==================================” &gt;&gt; $LOG<br>format</p>
+<p>###########################################################################<br># Stop Service  关闭不必要的服务<br>echo “Some services are turned off now.”<br>for SER in rpcbind postfix portreserve certmonger mdmonitor blk-availability lvm2-monitor udev-post cups dhcpd firstboot gpm haldaemon hidd ip6tables ipsec isdn kudzu lpd mcstrans messagebus microcode_ctl netfs nfs nfslock nscd acpid anacron apmd atd auditd autofs avahi-daemon avahi-dnsconfd bluetooth cpuspeed pcscd portmap readahead_early restorecond rpcgssd rpcidmapd rstatd sendmail setroubleshoot snmpd sysstat xfs xinetd yppasswdd ypserv yum-updatesd<br> do<br>    /sbin/chkconfig –list $SER &amp;&gt; /dev/null<br>  if [ $? -eq 0 ]<br>    then<br>      chkconfig –level 35  $SER off<br>    echo “$SER” &gt;&gt; $LOG<br>  fi<br> done<br>echo “==================================================”<br>echo “Some services are turned off now:” &gt;&gt; $LOG<br>echo “==================================” &gt;&gt; $LOG<br>format</p>
+<p>###########################################################################<br># Del unnecessary users 删除不必要的用户<br>echo “Del unnecessary users.”<br>for USERS in adm lp sync shutdown halt mail news uucp operator games gopher<br> do<br>  grep $USERS /etc/passwd &amp;&gt;/dev/null<br>  if [ $? -eq 0 ]<br>   then<br>    userdel $USERS &amp;&gt; /dev/null<br>    echo $USERS &gt;&gt; $LOG<br>  fi<br> done<br>echo “==================================================”<br>echo “Del unnecessary users.” &gt;&gt; $LOG<br>echo “==================================” &gt;&gt; $LOG<br>format</p>
+<p>###########################################################################<br># Del unnecessary groups 删除不必要的用户组<br>echo “Del unnecessary groups.”<br>for GRP in adm lp mail news uucp games gopher mailnull floppy dip pppusers popusers slipusers daemon<br> do<br>  grep $GRP /etc/group &amp;&gt; /dev/null<br>  if [ $? -eq 0 ]<br>   then<br>    groupdel $GRP &amp;&gt; /dev/null<br>    echo $GRP &gt;&gt; $LOG<br>  fi<br> done<br>echo “==================================================”<br>echo “Del unnecessary groups.” &gt;&gt; $LOG<br>echo “==================================” &gt;&gt; $LOG<br>format</p>
+<p>###########################################################################<br># Disabled reboot by keys ctlaltdelete 禁用ctlaltdelete重启功能<br>echo “Disabled reboot by keys ctlaltdelete”<br>sed -i ‘s/^exec/#exec/‘ /etc/init/control-alt-delete.conf<br>echo “==================================================”<br>echo “Disabled reboot by keys ctlaltdelete” &gt;&gt; $LOG<br>echo “==================================” &gt;&gt; $LOG<br>format</p>
+<p>###########################################################################<br># Set ulimit  设置文件句柄数<br>echo “Set ulimit 1000000”<br>echo “*    soft    nofile  1000000” &gt;&gt; /etc/security/limits.conf<br>echo “*    hard    nofile  1000000” &gt;&gt; /etc/security/limits.conf<br>echo “*    soft    nproc 102400” &gt;&gt; /etc/security/limits.conf<br>echo “*    hard    nproc 102400” &gt;&gt; /etc/security/limits.conf<br>sed -i ‘s/102400/1000000/‘ /etc/security/limits.d/90-nproc.conf<br>echo “==================================================”<br>echo “Set ulimit 1000000” &gt;&gt; $LOG<br>echo “==================================” &gt;&gt; $LOG<br>format</p>
+<p>###########################################################################<br># Set login message 设置登录时显示的信息<br>echo “Set login message.”<br>echo “This is not a public Server” &gt; /etc/issue<br>echo “This is not a public Server” &gt; /etc/redhat-release<br>echo “==================================================”<br>echo “Set login message.” &gt;&gt; $LOG<br>echo “==================================” &gt;&gt; $LOG<br>format</p>
+<p>###########################################################################<br># Record SUID and SGID files<br>DATE2=`date +”%F”`<br>echo “Record SUID and SGID files.”<br>echo “SUID — “ &gt; /var/log/SuSg_”$DATE2”.log<br>find / -path ‘/proc’  -prune -o -perm -4000 &gt;&gt; /var/log/SuSg_”$DATE2”.log<br>echo “—————————————————— “ &gt;&gt; /var/log/SuSg_”$DATE2”.log<br>echo “SGID — “ &gt;&gt; /var/log/SuSg_”$DATE2”.log<br>find / -path ‘/proc’  -prune -o -perm -2000 &gt;&gt; /var/log/SuSg_”$DATE2”.log<br>echo “==================================================”<br>echo “Record SUID and SGID.” &gt;&gt; $LOG<br>echo “Record is in /var/log/SuSg_”$DATE2”.log” &gt;&gt; $LOG<br>echo “==================================” &gt;&gt; $LOG<br>format</p>
+<p>###########################################################################<br># Disabled crontab send mail 禁用执行任务计划时向root发送邮件<br>echo “Disable crontab send mail.”<br>sed -i ‘s/^MAILTO=root/MAILTO=””/‘ /etc/crontab<br>sed -i ‘s/^mail\.\*/mail\.err/‘ /etc/rsyslog.conf<br>echo “==================================================”<br>echo “Disable crontab send mail.” &gt;&gt; $LOG<br>echo “==================================” &gt;&gt; $LOG<br>format</p>
+<p>###########################################################################<br># Set ntp client 设置时间服务客户端<br>echo “Set ntp client.”<br>SED() {<br>    cp -p /etc/ntp.conf /etc/ntp.conf.bak<br>    sed -i ‘/^server/d’ /etc/ntp.conf<br>    sed -i ‘/^includefile/ i\server 0.centos.pool.ntp.org iburst’ /etc/ntp.conf<br>    sed -i ‘/0.centos.pool.ntp.org/ a\server 1.centos.pool.ntp.org iburst’ /etc/ntp.conf<br>    sed -i ‘/1.centos.pool.ntp.org/ a\server 2.centos.pool.ntp.org iburst’ /etc/ntp.conf<br>    sed -i ‘/2.centos.pool.ntp.org/ a\server 3.centos.pool.ntp.org iburst’ /etc/ntp.conf<br>    chkconfig –level 35 ntpd on &amp;&gt; /dev/null<br>    echo “==================================================”<br>}<br>rpm -q ntp &amp;&gt; /dev/null<br>if [ $? -eq 0 ]<br>  then<br>    SED<br>  else<br>   yum -y install ntp &amp;&gt; /dev/null<br>   SED<br>fi<br>echo “Set ntp client.” &gt;&gt; $LOG<br>echo “==================================” &gt;&gt; $LOG<br>format</p>
+<p>###########################################################################<br># Set sysctl.conf 设置内核参数<br>echo “Set sysctl.conf”<br>#web应用中listen函数的backlog默认会将内核参数的net.core.somaxconn限制到128，而nginx定义的NGX_LISTEN_BACKLOG默认是511，所以必须调整,一般调整为2048<br>echo “net.core.somaxconn = 2048” &gt;&gt; /etc/sysctl.conf</p>
+<p>echo “net.core.rmem_default = 262144” &gt;&gt; /etc/sysctl.conf<br>echo “net.core.wmem_default = 262144” &gt;&gt; /etc/sysctl.conf<br>echo “net.core.rmem_max = 16777216” &gt;&gt; /etc/sysctl.conf<br>echo “net.core.wmem_max = 16777216” &gt;&gt; /etc/sysctl.conf<br>echo “net.ipv4.tcp_rmem = 4096 4096 16777216” &gt;&gt; /etc/sysctl.conf<br>echo “net.ipv4.tcp_wmem = 4096 4096 16777216” &gt;&gt; /etc/sysctl.conf<br>echo “net.ipv4.tcp_mem = 786432 2097152 3145728” &gt;&gt; /etc/sysctl.conf<br>echo “net.ipv4.tcp_max_syn_backlog = 16384” &gt;&gt; /etc/sysctl.conf<br>echo “net.core.netdev_max_backlog = 20000” &gt;&gt; /etc/sysctl.conf<br>echo “net.ipv4.tcp_fin_timeout = 15” &gt;&gt; /etc/sysctl.conf<br>echo “net.ipv4.tcp_tw_reuse = 1” &gt;&gt; /etc/sysctl.conf<br>echo “net.ipv4.tcp_tw_recycle = 1” &gt;&gt; /etc/sysctl.conf<br>echo “net.ipv4.tcp_max_orphans = 131072” &gt;&gt; /etc/sysctl.conf<br>echo “net.ipv4.ip_local_port_range = 1024 65535” &gt;&gt; /etc/sysctl.conf<br>echo “Set sysctl.conf —- “ &gt;&gt; $LOG<br>/sbin/sysctl  -p &gt;&gt; $LOG<br>echo “==================================” &gt;&gt; $LOG<br>format<br>###########################################################################<br># Done<br>echo “Finished,You can check infomations in $LOG .”<br>#echo “System will reboot in 60s.”<br>#shutdown -r 1</p>
+<p>如果有不对的地方，各位大婶可以提出来，大家一起进步哈；谢谢您的意见。 Download Script: <a href="http://www.sctux.com/project/initsystem.sh">initsystem.sh</a></p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://blog.sctux.cc">NoardGuo-Ops</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://blog.sctux.cc/2015/06/19/linux-e7-b3-bb-e7-bb-9f-e5-88-9d-e5-a7-8b-e5-8c-96/">https://blog.sctux.cc/2015/06/19/linux-e7-b3-bb-e7-bb-9f-e5-88-9d-e5-a7-8b-e5-8c-96/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="https://blog.sctux.cc" target="_blank">OpsThoughts</a>！</span></div></div><div class="tag_share"></div><div class="post-reward"><div class="reward-button"><i class="fas fa-qrcode"></i>赞助</div><div class="reward-main"><ul class="reward-all"><li class="reward-item"><a href="/img/wechat.png" target="_blank"><img class="post-qr-code-img" src="/img/wechat.png" alt="wechat"/></a><div class="post-qr-code-desc">wechat</div></li><li class="reward-item"><a href="/img/zhifubao.png" target="_blank"><img class="post-qr-code-img" src="/img/zhifubao.png" alt="alipay"/></a><div class="post-qr-code-desc">alipay</div></li></ul></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/2015/08/12/e5-ad-a6-e4-b9-a0saltstack-e5-b0-8f-e8-ae-b0-e7-ac-ac-e4-b8-80-e7-ab-a0-e3-80-8a-e5-ae-89-e8-a3-85-e5-8f-8a-e7-ae-80-e5-8d-95-e6-b5-8b-e8-af-95-e3-80-8b/" title="学习SaltStack小记---第一章《安装及简单测试》"><img class="cover" src="https://images.unsplash.com/photo-1620712943543-bcc4688e7485?w=800&amp;h=400" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="info"><div class="info-1"><div class="info-item-1">上一篇</div><div class="info-item-2">学习SaltStack小记---第一章《安装及简单测试》</div></div><div class="info-2"><div class="info-item-1">一、什么是saltstack Salt，,一种全新的基础设施管理方式，部署轻松，在几分钟内可运行起来，扩展性好，很容易管理上万台服务器，速度够快，服务器之间秒级通讯。salt底层采用动态的连接总线, 使其可以用于编配, 远程执行, 配置管理等等. SaltStack 是继 Puppet、Chef 之后新出现的配置管理及远程执行工具， 目前，SaltStack 正得到越来越多的瞩目。与 Puppet 相比，SaltStack 没有那么笨重，感觉较为轻量；不像 Puppet 有 一套自己的 DSL 用来写配置，SaltStack 使用 YAML 作为配置文件格式，写 起来既简单又容易，同时也便于动态生成；此外，SaltStack 在远程执行命令 时的速度非常快，也包含丰富的模块。 官方站点：http://www.saltstack.com/ 官方文档：http://docs.saltstack.com/ 中文站点：http://www.saltstack.cn/ 中文手册：http://docs.saltstack.cn/ 中文wiki：http://wiki.saltstack.c...</div></div></div></a><a class="pagination-related" href="/2015/04/23/e9-80-9a-e8-bf-87-ulimit-e6-94-b9-e5-96-84-e7-b3-bb-e7-bb-9f-e6-80-a7-e8-83-bd/" title="通过 Ulimit 改善系统性能"><img class="cover" src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&amp;h=400" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">通过 Ulimit 改善系统性能</div></div><div class="info-2"><div class="info-item-1">概述 系统性能一直是一个受关注的话题，如何通过最简单的设置来实现最有效的性能调优，如何在有限资源的条件下保证程序的运作，ulimit 是我们在处理这些问题时，经常使用的一种简单手段。ulimit 是一种 linux 系统的内键功能，它具有一套参数集，用于为由它生成的 shell 进程及其子进程的资源使用设置限制。本文将在后面的章节中详细说明 ulimit 的功能，使用以及它的影响，并以具体的例子来详细地阐述它在限制资源使用方面的影响。 ulimit 的功能和用法 ulimit 功能简述 假设有这样一种情况，当一台 Linux 主机上同时登陆了 10 个人，在系统资源无限制的情况下，这 10 个用户同时打开了 500 个文档，而假设每个文档的大小有 10M，这时系统的内存资源就会受到巨大的挑战。 而实际应用的环境要比这种假设复杂的多，例如在一个嵌入式开发环境中，各方面的资源都是非常紧缺的，对于开启文件描述符的数量，分配堆栈的大小，CPU 时间，虚拟内存大小，等等，都有非常严格的要求。资源的合理限制和分配，不仅仅是保证系统可用性的必要条件，也与系统上软件运行的性能有着密不可分的联系。...</div></div></div></a></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/avatar.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">NoardGuo-Ops</div><div class="author-info-description">Happiness is not something ready-made. It comes from your own actions💪🏻.</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">100</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">93</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">30</div></a></div><a id="card-info-btn" href="https://github.com/guomaoqiu"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons"><a class="social-icon" href="https://github.com/guomaoqiu" target="_blank" title="Github"><i class="fab fa-github" style="color: #24292e;"></i></a><a class="social-icon" href="mailto:guomaoqiu@icloud.com" target="_blank" title="Email"><i class="fas fa-envelope" style="color: #4a7dbe;"></i></a></div></div><div class="sticky_layout"><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2025/08/29/%E6%B1%82%E8%81%8C%E5%B8%96/" title="求职-系统运维/SRE方向"><img src="https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=800&amp;h=400" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="求职-系统运维/SRE方向"/></a><div class="content"><a class="title" href="/2025/08/29/%E6%B1%82%E8%81%8C%E5%B8%96/" title="求职-系统运维/SRE方向">求职-系统运维/SRE方向</a><time datetime="2025-08-28T16:01:01.000Z" title="发表于 2025-08-29 00:01:01">2025-08-29</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2024/07/23/Docker%E6%9E%84%E5%BB%BA%E6%97%A5%E5%BF%97%E6%94%B6%E9%9B%86%E5%B9%B3%E5%8F%B0EFK-TLS/" title="Docker构建日志收集平台EFK(TLS)"><img src="https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=800&amp;h=400" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Docker构建日志收集平台EFK(TLS)"/></a><div class="content"><a class="title" href="/2024/07/23/Docker%E6%9E%84%E5%BB%BA%E6%97%A5%E5%BF%97%E6%94%B6%E9%9B%86%E5%B9%B3%E5%8F%B0EFK-TLS/" title="Docker构建日志收集平台EFK(TLS)">Docker构建日志收集平台EFK(TLS)</a><time datetime="2024-07-23T01:56:27.000Z" title="发表于 2024-07-23 09:56:27">2024-07-23</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2024/07/16/%E5%A6%82%E4%BD%95%E5%88%A9%E7%94%A8ElastAlert2%E5%AF%B9ES%E4%B8%AD%E7%9A%84%E6%97%A5%E5%BF%97%E5%88%9B%E5%BB%BA%E5%91%8A%E8%AD%A6/" title="如何利用ElastAlert2对ES中的日志创建告警"><img src="https://images.unsplash.com/photo-1542831371-29b0f74f9713?w=800&amp;h=400" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="如何利用ElastAlert2对ES中的日志创建告警"/></a><div class="content"><a class="title" href="/2024/07/16/%E5%A6%82%E4%BD%95%E5%88%A9%E7%94%A8ElastAlert2%E5%AF%B9ES%E4%B8%AD%E7%9A%84%E6%97%A5%E5%BF%97%E5%88%9B%E5%BB%BA%E5%91%8A%E8%AD%A6/" title="如何利用ElastAlert2对ES中的日志创建告警">如何利用ElastAlert2对ES中的日志创建告警</a><time datetime="2024-07-16T09:56:39.000Z" title="发表于 2024-07-16 17:56:39">2024-07-16</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2024/07/09/%E5%A6%82%E4%BD%95%E5%88%A9%E7%94%A8Python%E8%8E%B7%E5%8F%96%E6%89%80%E6%9C%89pod%E5%AE%B9%E5%99%A8%E7%8A%B6%E6%80%81/" title="如何利用Python获取所有pod容器状态"><img src="https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=800&amp;h=400" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="如何利用Python获取所有pod容器状态"/></a><div class="content"><a class="title" href="/2024/07/09/%E5%A6%82%E4%BD%95%E5%88%A9%E7%94%A8Python%E8%8E%B7%E5%8F%96%E6%89%80%E6%9C%89pod%E5%AE%B9%E5%99%A8%E7%8A%B6%E6%80%81/" title="如何利用Python获取所有pod容器状态">如何利用Python获取所有pod容器状态</a><time datetime="2024-07-09T09:38:00.000Z" title="发表于 2024-07-09 17:38:00">2024-07-09</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2024/05/10/K8S%E4%B8%ADMySQL%E4%BD%BF%E7%94%A8NFS%E6%8C%82%E8%BD%BD%E7%9A%84%E5%BC%82%E5%B8%B8%E9%97%AE%E9%A2%98%E5%A4%84%E7%90%86/" title="K8S中MySQL使用NFS挂载的异常问题处理"><img src="https://images.unsplash.com/photo-1573164713714-d95e436ab8d6?w=800&amp;h=400" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="K8S中MySQL使用NFS挂载的异常问题处理"/></a><div class="content"><a class="title" href="/2024/05/10/K8S%E4%B8%ADMySQL%E4%BD%BF%E7%94%A8NFS%E6%8C%82%E8%BD%BD%E7%9A%84%E5%BC%82%E5%B8%B8%E9%97%AE%E9%A2%98%E5%A4%84%E7%90%86/" title="K8S中MySQL使用NFS挂载的异常问题处理">K8S中MySQL使用NFS挂载的异常问题处理</a><time datetime="2024-05-10T12:58:02.000Z" title="发表于 2024-05-10 20:58:02">2024-05-10</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2022/09/12/Prometheus-Consul%E5%AE%9E%E7%8E%B0%E4%BC%81%E4%B8%9A%E7%BA%A7%E5%AE%BF%E4%B8%BB%E6%9C%BA-%E5%AE%B9%E5%99%A8%E7%9B%91%E6%8E%A7%E5%91%8A%E8%AD%A6/" title="Prometheus+Consul实现企业级宿主机+容器监控告警"><img src="https://images.unsplash.com/photo-1504639725590-34d0984388bd?w=800&amp;h=400" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Prometheus+Consul实现企业级宿主机+容器监控告警"/></a><div class="content"><a class="title" href="/2022/09/12/Prometheus-Consul%E5%AE%9E%E7%8E%B0%E4%BC%81%E4%B8%9A%E7%BA%A7%E5%AE%BF%E4%B8%BB%E6%9C%BA-%E5%AE%B9%E5%99%A8%E7%9B%91%E6%8E%A7%E5%91%8A%E8%AD%A6/" title="Prometheus+Consul实现企业级宿主机+容器监控告警">Prometheus+Consul实现企业级宿主机+容器监控告警</a><time datetime="2022-09-12T06:45:26.000Z" title="发表于 2022-09-12 14:45:26">2022-09-12</time></div></div></div></div></div></div></main><footer id="footer" style="background-image: url(https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=800&amp;h=400);"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2013 - 2025 By NoardGuo-Ops</span><span class="framework-info"><span>框架 </span><a href="https://hexo.io">Hexo 7.3.0</a><span class="footer-separator">|</span><span>主题 </span><a href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.4.3</a></span></div><div class="footer_custom_text">Hi, welcome to my <a href="https://blog.sctux.cc/">blog</a>!</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="translateLink" type="button" title="简繁转换">繁</button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="/js/tw_cn.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox/fancybox.umd.min.js"></script><script src="https://cdn.jsdelivr.net/npm/instant.page/instantpage.min.js" type="module"></script><script src="https://cdn.jsdelivr.net/npm/node-snackbar/dist/snackbar.min.js"></script><div class="js-pjax"></div><canvas class="fireworks" mobile="true"></canvas><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/dist/fireworks.min.js"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="text-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js"></script></div></div></body></html>

@@ -1,0 +1,697 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>Redis集群详细搭建指南 | OpsThoughts</title><meta name="author" content="NoardGuo-Ops"><meta name="copyright" content="NoardGuo-Ops"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="Redis 集群简介Redis 是一个开源的 key-value 存储系统，由于出众的性能，大部分互联网企业都用来做服务器端缓存。Redis 在3.0版本前只支持单实例模式，虽然支持主从模式、哨兵模式部署来解决单点故障，但是现在互联网企业动辄大几百G的数据，可完全是没法满足业务的需求，所以，Redis 在 3.0 版本以后就推出了集群模式。 Redis 从3.0.0正式版开始官方支持集群, Red">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Redis集群详细搭建指南">
+<meta property="og:url" content="https://blog.sctux.cc/2017/06/04/redis-ji-qun-xiang-xi-da-jian-zhi-nan/index.html">
+<meta property="og:site_name" content="OpsThoughts">
+<meta property="og:description" content="Redis 集群简介Redis 是一个开源的 key-value 存储系统，由于出众的性能，大部分互联网企业都用来做服务器端缓存。Redis 在3.0版本前只支持单实例模式，虽然支持主从模式、哨兵模式部署来解决单点故障，但是现在互联网企业动辄大几百G的数据，可完全是没法满足业务的需求，所以，Redis 在 3.0 版本以后就推出了集群模式。 Redis 从3.0.0正式版开始官方支持集群, Red">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://images.unsplash.com/photo-1504639725590-34d0984388bd?w=800&h=400">
+<meta property="article:published_time" content="2017-06-04T06:17:26.000Z">
+<meta property="article:modified_time" content="2025-09-01T01:59:08.955Z">
+<meta property="article:author" content="NoardGuo-Ops">
+<meta property="article:tag" content="redis-cluster">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://images.unsplash.com/photo-1504639725590-34d0984388bd?w=800&h=400"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Redis集群详细搭建指南",
+  "url": "https://blog.sctux.cc/2017/06/04/redis-ji-qun-xiang-xi-da-jian-zhi-nan/",
+  "image": "https://images.unsplash.com/photo-1504639725590-34d0984388bd?w=800&h=400",
+  "datePublished": "2017-06-04T06:17:26.000Z",
+  "dateModified": "2025-09-01T01:59:08.955Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "NoardGuo-Ops",
+      "url": "https://blog.sctux.cc"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="https://blog.sctux.cc/2017/06/04/redis-ji-qun-xiang-xi-da-jian-zhi-nan/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//fonts.googleapis.com" crossorigin=""/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/node-snackbar/dist/snackbar.min.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Titillium+Web&amp;display=swap" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"languages":{"hits_empty":"未找到符合您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: {"defaultEncoding":1,"translateDelay":0,"msgToTraditionalChinese":"繁","msgToSimplifiedChinese":"簡"},
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":true},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: {"chs_to_cht":"已切换为繁体中文","cht_to_chs":"已切换为简体中文","day_to_night":"已切换为深色模式","night_to_day":"已切换为浅色模式","bgLight":"#49b1f5","bgDark":"#1f1f1f","position":"bottom-left"},
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Redis集群详细搭建指南',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><meta name="generator" content="Hexo 7.3.0">
+<style>.github-emoji { position: relative; display: inline-block; width: 1.2em; min-height: 1.2em; overflow: hidden; vertical-align: top; color: transparent; }  .github-emoji > span { position: relative; z-index: 10; }  .github-emoji img, .github-emoji .fancybox { margin: 0 !important; padding: 0 !important; border: none !important; outline: none !important; text-decoration: none !important; user-select: none !important; cursor: auto !important; }  .github-emoji img { height: 1.2em !important; width: 1.2em !important; position: absolute !important; left: 50% !important; top: 50% !important; transform: translate(-50%, -50%) !important; user-select: none !important; cursor: auto !important; } .github-emoji-fallback { color: inherit; } .github-emoji-fallback img { opacity: 0 !important; }</style>
+<link rel="alternate" href="/atom.xml" title="OpsThoughts" type="application/atom+xml">
+</head><body><div id="loading-box"><div class="loading-left-bg"></div><div class="loading-right-bg"></div><div class="spinner-box"><div class="configure-border-1"><div class="configure-core"></div></div><div class="configure-border-2"><div class="configure-core"></div></div><div class="loading-word">加载中...</div></div></div><script>(()=>{
+  const $loadingBox = document.getElementById('loading-box')
+  const $body = document.body
+  const preloader = {
+    endLoading: () => {
+      if ($loadingBox.classList.contains('loaded')) return
+      $body.style.overflow = ''
+      $loadingBox.classList.add('loaded')
+    },
+    initLoading: () => {
+      $body.style.overflow = 'hidden'
+      $loadingBox.classList.remove('loaded')
+    }
+  }
+
+  preloader.initLoading()
+
+  if (document.readyState === 'complete') {
+    preloader.endLoading()
+  } else {
+    window.addEventListener('load', preloader.endLoading)
+    document.addEventListener('DOMContentLoaded', preloader.endLoading)
+    // Add timeout protection: force end after 7 seconds
+    setTimeout(preloader.endLoading, 7000)
+  }
+
+  if (false) {
+    btf.addGlobalFn('pjaxSend', preloader.initLoading, 'preloader_init')
+    btf.addGlobalFn('pjaxComplete', preloader.endLoading, 'preloader_end')
+  }
+})()</script><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/avatar.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">100</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">93</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">30</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/works/"><i class="fa-fw fas fa-folder-open"></i><span> 作品</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于我</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(https://images.unsplash.com/photo-1504639725590-34d0984388bd?w=800&amp;h=400);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">OpsThoughts</span></a><a class="nav-page-title" href="/"><span class="site-name">Redis集群详细搭建指南</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div id="search-button"><span class="site-page social-icon search"><i class="fas fa-search fa-fw"></i><span> 搜索</span></span></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/works/"><i class="fa-fw fas fa-folder-open"></i><span> 作品</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于我</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">Redis集群详细搭建指南</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2017-06-04T06:17:26.000Z" title="发表于 2017-06-04 14:17:26">2017-06-04</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2025-09-01T01:59:08.955Z" title="更新于 2025-09-01 09:59:08">2025-09-01</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/">数据库</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><h2 id="Redis-集群简介"><a href="#Redis-集群简介" class="headerlink" title="Redis 集群简介"></a>Redis 集群简介</h2><p>Redis 是一个开源的 key-value 存储系统，由于出众的性能，大部分互联网企业都用来做服务器端缓存。Redis 在3.0版本前只支持单实例模式，虽然支持主从模式、哨兵模式部署来解决单点故障，但是现在互联网企业动辄大几百G的数据，可完全是没法满足业务的需求，所以，Redis 在 3.0 版本以后就推出了集群模式。</p>
+<p>Redis 从3.0.0正式版开始官方支持集群, Redis 集群采用了P2P的模式，完全去中心化。Redis 把所有的 Key 分成了 16384 个 slot，每个 Redis 实例负责其中一部分 slot 。集群中的所有信息（节点、端口、slot等），都通过节点之间定期的数据交换而更新。</p>
+<p>Redis 客户端可以在任意一个 Redis 实例发出请求，如果所需数据不在该实例中，通过重定向命令引导客户端访问所需的实例。</p>
+<h2 id="随随便便搭建一个集群"><a href="#随随便便搭建一个集群" class="headerlink" title="随随便便搭建一个集群"></a>随随便便搭建一个集群</h2><p>安装部署任何一个应用其实都很简单，只要安装步骤一步一步来就行了。下面说一下 Redis 集群搭建规划，由于集群至少需要6个节点（3主3从模式），所以，没有这么多机器给我玩，现在计划是在一台机器上模拟一个集群，当然，这和生产环境的集群搭建没本质区别。</p>
+<h4 id="1-获取软件包"><a href="#1-获取软件包" class="headerlink" title="1.获取软件包"></a>1.获取软件包</h4><pre><code>cd /tmp/ &amp;&amp; wget http://download.redis.io/releases/redis-4.0.11.tar.gz
+mkdir /usr/local/redis &amp;&amp; tar -xr /tmp/redis-4.0.11.tar.gz -C /usr/local/redis
+cd /usr/local/redis
+./configure
+make -j 4
+make install
+</code></pre>
+<h4 id="2-规划创建文件目录"><a href="#2-规划创建文件目录" class="headerlink" title="2.规划创建文件目录"></a>2.规划创建文件目录</h4><p>我们计划集群中 Redis 节点的端口号为 9001-9006 ，端口号即集群下各实例文件夹。数据存放在 端口号/data 文件夹中。</p>
+<pre><code>mkdir /usr/local/redis-cluster/
+cd /usr/local/redis-cluster/
+
+for i in {1..6};do
+    mkdir 900${i}/data
+done
+</code></pre>
+<h4 id="3-复制执行脚本"><a href="#3-复制执行脚本" class="headerlink" title="3. 复制执行脚本"></a>3. 复制执行脚本</h4><p>在 /usr/local/redis-cluster 下创建 bin 文件夹，用来存放集群运行脚本，并把安装好的 Redis 的 src 路径下的运行脚本拷贝过来。看命令：</p>
+<pre><code>mkdir /usr/local/redis-cluster/bin
+cd /usr/local/redis/src # 下载后解压编译后的src目录
+cp mkreleasehdr.sh redis-benchmark redis-check-aof redis-check-dump redis-cli redis-server redis-trib.rb /usr/local/redis-cluster/bin
+</code></pre>
+<h4 id="4-复制一个新-Redis-实例"><a href="#4-复制一个新-Redis-实例" class="headerlink" title="4.复制一个新 Redis 实例"></a>4.复制一个新 Redis 实例</h4><p>我们现在从已安装好的 Redis 中复制一个新的实例到 9001 文件夹，并修改 redis.conf 配置。</p>
+<pre><code>cp /usr/local/redis/* /usr/local/redis-cluster/9001
+
+
+port 9001（每个节点的端口号）
+daemonize yes
+bind 192.168.56.127（绑定当前机器 IP）
+dir /usr/local/redis-cluster/9001/data/（数据文件存放位置）
+pidfile /var/run/redis_9001.pid（pid 9001和port要对应）
+cluster-enabled yes（启动集群模式）
+cluster-config-file nodes9001.conf（9001和port要对应）
+cluster-node-timeout 15000
+appendonly yes
+</code></pre>
+<h4 id="5-再复制出五个新-Redis-实例"><a href="#5-再复制出五个新-Redis-实例" class="headerlink" title="5.再复制出五个新 Redis 实例"></a>5.再复制出五个新 Redis 实例</h4><p>我们已经完成了一个节点了，其实接下来就是机械化的再完成另外五个节点，其实可以这么做：把 9001 实例 复制到另外五个文件夹中，唯一要修改的就是 redis.conf 中的所有和端口的相关的信息即可，其实就那么四个位置。开始操作，看命令：</p>
+<pre><code>\cp -rf /usr/local/redis-cluster/9001/* /usr/local/redis-cluster/9002
+\cp -rf /usr/local/redis-cluster/9001/* /usr/local/redis-cluster/9003
+\cp -rf /usr/local/redis-cluster/9001/* /usr/local/redis-cluster/9004
+\cp -rf /usr/local/redis-cluster/9001/* /usr/local/redis-cluster/9005
+\cp -rf /usr/local/redis-cluster/9001/* /usr/local/redis-cluster/9006
+</code></pre>
+<p>这里我们把配置复制过去之后需要修改对应文件夹中的redis.conf 用sed或者vim全局替换即可，主要是端口</p>
+<p>下面，下面我们来启动它们</p>
+<pre><code>for i in {1..6};do
+    /usr/local/bin/redis-server /usr/local/redis-cluster/900${i}/redis.conf 
+done
+
+
+[root@localhost redis-cluster]# ps aux | grep redis | grep -v grep
+root       3995  0.5  0.6 151404 11864 ?        Ssl  10:51   0:10 /usr/local/redis-cluster/bin/redis-server 192.168.56.127:9001 [cluster]
+root       4000  0.4  0.6 151404 11856 ?        Ssl  10:51   0:09 /usr/local/redis-cluster/bin/redis-server 192.168.56.127:9002 [cluster]
+root       4005  0.4  0.6 151404 11856 ?        Ssl  10:51   0:09 /usr/local/redis-cluster/bin/redis-server 192.168.56.127:9003 [cluster]
+root       4010  0.1  0.6 151404 11872 ?        Ssl  10:51   0:02 /usr/local/redis-cluster/bin/redis-server 192.168.56.127:9004 [cluster]
+root       4015  0.0  0.6 151404 11876 ?        Ssl  10:51   0:01 /usr/local/redis-cluster/bin/redis-server 192.168.56.127:9005 [cluster]
+root       4020  0.0  0.6 151404 11872 ?        Ssl  10:51   0:01 /usr/local/redis-cluster/bin/redis-server 192.168.56.127:9006 [cluster]
+root       4509  0.8  0.6 149356 11880 ?        Ssl  10:55   0:14 /usr/local/redis-cluster/bin/redis-server 
+[root@localhost redis-cluster]#
+</code></pre>
+<p>以上 可以看出我们的6个实例已经启动了<br>测试一下？</p>
+<p>随便找个节点测试一下:</p>
+<pre><code>/usr/local/redis-cluster/bin/redis-cli -h 192.168.56.127 -p 9001
+
+192.168.56.127:9001&gt; set name guomaoqiu
+(error) CLUSTERDOWN Hash slot not served
+192.168.56.127:9001&gt;
+</code></pre>
+<p>连接成功了，但好像报错了</p>
+<p>这是因为虽然我们配置并启动了 Redis 集群服务，但是他们暂时还并不在一个集群中，互相直接发现不了，而且还没有可存储的位置，就是所谓的slot（槽）。</p>
+<h4 id="6-安装集群所需软件"><a href="#6-安装集群所需软件" class="headerlink" title="6.安装集群所需软件"></a>6.安装集群所需软件</h4><p>由于 Redis 集群需要使用 ruby 命令，所以我们需要安装 ruby 和相关接口。</p>
+<pre><code>安装redis需要ruby版本最低是2.2.2，而centos yum库中ruby版本支持到2.0.0。所以，无法满足需求。
+解决方案：
+
+1.安装curl
+sudo yum install curl
+2.安装RVM
+curl -L get.rvm.io | bash -s stable
+source /usr/local/rvm/scripts/rvm
+3.查看rvm库中已知的ruby版本
+rvm list known
+4.安装一个ruby版本
+rvm install 2.3.3
+5.设置默认版本
+rvm use 2.3.3
+6.卸载一个已知版本
+rvm remove 2.0.0
+7.查看ruby版本
+ruby –version
+8.再安装redis就可以了
+gem install redis
+</code></pre>
+<h4 id="7-利用官方提供的命令创建集群"><a href="#7-利用官方提供的命令创建集群" class="headerlink" title="7. 利用官方提供的命令创建集群"></a>7. 利用官方提供的命令创建集群</h4><pre><code>/usr/local/redis-cluster/bin/redis-trib.rb create --replicas 1 192.168.56.127:9001 192.168.56.127:9002 192.168.56.127:9003 192.168.56.127:9004 192.168.56.127:9005 192.168.56.127:9006
+</code></pre>
+<p>简单解释一下这个命令：调用 ruby 命令来进行创建集群，–replicas 1 表示主从复制比例为 1:1，即一个主节点对应一个从节点；然后，默认给我们分配好了每个主节点和对应从节点服务，以及 solt 的大小，因为在 Redis 集群中有且仅有 16383 个 solt ，默认情况会给我们平均分配，当然你可以指定，后续的增减节点也可以重新分配。</p>
+<pre><code>[root@localhost redis-cluster]# /usr/local/redis-cluster/bin/redis-trib.rb create --replicas 1 192.168.56.127:9001 192.168.56.127:9002 192.168.56.127:9003 192.168.56.127:9004 192.168.56.127:9005 192.168.56.127:9006
+&gt;&gt;&gt; Creating cluster
+&gt;&gt;&gt; Performing hash slots allocation on 6 nodes...
+Using 3 masters:
+# 三个主节点
+192.168.56.127:9001
+192.168.56.127:9002
+192.168.56.127:9003
+# 三个主节点对应三个从节点
+Adding replica 192.168.56.127:9005 to 192.168.56.127:9001
+Adding replica 192.168.56.127:9006 to 192.168.56.127:9002
+Adding replica 192.168.56.127:9004 to 192.168.56.127:9003
+&gt;&gt;&gt; Trying to optimize slaves allocation for anti-affinity
+[WARNING] Some slaves are in the same host as their master
+M: 0fcbaa301451baf87284546513003568e47b5daa 192.168.56.127:9001
+   slots:0-5460 (5461 slots) master
+M: 474fd53f7199ad70cce7f18bd68f5445b559509a 192.168.56.127:9002
+   slots:5461-10922 (5462 slots) master
+M: e070e76789352d2492cfc9800850e943e0c4b72d 192.168.56.127:9003
+   slots:10923-16383 (5461 slots) master
+S: 950c399165439660efb6ff2f907f938e213de530 192.168.56.127:9004
+   replicates 474fd53f7199ad70cce7f18bd68f5445b559509a
+S: 17db098db9fd222df002e649506f88efcdc83633 192.168.56.127:9005
+   replicates e070e76789352d2492cfc9800850e943e0c4b72d
+S: bd278fcea63862199e964a6aab2e786710cf5575 192.168.56.127:9006
+   replicates 0fcbaa301451baf87284546513003568e47b5daa
+Can I set the above configuration? (type 'yes' to accept): yes
+&gt;&gt;&gt; Nodes configuration updated
+&gt;&gt;&gt; Assign a different config epoch to each node
+&gt;&gt;&gt; Sending CLUSTER MEET messages to join the cluster
+Waiting for the cluster to join...
+&gt;&gt;&gt; Performing Cluster Check (using node 192.168.56.127:9001)
+M: 0fcbaa301451baf87284546513003568e47b5daa 192.168.56.127:9001
+   slots:0-5460 (5461 slots) master
+   1 additional replica(s)
+M: 474fd53f7199ad70cce7f18bd68f5445b559509a 192.168.56.127:9002
+   slots:5461-10922 (5462 slots) master
+   1 additional replica(s)
+M: e070e76789352d2492cfc9800850e943e0c4b72d 192.168.56.127:9003
+   slots:10923-16383 (5461 slots) master
+   1 additional replica(s)
+S: bd278fcea63862199e964a6aab2e786710cf5575 192.168.56.127:9006
+   slots: (0 slots) slave
+   replicates 0fcbaa301451baf87284546513003568e47b5daa
+S: 950c399165439660efb6ff2f907f938e213de530 192.168.56.127:9004
+   slots: (0 slots) slave
+   replicates 474fd53f7199ad70cce7f18bd68f5445b559509a
+S: 17db098db9fd222df002e649506f88efcdc83633 192.168.56.127:9005
+   slots: (0 slots) slave
+   replicates e070e76789352d2492cfc9800850e943e0c4b72d
+[OK] All nodes agree about slots configuration.
+&gt;&gt;&gt; Check for open slots...
+&gt;&gt;&gt; Check slots coverage...
+[OK] All 16384 slots covered.
+</code></pre>
+<p>以上执行结果代表集群搭建成功啦！！！</p>
+<p>验证：</p>
+<pre><code>/usr/local/redis-cluster/bin/redis-cli -c -h 192.168.56.127 -p 9001
+192.168.56.127:9001&gt; cluster info
+cluster_state:ok
+cluster_slots_assigned:16384
+cluster_slots_ok:16384
+cluster_slots_pfail:0
+cluster_slots_fail:0
+cluster_known_nodes:6
+cluster_size:3
+cluster_current_epoch:6
+cluster_my_epoch:1
+cluster_stats_messages_ping_sent:167
+cluster_stats_messages_pong_sent:172
+cluster_stats_messages_sent:339
+cluster_stats_messages_ping_received:167
+cluster_stats_messages_pong_received:167
+cluster_stats_messages_meet_received:5
+cluster_stats_messages_received:339
+192.168.56.127:9001&gt; cluster nodes
+474fd53f7199ad70cce7f18bd68f5445b559509a 192.168.56.127:9002@19002 master - 0 1536205294229 2 connected 5461-10922
+e070e76789352d2492cfc9800850e943e0c4b72d 192.168.56.127:9003@19003 master - 0 1536205293000 3 connected 10923-16383
+bd278fcea63862199e964a6aab2e786710cf5575 192.168.56.127:9006@19006 slave 0fcbaa301451baf87284546513003568e47b5daa 0 1536205295234 6 connected
+0fcbaa301451baf87284546513003568e47b5daa 192.168.56.127:9001@19001 myself,master - 0 1536205294000 1 connected 0-5460
+950c399165439660efb6ff2f907f938e213de530 192.168.56.127:9004@19004 slave 474fd53f7199ad70cce7f18bd68f5445b559509a 0 1536205293217 4 connected
+17db098db9fd222df002e649506f88efcdc83633 192.168.56.127:9005@19005 slave e070e76789352d2492cfc9800850e943e0c4b72d 0 1536205292212 5 connected
+192.168.56.127:9001&gt; set name guomaoqiu
+-&gt; Redirected to slot [5798] located at 192.168.56.127:9002
+OK
+192.168.56.127:9002&gt; get name
+"guomaoqiu"
+192.168.56.127:9002&gt;
+</code></pre>
+<p>通过命令，可以详细的看出集群信息和各个节点状态，主从信息以及连接数、槽信息等。这么看到，我们已经真的把 Redis 集群搭建部署成功啦！</p>
+<h2 id="如何新增节点？"><a href="#如何新增节点？" class="headerlink" title="如何新增节点？"></a>如何新增节点？</h2><p>新增节点无非就是复制配置，修改配置，然后启动；我这里还是创建了一对一主一从的配置，端口分别对应的是9007、9008</p>
+<h4 id="1-启动两个实例-假设我这里已经复制配置，修改完配置了"><a href="#1-启动两个实例-假设我这里已经复制配置，修改完配置了" class="headerlink" title="1.启动两个实例(假设我这里已经复制配置，修改完配置了)"></a>1.启动两个实例(假设我这里已经复制配置，修改完配置了)</h4><pre><code>for i in {7..8};do
+    /usr/local/redis-cluster/bin/redis-server /usr/local/redis-cluster/900${i}/redis.conf 
+done
+
+6002:C 06 Sep 11:50:53.048 # oO0OoO0OoO0Oo Redis is starting oO0OoO0OoO0Oo
+6002:C 06 Sep 11:50:53.048 # Redis version=4.0.11, bits=64, commit=00000000, modified=0, pid=6002, just started
+6002:C 06 Sep 11:50:53.048 # Configuration loaded
+6004:C 06 Sep 11:50:53.060 # oO0OoO0OoO0Oo Redis is starting oO0OoO0OoO0Oo
+6004:C 06 Sep 11:50:53.060 # Redis version=4.0.11, bits=64, commit=00000000, modified=0, pid=6004, just started
+6004:C 06 Sep 11:50:53.060 # Configuration loaded
+
+ps aux | grep redis | grep -v grep
+redis      1180  0.0  0.3 142900  5828 ?        Ssl  11:28   0:01 /usr/bin/redis-server 0.0.0.0:6379
+root       4257  0.0  0.6 149356 11880 ?        Ssl  11:32   0:00 /usr/local/redis-cluster/bin/redis-server 192.168.56.127:9001 [cluster]
+root       4262  0.0  0.6 149356 11880 ?        Ssl  11:32   0:00 /usr/local/redis-cluster/bin/redis-server 192.168.56.127:9002 [cluster]
+root       4267  0.0  0.6 149356 11876 ?        Ssl  11:32   0:00 /usr/local/redis-cluster/bin/redis-server 192.168.56.127:9003 [cluster]
+root       4272  0.0  0.6 149356 11908 ?        Ssl  11:32   0:00 /usr/local/redis-cluster/bin/redis-server 192.168.56.127:9004 [cluster]
+root       4277  0.0  0.6 149356 11920 ?        Ssl  11:32   0:00 /usr/local/redis-cluster/bin/redis-server 192.168.56.127:9005 [cluster]
+root       4282  0.0  0.6 149356 11912 ?        Ssl  11:32   0:00 /usr/local/redis-cluster/bin/redis-server 192.168.56.127:9006 [cluster]
+root       6003  0.1  0.5 147308  9616 ?        Ssl  11:50   0:00 /usr/local/redis-cluster/bin/redis-server 192.168.56.127:9007 [cluster]
+root       6008  0.0  0.5 147308  9616 ?        Ssl  11:50   0:00 /usr/local/redis-cluster/bin/redis-server 192.168.56.127:9008 [cluster]
+</code></pre>
+<p>以上 可以看到我们启动了后面两个实例，并且进程中标注了是以集群方式启动, 但是此时还并没有将实例加入到集群当中。</p>
+<h4 id="2-添加实例到集群"><a href="#2-添加实例到集群" class="headerlink" title="2.添加实例到集群"></a>2.添加实例到集群</h4><pre><code>[root@locahost redis-cluster]# /usr/local/redis-cluster/bin/redis-trib.rb add-node 192.168.56.127:9007 192.168.56.127:9001
+&gt;&gt;&gt; Adding node 192.168.56.127:9007 to cluster 192.168.56.127:9001
+&gt;&gt;&gt; Performing Cluster Check (using node 192.168.56.127:9001)
+M: 0fcbaa301451baf87284546513003568e47b5daa 192.168.56.127:9001
+   slots:0-5460 (5461 slots) master
+   1 additional replica(s)
+M: 474fd53f7199ad70cce7f18bd68f5445b559509a 192.168.56.127:9002
+   slots:5461-10922 (5462 slots) master
+   1 additional replica(s)
+M: e070e76789352d2492cfc9800850e943e0c4b72d 192.168.56.127:9003
+   slots:10923-16383 (5461 slots) master
+   1 additional replica(s)
+S: bd278fcea63862199e964a6aab2e786710cf5575 192.168.56.127:9006
+   slots: (0 slots) slave
+   replicates 0fcbaa301451baf87284546513003568e47b5daa
+S: 950c399165439660efb6ff2f907f938e213de530 192.168.56.127:9004
+   slots: (0 slots) slave
+   replicates 474fd53f7199ad70cce7f18bd68f5445b559509a
+S: 17db098db9fd222df002e649506f88efcdc83633 192.168.56.127:9005
+   slots: (0 slots) slave
+   replicates e070e76789352d2492cfc9800850e943e0c4b72d
+[OK] All nodes agree about slots configuration.
+&gt;&gt;&gt; Check for open slots...
+&gt;&gt;&gt; Check slots coverage...
+[OK] All 16384 slots covered.
+&gt;&gt;&gt; Send CLUSTER MEET to node 192.168.56.127:9007 to make it join the cluster.
+[OK] New node added correctly.
+[root@localhost redis-cluster]# /usr/local/redis-cluster/bin/redis-cli -c -h 192.168.56.127 -p 9001 cluster nodes
+474fd53f7199ad70cce7f18bd68f5445b559509a 192.168.56.127:9002@19002 master - 0 1536215194000 2 connected 5461-10922
+e070e76789352d2492cfc9800850e943e0c4b72d 192.168.56.127:9003@19003 master - 0 1536215194000 3 connected 10923-16383
+bd278fcea63862199e964a6aab2e786710cf5575 192.168.56.127:9006@19006 slave 0fcbaa301451baf87284546513003568e47b5daa 0 1536215193000 6 connected
+0fcbaa301451baf87284546513003568e47b5daa 192.168.56.127:9001@19001 myself,master - 0 1536215192000 1 connected 0-5460
+950c399165439660efb6ff2f907f938e213de530 192.168.56.127:9004@19004 slave 474fd53f7199ad70cce7f18bd68f5445b559509a 0 1536215195858 4 connected
+1714784542b3afc9e2a8b2c93fff49d095e7d72b 192.168.56.127:9007@19007 master - 0 1536215195000 0 connected
+17db098db9fd222df002e649506f88efcdc83633 192.168.56.127:9005@19005 slave e070e76789352d2492cfc9800850e943e0c4b72d 0 1536215194855 5 connected
+</code></pre>
+<p>以上可以看到我们通过 add-node 参数添加了 9007这个实例；命令最后一个参数是已经成为集群的集群成员host:port<br>而且实例9007获得了一个集群ID:<code>1714784542b3afc9e2a8b2c93fff49d095e7d72b</code></p>
+<h4 id="5-增加实例的从节点到集群"><a href="#5-增加实例的从节点到集群" class="headerlink" title="5. 增加实例的从节点到集群"></a>5. 增加实例的从节点到集群</h4><p>以上我们将实例9007作为master增加到了集群中，但是按照前面的规划，每个master对应一个slave所以我们需要将实例9008加入集群并将其称为9007的slave,命令如下</p>
+<pre><code>[root@localhost redis-cluster]# /usr/local/redis-cluster/bin/redis-trib.rb add-node --slave --master-id 1714784542b3afc9e2a8b2c93fff49d095e7d72b 192.168.56.127:9008 192.168.56.127:9001
+&gt;&gt;&gt; Adding node 192.168.56.127:9008 to cluster 192.168.56.127:9001
+&gt;&gt;&gt; Performing Cluster Check (using node 192.168.56.127:9001)
+M: 0fcbaa301451baf87284546513003568e47b5daa 192.168.56.127:9001
+   slots:0-5460 (5461 slots) master
+   1 additional replica(s)
+M: 474fd53f7199ad70cce7f18bd68f5445b559509a 192.168.56.127:9002
+   slots:5461-10922 (5462 slots) master
+   1 additional replica(s)
+M: e070e76789352d2492cfc9800850e943e0c4b72d 192.168.56.127:9003
+   slots:10923-16383 (5461 slots) master
+   1 additional replica(s)
+S: bd278fcea63862199e964a6aab2e786710cf5575 192.168.56.127:9006
+   slots: (0 slots) slave
+   replicates 0fcbaa301451baf87284546513003568e47b5daa
+S: 950c399165439660efb6ff2f907f938e213de530 192.168.56.127:9004
+   slots: (0 slots) slave
+   replicates 474fd53f7199ad70cce7f18bd68f5445b559509a
+M: 1714784542b3afc9e2a8b2c93fff49d095e7d72b 192.168.56.127:9007
+   slots: (0 slots) master
+   0 additional replica(s)
+S: 17db098db9fd222df002e649506f88efcdc83633 192.168.56.127:9005
+   slots: (0 slots) slave
+   replicates e070e76789352d2492cfc9800850e943e0c4b72d
+[OK] All nodes agree about slots configuration.
+&gt;&gt;&gt; Check for open slots...
+&gt;&gt;&gt; Check slots coverage...
+[OK] All 16384 slots covered.
+&gt;&gt;&gt; Send CLUSTER MEET to node 192.168.56.127:9008 to make it join the cluster.
+Waiting for the cluster to join.
+&gt;&gt;&gt; Configure node as replica of 192.168.56.127:9007.
+[OK] New node added correctly.
+
+[root@localhost redis-cluster]# /usr/local/redis-cluster/bin/redis-trib.rb check 192.168.56.127:9001
+&gt;&gt;&gt; Performing Cluster Check (using node 192.168.56.127:9001)
+M: 0fcbaa301451baf87284546513003568e47b5daa 192.168.56.127:9001
+   slots:0-5460 (5461 slots) master
+   1 additional replica(s)
+M: 474fd53f7199ad70cce7f18bd68f5445b559509a 192.168.56.127:9002
+   slots:5461-10922 (5462 slots) master
+   1 additional replica(s)
+M: e070e76789352d2492cfc9800850e943e0c4b72d 192.168.56.127:9003
+   slots:10923-16383 (5461 slots) master
+   1 additional replica(s)
+S: 5ed978b695e6a222e67d13c68e55f6c4e74b7ba6 192.168.56.127:9008
+   slots: (0 slots) slave
+   replicates 1714784542b3afc9e2a8b2c93fff49d095e7d72b
+S: bd278fcea63862199e964a6aab2e786710cf5575 192.168.56.127:9006
+   slots: (0 slots) slave
+   replicates 0fcbaa301451baf87284546513003568e47b5daa
+S: 950c399165439660efb6ff2f907f938e213de530 192.168.56.127:9004
+   slots: (0 slots) slave
+   replicates 474fd53f7199ad70cce7f18bd68f5445b559509a
+M: 1714784542b3afc9e2a8b2c93fff49d095e7d72b 192.168.56.127:9007
+   slots: (0 slots) master
+   1 additional replica(s)
+S: 17db098db9fd222df002e649506f88efcdc83633 192.168.56.127:9005
+   slots: (0 slots) slave
+   replicates e070e76789352d2492cfc9800850e943e0c4b72d
+[OK] All nodes agree about slots configuration.
+&gt;&gt;&gt; Check for open slots...
+&gt;&gt;&gt; Check slots coverage...
+[OK] All 16384 slots covered.
+</code></pre>
+<p>以上我们将两个节点加入到了集群中，但是细心的同学会发现我们的实例9007所拥有的slot数量为0，那此时就需要将重新调整哈希槽啦~<br>再次之前我们三个master 平均将16384 分成了三等分，那我们新增加了一个master ，为了平衡我们可以计算出这个新的master需要多少哈希槽，即 16384/4 = 4096 我们需要移动4096个槽点到9007上。</p>
+<pre><code>[root@localhost redis-cluster]# /usr/local/redis-cluster/bin/redis-trib.rb reshard 192.168.56.127:9001
+&gt;&gt;&gt; Performing Cluster Check (using node 192.168.56.127:9001)
+M: 0fcbaa301451baf87284546513003568e47b5daa 192.168.56.127:9001
+   slots:0-5460 (5461 slots) master
+   1 additional replica(s)
+S: 5ed978b695e6a222e67d13c68e55f6c4e74b7ba6 192.168.56.127:9008
+   slots: (0 slots) slave
+   replicates 1714784542b3afc9e2a8b2c93fff49d095e7d72b
+M: 1714784542b3afc9e2a8b2c93fff49d095e7d72b 192.168.56.127:9007
+   slots:5461-5798 (0 slots) master
+   1 additional replica(s)
+S: 17db098db9fd222df002e649506f88efcdc83633 192.168.56.127:9005
+   slots: (0 slots) slave
+   replicates e070e76789352d2492cfc9800850e943e0c4b72d
+M: 474fd53f7199ad70cce7f18bd68f5445b559509a 192.168.56.127:9002
+   slots:5799-10922 (5462 slots) master
+   1 additional replica(s)
+M: e070e76789352d2492cfc9800850e943e0c4b72d 192.168.56.127:9003
+   slots:10923-16383 (5461 slots) master
+   1 additional replica(s)
+S: bd278fcea63862199e964a6aab2e786710cf5575 192.168.56.127:9006
+   slots: (0 slots) slave
+   replicates 0fcbaa301451baf87284546513003568e47b5daa
+S: 950c399165439660efb6ff2f907f938e213de530 192.168.56.127:9004
+   slots: (0 slots) slave
+   replicates 474fd53f7199ad70cce7f18bd68f5445b559509a
+[OK] All nodes agree about slots configuration.
+&gt;&gt;&gt; Check for open slots...
+&gt;&gt;&gt; Check slots coverage...
+[OK] All 16384 slots covered.
+# 这里需要输入我们所需要的哈希槽
+How many slots do you want to move (from 1 to 16384)? 4097
+# 这里需要输入我们实例9007的ID
+What is the receiving node ID? 1714784542b3afc9e2a8b2c93fff49d095e7d72b
+Please enter all the source node IDs.
+  Type 'all' to use all the nodes as source nodes for the hash slots.
+  Type 'done' once you entered all the source nodes IDs.
+Source node #1:all
+#输入all 表示从所有的主节点中随机转移，凑够1000个哈希槽
+#然后再输入yes，redis集群就开始分配哈希槽了。
+</code></pre>
+<p>以上:<br>redis-trib 会向你询问重新分片的源节点（source node），即，要从特点的哪个节点中取出 4096 个哈希槽，还是从全部节点提取4096个哈希槽， 并将这些槽移动到9007节点上面。</p>
+<p>如果我们不打算从特定的节点上取出指定数量的哈希槽，那么可以向redis-trib输入 all，这样的话， 集群中的所有主节点都会成为源节点，redis-trib从各个源节点中各取出一部分哈希槽，凑够4096个，然后移动到9007节点上：</p>
+<p>验证：</p>
+<pre><code>[root@localhost redis-cluster]# /usr/local/redis-cluster/bin/redis-trib.rb check 192.168.56.127:9001
+&gt;&gt;&gt; Performing Cluster Check (using node 192.168.56.127:9001)
+M: 0fcbaa301451baf87284546513003568e47b5daa 192.168.56.127:9001
+   slots:1280-5460 (4096 slots) master
+   1 additional replica(s)
+S: 5ed978b695e6a222e67d13c68e55f6c4e74b7ba6 192.168.56.127:9008
+   slots: (0 slots) slave
+   replicates 1714784542b3afc9e2a8b2c93fff49d095e7d72b
+M: 1714784542b3afc9e2a8b2c93fff49d095e7d72b 192.168.56.127:9007
+   slots:0-1279,5461-6998,10923-12201 (4096 slots) master
+   1 additional replica(s)
+S: 17db098db9fd222df002e649506f88efcdc83633 192.168.56.127:9005
+   slots: (0 slots) slave
+   replicates e070e76789352d2492cfc9800850e943e0c4b72d
+M: 474fd53f7199ad70cce7f18bd68f5445b559509a 192.168.56.127:9002
+   slots:6999-10922 (4096 slots) master
+   1 additional replica(s)
+M: e070e76789352d2492cfc9800850e943e0c4b72d 192.168.56.127:9003
+   slots:12202-16383 (4096 slots) master
+   1 additional replica(s)
+S: bd278fcea63862199e964a6aab2e786710cf5575 192.168.56.127:9006
+   slots: (0 slots) slave
+   replicates 0fcbaa301451baf87284546513003568e47b5daa
+S: 950c399165439660efb6ff2f907f938e213de530 192.168.56.127:9004
+   slots: (0 slots) slave
+   replicates 474fd53f7199ad70cce7f18bd68f5445b559509a
+[OK] All nodes agree about slots configuration.
+&gt;&gt;&gt; Check for open slots...
+&gt;&gt;&gt; Check slots coverage...
+[OK] All 16384 slots covered.
+</code></pre>
+<p>以上我们的集群搭建以及新增节点就完成了；</p>
+<h4 id="6-从集群中删除节点"><a href="#6-从集群中删除节点" class="headerlink" title="6. 从集群中删除节点:"></a>6. 从集群中删除节点:</h4><p>和节点添加一样，移除节点也有移除主节点，从节点</p>
+<h5 id="1、移除主节点"><a href="#1、移除主节点" class="headerlink" title="1、移除主节点"></a>1、移除主节点</h5><p>移除节点使用redis-trib的del-node命令</p>
+<pre><code>/usr/local/redis-cluster/bin/redis-trib.rb del-node 192.168.56.127:9001 ${node-id}
+</code></pre>
+<p>192.168.56.127:9001其中一个集群节点，node-id为要删除的主节点,这里和添加节点不同,移除节点node-id是必需的，测试删除9003主节点</p>
+<pre><code>[root@localhost redis-cluster]# /usr/local/redis-cluster/bin/redis-trib.rb del-node 192.168.56.127:9001 e070e76789352d2492cfc9800850e943e0c4b72d
+&gt;&gt;&gt; Removing node e070e76789352d2492cfc9800850e943e0c4b72d from cluster 192.168.56.127:9001
+[ERR] Node 192.168.56.127:9003 is not empty! Reshard data away and try again.
+</code></pre>
+<p>redis cluster提示9003已经有数据了，不能够被删除，需要将他的数据转移出去，也就是和新增主节点一样需重新分片。</p>
+<pre><code>/usr/local/redis-cluster/bin/redis-trib.rb reshard 192.168.56.127:9001
+</code></pre>
+<p>执行以后会提示我们移除的大小，因为9003占用了4096个槽点</p>
+<pre><code>&gt;&gt;&gt; Check for open slots...
+&gt;&gt;&gt; Check slots coverage...
+[OK] All 16384 slots covered.
+How many slots do you want to move (from 1 to 16384)?
+</code></pre>
+<p>输入4096<br>提示移动的node id，填写9007的node id。</p>
+<pre><code>&gt;&gt;&gt; Check for open slots...
+&gt;&gt;&gt; Check slots coverage...
+[OK] All 16384 slots covered.
+How many slots do you want to move (from 1 to 16384)? 4182
+What is the receiving node ID? 1714784542b3afc9e2a8b2c93fff49d095e7d72b
+</code></pre>
+<p>需要移动到全部主节点上还是单个主节点</p>
+<pre><code>Please enter all the source node IDs.
+  Type 'all' to use all the nodes as source nodes for the hash slots.
+  Type 'done' once you entered all the source nodes IDs.
+Source node #1:
+</code></pre>
+<p>将4096个槽点移动到9007上，填写9003的node id ：e070e76789352d2492cfc9800850e943e0c4b72d</p>
+<pre><code>Source node #1:e070e76789352d2492cfc9800850e943e0c4b72d
+Source node #2:done
+</code></pre>
+<p>确认之后会一个一个将9003的卡槽移到到9007上。</p>
+<pre><code>[root@localhost redis-cluster]# /usr/local/redis-cluster/bin/redis-trib.rb check 192.168.56.127:9001
+&gt;&gt;&gt; Performing Cluster Check (using node 192.168.56.127:9001)
+M: 0fcbaa301451baf87284546513003568e47b5daa 192.168.56.127:9001
+   slots:1280-5460 (4096 slots) master
+   1 additional replica(s)
+S: 5ed978b695e6a222e67d13c68e55f6c4e74b7ba6 192.168.56.127:9008
+   slots: (0 slots) slave
+   replicates 1714784542b3afc9e2a8b2c93fff49d095e7d72b
+M: 1714784542b3afc9e2a8b2c93fff49d095e7d72b 192.168.56.127:9007
+   slots:0-1279,5461-6998,10923-16383 (8192 slots) master
+   2 additional replica(s)
+S: 17db098db9fd222df002e649506f88efcdc83633 192.168.56.127:9005
+   slots: (0 slots) slave
+   replicates 1714784542b3afc9e2a8b2c93fff49d095e7d72b
+M: 474fd53f7199ad70cce7f18bd68f5445b559509a 192.168.56.127:9002
+   slots:6999-10922 (4096 slots) master
+   1 additional replica(s)
+M: e070e76789352d2492cfc9800850e943e0c4b72d 192.168.56.127:9003
+   slots: (0 slots) master
+   0 additional replica(s)
+S: bd278fcea63862199e964a6aab2e786710cf5575 192.168.56.127:9006
+   slots: (0 slots) slave
+   replicates 0fcbaa301451baf87284546513003568e47b5daa
+S: 950c399165439660efb6ff2f907f938e213de530 192.168.56.127:9004
+   slots: (0 slots) slave
+   replicates 474fd53f7199ad70cce7f18bd68f5445b559509a
+[OK] All nodes agree about slots configuration.
+&gt;&gt;&gt; Check for open slots...
+&gt;&gt;&gt; Check slots coverage...
+[OK] All 16384 slots covered.
+</code></pre>
+<p>以上我们将实例9003的哈希槽全部转移到了9007，已经为0 ,此时再来删除我们的节点就行了~</p>
+<pre><code>[root@localhost redis-cluster]# /usr/local/redis-cluster/bin/redis-trib.rb del-node 192.168.56.127:9001 e070e76789352d2492cfc9800850e943e0c4b72d
+&gt;&gt;&gt; Removing node e070e76789352d2492cfc9800850e943e0c4b72d from cluster 192.168.56.127:9001
+&gt;&gt;&gt; Sending CLUSTER FORGET messages to the cluster...
+&gt;&gt;&gt; SHUTDOWN the node.
+
+# 看下面结果 执行完del-node 9003节点就已经从集群中剔除啦~😁
+&gt;&gt;&gt; Performing Cluster Check (using node 192.168.56.127:9001)
+M: 0fcbaa301451baf87284546513003568e47b5daa 192.168.56.127:9001
+   slots:1280-5460 (4096 slots) master
+   1 additional replica(s)
+S: 5ed978b695e6a222e67d13c68e55f6c4e74b7ba6 192.168.56.127:9008
+   slots: (0 slots) slave
+   replicates 1714784542b3afc9e2a8b2c93fff49d095e7d72b
+M: 1714784542b3afc9e2a8b2c93fff49d095e7d72b 192.168.56.127:9007
+   slots:0-1279,5461-6998,10923-16383 (8192 slots) master
+   2 additional replica(s)
+S: 17db098db9fd222df002e649506f88efcdc83633 192.168.56.127:9005
+   slots: (0 slots) slave
+   replicates 1714784542b3afc9e2a8b2c93fff49d095e7d72b
+M: 474fd53f7199ad70cce7f18bd68f5445b559509a 192.168.56.127:9002
+   slots:6999-10922 (4096 slots) master
+   1 additional replica(s)
+S: bd278fcea63862199e964a6aab2e786710cf5575 192.168.56.127:9006
+   slots: (0 slots) slave
+   replicates 0fcbaa301451baf87284546513003568e47b5daa
+S: 950c399165439660efb6ff2f907f938e213de530 192.168.56.127:9004
+   slots: (0 slots) slave
+   replicates 474fd53f7199ad70cce7f18bd68f5445b559509a
+[OK] All nodes agree about slots configuration.
+&gt;&gt;&gt; Check for open slots...
+&gt;&gt;&gt; Check slots coverage...
+[OK] All 16384 slots covered.
+</code></pre>
+<h2 id="最后"><a href="#最后" class="headerlink" title="最后"></a>最后</h2><p>当然我们集群搭建已经完成，那集群的作用是为了解决分片的问题，如果需要搭建高可用集群；也就是主的失败后从的能够切换角色,<br>所以可以使用哨兵机制来解决HA.<br>sentinel和cluster主要区别，sentinel用来解决HA（高可用）问题，而cluster主要解决sharding（分片）问题。两个经常结合使用搭建高可用集群。</p>
+<h2 id="关于哈希槽的概念："><a href="#关于哈希槽的概念：" class="headerlink" title="关于哈希槽的概念："></a>关于哈希槽的概念：</h2><p>Redis 集群中内置了 16384 个哈希槽，当需要在 Redis 集群中放置一个 key-value时，redis 先对 key 使用 crc16 算法算出一个结果，然后把结果对 16384 求余数，这样每个 key 都会对应一个编号在 0-16383 之间的哈希槽，redis 会根据节点数量大致均等的将哈希槽映射到不同的节点。</p>
+<p>Redis 集群没有使用一致性hash, 而是引入了哈希槽的概念。</p>
+<p>Redis 集群有16384个哈希槽,每个key通过CRC16校验后对16384取模来决定放置哪个槽.集群的每个节点负责一部分hash槽。这种结构很容易添加或者删除节点，并且无论是添加删除或者修改某一个节点，都不会造成集群不可用的状态。</p>
+<p>使用哈希槽的好处就在于可以方便的添加或移除节点。</p>
+<p>当需要增加节点时，只需要把其他节点的某些哈希槽挪到新节点就可以了；</p>
+<p>当需要移除节点时，只需要把移除节点上的哈希槽挪到其他节点就行了；</p>
+<p>在这一点上，我们以后新增或移除节点的时候不用先停掉所有的 redis 服务。</p>
+<p>“用了哈希槽的概念，而没有用一致性哈希算法，不都是哈希么？这样做的原因是为什么呢？”<br>Redis Cluster是自己做的crc16的简单hash算法，没有用一致性hash。Redis的作者认为它的crc16(key) mod 16384的效果已经不错了，虽然没有一致性hash灵活，但实现很简单，节点增删时处理起来也很方便。</p>
+<p>“为了动态增删节点的时候，不至于丢失数据么？”<br>节点增删时不丢失数据和hash算法没什么关系，不丢失数据要求的是一份数据有多个副本。</p>
+<p>“还有集群总共有2的14次方，16384个哈希槽，那么每一个哈希槽中存的key 和 value是什么？”<br>当你往Redis Cluster中加入一个Key时，会根据crc16(key) mod 16384计算这个key应该分布到哪个hash slot中，一个hash slot中会有很多key和value。你可以理解成表的分区，使用单节点时的redis时只有一个表，所有的key都放在这个表里；改用Redis Cluster以后会自动为你生成16384个分区表，你insert数据时会根据上面的简单算法来决定你的key应该存在哪个分区，每个分区里有很多key。</p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://blog.sctux.cc">NoardGuo-Ops</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://blog.sctux.cc/2017/06/04/redis-ji-qun-xiang-xi-da-jian-zhi-nan/">https://blog.sctux.cc/2017/06/04/redis-ji-qun-xiang-xi-da-jian-zhi-nan/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="https://blog.sctux.cc" target="_blank">OpsThoughts</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/redis-cluster/">redis-cluster</a></div></div><div class="post-reward"><div class="reward-button"><i class="fas fa-qrcode"></i>赞助</div><div class="reward-main"><ul class="reward-all"><li class="reward-item"><a href="/img/wechat.png" target="_blank"><img class="post-qr-code-img" src="/img/wechat.png" alt="wechat"/></a><div class="post-qr-code-desc">wechat</div></li><li class="reward-item"><a href="/img/zhifubao.png" target="_blank"><img class="post-qr-code-img" src="/img/zhifubao.png" alt="alipay"/></a><div class="post-qr-code-desc">alipay</div></li></ul></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/2017/11/24/ru-he-shi-yongcelery-qin-cai-yi-bu-shen-qi-zhi-xin/" title="如何使用Celery(芹菜)异步神器执行后台任务"><img class="cover" src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&amp;h=400" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="info"><div class="info-1"><div class="info-item-1">上一篇</div><div class="info-item-2">如何使用Celery(芹菜)异步神器执行后台任务</div></div><div class="info-2"><div class="info-item-1">关于异步的知识网上很多，这里就直接上代码，目前结合Flask这个Python框架实现后台任务的执行操作； 1.需要了解的知识点: 了解生产消费模型或者发布订阅模式来实现消息队列 了解异步、同步之间的差别  2.实现过程(1)目录结构├── LICENSE ├── README.md ├── app                     // Flask APP应用 │&nbsp;&nbsp; ├── __init__.py  │&nbsp;&nbsp; ├── auth │&nbsp;&nbsp; ├── email.py │&nbsp;&nbsp; ├── main │&nbsp;&nbsp; ├── models.py │&nbsp;&nbsp; ├── salt │&nbsp;&nbsp; ├── static │&nbsp;&nbsp; └── templates ├── config.py               // 通用配置 ├── config.pyc ├── manager.py ├── migrations │&nbsp;&nbsp; ├── READM...</div></div></div></a><a class="pagination-related" href="/2017/05/31/lan-jing-ping-tai-shi-jian-ji-ying-yong-2/" title="蓝鲸平台实践及应用..."><img class="cover" src="https://images.unsplash.com/photo-1555949963-aa79dcee981c?w=800&amp;h=400" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">蓝鲸平台实践及应用...</div></div><div class="info-2"><div class="info-item-1">前言:在今年三月份蓝鲸推出了一套免费的蓝鲸DevOps技能培训，借助蓝鲸平台致力于让每个运维屌丝都具备一定的开发能力；有幸在此次培训课程坚持了下来，也收获了关于腾讯蓝鲸运维的一些理念、思维；同时自己的工作方式、学习方式也有了一定的提升、改变；再此感谢各位导师的孜孜不倦的教授—–授人以鱼不如授人以渔。  一、如何学习它？ Linux基础(必备)； 需要有一定的Python基础知识； 前端方面也需要多写； 学习能力 + 学习方法；   二、学习途径：链接: 蓝鲸DevOps技能培训  三、我的学习记录:链接: 作业记录  四、目前学习成果: 蓝鲸paas平台页面截图:  蓝鲸开发者中心: ￼ 自主开发App权限控制平台: ￼ 自主开发运维管控平台: ￼   五、小结:上面的两个应用已经应用在生产环境;其他各个部门的平台开发ing;现在小伙伴儿们如果去学习的话；应该非常的顺利，毕竟坑差不多都被填完了。不想说太多；此篇博文记录一下这三个月以来的一些收获吧;￼ 你的对手在看书，你的仇人在磨刀，你的闺密在减肥，隔壁老王在练腰，我们必须不断学习，才能让自己变得更强。</div></div></div></a></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/avatar.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">NoardGuo-Ops</div><div class="author-info-description">Happiness is not something ready-made. It comes from your own actions💪🏻.</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">100</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">93</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">30</div></a></div><a id="card-info-btn" href="https://github.com/guomaoqiu"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons"><a class="social-icon" href="https://github.com/guomaoqiu" target="_blank" title="Github"><i class="fab fa-github" style="color: #24292e;"></i></a><a class="social-icon" href="mailto:guomaoqiu@icloud.com" target="_blank" title="Email"><i class="fas fa-envelope" style="color: #4a7dbe;"></i></a></div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Redis-%E9%9B%86%E7%BE%A4%E7%AE%80%E4%BB%8B"><span class="toc-number">1.</span> <span class="toc-text">Redis 集群简介</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%9A%8F%E9%9A%8F%E4%BE%BF%E4%BE%BF%E6%90%AD%E5%BB%BA%E4%B8%80%E4%B8%AA%E9%9B%86%E7%BE%A4"><span class="toc-number">2.</span> <span class="toc-text">随随便便搭建一个集群</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-%E8%8E%B7%E5%8F%96%E8%BD%AF%E4%BB%B6%E5%8C%85"><span class="toc-number">2.0.1.</span> <span class="toc-text">1.获取软件包</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-%E8%A7%84%E5%88%92%E5%88%9B%E5%BB%BA%E6%96%87%E4%BB%B6%E7%9B%AE%E5%BD%95"><span class="toc-number">2.0.2.</span> <span class="toc-text">2.规划创建文件目录</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-%E5%A4%8D%E5%88%B6%E6%89%A7%E8%A1%8C%E8%84%9A%E6%9C%AC"><span class="toc-number">2.0.3.</span> <span class="toc-text">3. 复制执行脚本</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#4-%E5%A4%8D%E5%88%B6%E4%B8%80%E4%B8%AA%E6%96%B0-Redis-%E5%AE%9E%E4%BE%8B"><span class="toc-number">2.0.4.</span> <span class="toc-text">4.复制一个新 Redis 实例</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#5-%E5%86%8D%E5%A4%8D%E5%88%B6%E5%87%BA%E4%BA%94%E4%B8%AA%E6%96%B0-Redis-%E5%AE%9E%E4%BE%8B"><span class="toc-number">2.0.5.</span> <span class="toc-text">5.再复制出五个新 Redis 实例</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#6-%E5%AE%89%E8%A3%85%E9%9B%86%E7%BE%A4%E6%89%80%E9%9C%80%E8%BD%AF%E4%BB%B6"><span class="toc-number">2.0.6.</span> <span class="toc-text">6.安装集群所需软件</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#7-%E5%88%A9%E7%94%A8%E5%AE%98%E6%96%B9%E6%8F%90%E4%BE%9B%E7%9A%84%E5%91%BD%E4%BB%A4%E5%88%9B%E5%BB%BA%E9%9B%86%E7%BE%A4"><span class="toc-number">2.0.7.</span> <span class="toc-text">7. 利用官方提供的命令创建集群</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%A6%82%E4%BD%95%E6%96%B0%E5%A2%9E%E8%8A%82%E7%82%B9%EF%BC%9F"><span class="toc-number">3.</span> <span class="toc-text">如何新增节点？</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-%E5%90%AF%E5%8A%A8%E4%B8%A4%E4%B8%AA%E5%AE%9E%E4%BE%8B-%E5%81%87%E8%AE%BE%E6%88%91%E8%BF%99%E9%87%8C%E5%B7%B2%E7%BB%8F%E5%A4%8D%E5%88%B6%E9%85%8D%E7%BD%AE%EF%BC%8C%E4%BF%AE%E6%94%B9%E5%AE%8C%E9%85%8D%E7%BD%AE%E4%BA%86"><span class="toc-number">3.0.1.</span> <span class="toc-text">1.启动两个实例(假设我这里已经复制配置，修改完配置了)</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-%E6%B7%BB%E5%8A%A0%E5%AE%9E%E4%BE%8B%E5%88%B0%E9%9B%86%E7%BE%A4"><span class="toc-number">3.0.2.</span> <span class="toc-text">2.添加实例到集群</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#5-%E5%A2%9E%E5%8A%A0%E5%AE%9E%E4%BE%8B%E7%9A%84%E4%BB%8E%E8%8A%82%E7%82%B9%E5%88%B0%E9%9B%86%E7%BE%A4"><span class="toc-number">3.0.3.</span> <span class="toc-text">5. 增加实例的从节点到集群</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#6-%E4%BB%8E%E9%9B%86%E7%BE%A4%E4%B8%AD%E5%88%A0%E9%99%A4%E8%8A%82%E7%82%B9"><span class="toc-number">3.0.4.</span> <span class="toc-text">6. 从集群中删除节点:</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#1%E3%80%81%E7%A7%BB%E9%99%A4%E4%B8%BB%E8%8A%82%E7%82%B9"><span class="toc-number">3.0.4.1.</span> <span class="toc-text">1、移除主节点</span></a></li></ol></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%9C%80%E5%90%8E"><span class="toc-number">4.</span> <span class="toc-text">最后</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%B3%E4%BA%8E%E5%93%88%E5%B8%8C%E6%A7%BD%E7%9A%84%E6%A6%82%E5%BF%B5%EF%BC%9A"><span class="toc-number">5.</span> <span class="toc-text">关于哈希槽的概念：</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2025/08/29/%E6%B1%82%E8%81%8C%E5%B8%96/" title="求职-系统运维/SRE方向"><img src="https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=800&amp;h=400" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="求职-系统运维/SRE方向"/></a><div class="content"><a class="title" href="/2025/08/29/%E6%B1%82%E8%81%8C%E5%B8%96/" title="求职-系统运维/SRE方向">求职-系统运维/SRE方向</a><time datetime="2025-08-28T16:01:01.000Z" title="发表于 2025-08-29 00:01:01">2025-08-29</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2024/07/23/Docker%E6%9E%84%E5%BB%BA%E6%97%A5%E5%BF%97%E6%94%B6%E9%9B%86%E5%B9%B3%E5%8F%B0EFK-TLS/" title="Docker构建日志收集平台EFK(TLS)"><img src="https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=800&amp;h=400" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Docker构建日志收集平台EFK(TLS)"/></a><div class="content"><a class="title" href="/2024/07/23/Docker%E6%9E%84%E5%BB%BA%E6%97%A5%E5%BF%97%E6%94%B6%E9%9B%86%E5%B9%B3%E5%8F%B0EFK-TLS/" title="Docker构建日志收集平台EFK(TLS)">Docker构建日志收集平台EFK(TLS)</a><time datetime="2024-07-23T01:56:27.000Z" title="发表于 2024-07-23 09:56:27">2024-07-23</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2024/07/16/%E5%A6%82%E4%BD%95%E5%88%A9%E7%94%A8ElastAlert2%E5%AF%B9ES%E4%B8%AD%E7%9A%84%E6%97%A5%E5%BF%97%E5%88%9B%E5%BB%BA%E5%91%8A%E8%AD%A6/" title="如何利用ElastAlert2对ES中的日志创建告警"><img src="https://images.unsplash.com/photo-1542831371-29b0f74f9713?w=800&amp;h=400" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="如何利用ElastAlert2对ES中的日志创建告警"/></a><div class="content"><a class="title" href="/2024/07/16/%E5%A6%82%E4%BD%95%E5%88%A9%E7%94%A8ElastAlert2%E5%AF%B9ES%E4%B8%AD%E7%9A%84%E6%97%A5%E5%BF%97%E5%88%9B%E5%BB%BA%E5%91%8A%E8%AD%A6/" title="如何利用ElastAlert2对ES中的日志创建告警">如何利用ElastAlert2对ES中的日志创建告警</a><time datetime="2024-07-16T09:56:39.000Z" title="发表于 2024-07-16 17:56:39">2024-07-16</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2024/07/09/%E5%A6%82%E4%BD%95%E5%88%A9%E7%94%A8Python%E8%8E%B7%E5%8F%96%E6%89%80%E6%9C%89pod%E5%AE%B9%E5%99%A8%E7%8A%B6%E6%80%81/" title="如何利用Python获取所有pod容器状态"><img src="https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=800&amp;h=400" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="如何利用Python获取所有pod容器状态"/></a><div class="content"><a class="title" href="/2024/07/09/%E5%A6%82%E4%BD%95%E5%88%A9%E7%94%A8Python%E8%8E%B7%E5%8F%96%E6%89%80%E6%9C%89pod%E5%AE%B9%E5%99%A8%E7%8A%B6%E6%80%81/" title="如何利用Python获取所有pod容器状态">如何利用Python获取所有pod容器状态</a><time datetime="2024-07-09T09:38:00.000Z" title="发表于 2024-07-09 17:38:00">2024-07-09</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2024/05/10/K8S%E4%B8%ADMySQL%E4%BD%BF%E7%94%A8NFS%E6%8C%82%E8%BD%BD%E7%9A%84%E5%BC%82%E5%B8%B8%E9%97%AE%E9%A2%98%E5%A4%84%E7%90%86/" title="K8S中MySQL使用NFS挂载的异常问题处理"><img src="https://images.unsplash.com/photo-1573164713714-d95e436ab8d6?w=800&amp;h=400" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="K8S中MySQL使用NFS挂载的异常问题处理"/></a><div class="content"><a class="title" href="/2024/05/10/K8S%E4%B8%ADMySQL%E4%BD%BF%E7%94%A8NFS%E6%8C%82%E8%BD%BD%E7%9A%84%E5%BC%82%E5%B8%B8%E9%97%AE%E9%A2%98%E5%A4%84%E7%90%86/" title="K8S中MySQL使用NFS挂载的异常问题处理">K8S中MySQL使用NFS挂载的异常问题处理</a><time datetime="2024-05-10T12:58:02.000Z" title="发表于 2024-05-10 20:58:02">2024-05-10</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2022/09/12/Prometheus-Consul%E5%AE%9E%E7%8E%B0%E4%BC%81%E4%B8%9A%E7%BA%A7%E5%AE%BF%E4%B8%BB%E6%9C%BA-%E5%AE%B9%E5%99%A8%E7%9B%91%E6%8E%A7%E5%91%8A%E8%AD%A6/" title="Prometheus+Consul实现企业级宿主机+容器监控告警"><img src="https://images.unsplash.com/photo-1504639725590-34d0984388bd?w=800&amp;h=400" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Prometheus+Consul实现企业级宿主机+容器监控告警"/></a><div class="content"><a class="title" href="/2022/09/12/Prometheus-Consul%E5%AE%9E%E7%8E%B0%E4%BC%81%E4%B8%9A%E7%BA%A7%E5%AE%BF%E4%B8%BB%E6%9C%BA-%E5%AE%B9%E5%99%A8%E7%9B%91%E6%8E%A7%E5%91%8A%E8%AD%A6/" title="Prometheus+Consul实现企业级宿主机+容器监控告警">Prometheus+Consul实现企业级宿主机+容器监控告警</a><time datetime="2022-09-12T06:45:26.000Z" title="发表于 2022-09-12 14:45:26">2022-09-12</time></div></div></div></div></div></div></main><footer id="footer" style="background-image: url(https://images.unsplash.com/photo-1504639725590-34d0984388bd?w=800&amp;h=400);"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2013 - 2025 By NoardGuo-Ops</span><span class="framework-info"><span>框架 </span><a href="https://hexo.io">Hexo 7.3.0</a><span class="footer-separator">|</span><span>主题 </span><a href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.4.3</a></span></div><div class="footer_custom_text">Hi, welcome to my <a href="https://blog.sctux.cc/">blog</a>!</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="translateLink" type="button" title="简繁转换">繁</button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="/js/tw_cn.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox/fancybox.umd.min.js"></script><script src="https://cdn.jsdelivr.net/npm/instant.page/instantpage.min.js" type="module"></script><script src="https://cdn.jsdelivr.net/npm/node-snackbar/dist/snackbar.min.js"></script><div class="js-pjax"></div><canvas class="fireworks" mobile="true"></canvas><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/dist/fireworks.min.js"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="text-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js"></script></div></div></body></html>

@@ -1,0 +1,241 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>ELK+Kafka 企业日志收集平台(二) | OpsThoughts</title><meta name="author" content="NoardGuo-Ops"><meta name="copyright" content="NoardGuo-Ops"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="上篇博文主要总结了一下elk、基于kafka的zookeeper集群搭建，以及系统日志通过zookeeper集群达到我们集群的整个过程。下面我们接着下面这个未完成的几个主题 4.Kibana部署; 5.Nginx负载均衡Kibana请求; 6.案例：nginx日志收集以及MySQL慢日志收集; 7.Kibana报表基本使用; &nbsp; Kibana的部署;Kibana的作用，想必大家都知道了就">
+<meta property="og:type" content="article">
+<meta property="og:title" content="ELK+Kafka 企业日志收集平台(二)">
+<meta property="og:url" content="https://blog.sctux.cc/2015/11/14/elkkafka-e4-bc-81-e4-b8-9a-e6-97-a5-e5-bf-97-e6-94-b6-e9-9b-86-e5-b9-b3-e5-8f-b0-e4-ba-8c/index.html">
+<meta property="og:site_name" content="OpsThoughts">
+<meta property="og:description" content="上篇博文主要总结了一下elk、基于kafka的zookeeper集群搭建，以及系统日志通过zookeeper集群达到我们集群的整个过程。下面我们接着下面这个未完成的几个主题 4.Kibana部署; 5.Nginx负载均衡Kibana请求; 6.案例：nginx日志收集以及MySQL慢日志收集; 7.Kibana报表基本使用; &nbsp; Kibana的部署;Kibana的作用，想必大家都知道了就">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=800&h=400">
+<meta property="article:published_time" content="2015-11-14T08:49:57.000Z">
+<meta property="article:modified_time" content="2025-09-01T01:59:08.879Z">
+<meta property="article:author" content="NoardGuo-Ops">
+<meta property="article:tag" content="ELK">
+<meta property="article:tag" content="kafka">
+<meta property="article:tag" content="zookeeper">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=800&h=400"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "ELK+Kafka 企业日志收集平台(二)",
+  "url": "https://blog.sctux.cc/2015/11/14/elkkafka-e4-bc-81-e4-b8-9a-e6-97-a5-e5-bf-97-e6-94-b6-e9-9b-86-e5-b9-b3-e5-8f-b0-e4-ba-8c/",
+  "image": "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=800&h=400",
+  "datePublished": "2015-11-14T08:49:57.000Z",
+  "dateModified": "2025-09-01T01:59:08.879Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "NoardGuo-Ops",
+      "url": "https://blog.sctux.cc"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="https://blog.sctux.cc/2015/11/14/elkkafka-e4-bc-81-e4-b8-9a-e6-97-a5-e5-bf-97-e6-94-b6-e9-9b-86-e5-b9-b3-e5-8f-b0-e4-ba-8c/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//fonts.googleapis.com" crossorigin=""/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/node-snackbar/dist/snackbar.min.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Titillium+Web&amp;display=swap" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"languages":{"hits_empty":"未找到符合您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: {"defaultEncoding":1,"translateDelay":0,"msgToTraditionalChinese":"繁","msgToSimplifiedChinese":"簡"},
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":true},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: {"chs_to_cht":"已切换为繁体中文","cht_to_chs":"已切换为简体中文","day_to_night":"已切换为深色模式","night_to_day":"已切换为浅色模式","bgLight":"#49b1f5","bgDark":"#1f1f1f","position":"bottom-left"},
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'ELK+Kafka 企业日志收集平台(二)',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><meta name="generator" content="Hexo 7.3.0">
+<style>.github-emoji { position: relative; display: inline-block; width: 1.2em; min-height: 1.2em; overflow: hidden; vertical-align: top; color: transparent; }  .github-emoji > span { position: relative; z-index: 10; }  .github-emoji img, .github-emoji .fancybox { margin: 0 !important; padding: 0 !important; border: none !important; outline: none !important; text-decoration: none !important; user-select: none !important; cursor: auto !important; }  .github-emoji img { height: 1.2em !important; width: 1.2em !important; position: absolute !important; left: 50% !important; top: 50% !important; transform: translate(-50%, -50%) !important; user-select: none !important; cursor: auto !important; } .github-emoji-fallback { color: inherit; } .github-emoji-fallback img { opacity: 0 !important; }</style>
+<link rel="alternate" href="/atom.xml" title="OpsThoughts" type="application/atom+xml">
+</head><body><div id="loading-box"><div class="loading-left-bg"></div><div class="loading-right-bg"></div><div class="spinner-box"><div class="configure-border-1"><div class="configure-core"></div></div><div class="configure-border-2"><div class="configure-core"></div></div><div class="loading-word">加载中...</div></div></div><script>(()=>{
+  const $loadingBox = document.getElementById('loading-box')
+  const $body = document.body
+  const preloader = {
+    endLoading: () => {
+      if ($loadingBox.classList.contains('loaded')) return
+      $body.style.overflow = ''
+      $loadingBox.classList.add('loaded')
+    },
+    initLoading: () => {
+      $body.style.overflow = 'hidden'
+      $loadingBox.classList.remove('loaded')
+    }
+  }
+
+  preloader.initLoading()
+
+  if (document.readyState === 'complete') {
+    preloader.endLoading()
+  } else {
+    window.addEventListener('load', preloader.endLoading)
+    document.addEventListener('DOMContentLoaded', preloader.endLoading)
+    // Add timeout protection: force end after 7 seconds
+    setTimeout(preloader.endLoading, 7000)
+  }
+
+  if (false) {
+    btf.addGlobalFn('pjaxSend', preloader.initLoading, 'preloader_init')
+    btf.addGlobalFn('pjaxComplete', preloader.endLoading, 'preloader_end')
+  }
+})()</script><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/avatar.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">100</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">93</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">30</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/works/"><i class="fa-fw fas fa-folder-open"></i><span> 作品</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于我</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=800&amp;h=400);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">OpsThoughts</span></a><a class="nav-page-title" href="/"><span class="site-name">ELK+Kafka 企业日志收集平台(二)</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div id="search-button"><span class="site-page social-icon search"><i class="fas fa-search fa-fw"></i><span> 搜索</span></span></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/works/"><i class="fa-fw fas fa-folder-open"></i><span> 作品</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于我</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">ELK+Kafka 企业日志收集平台(二)</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2015-11-14T08:49:57.000Z" title="发表于 2015-11-14 16:49:57">2015-11-14</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2025-09-01T01:59:08.879Z" title="更新于 2025-09-01 09:59:08">2025-09-01</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/Monitor/">Monitor</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/Monitor/Other/">Other</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/Monitor/Other/%E8%87%AA%E5%8A%A8%E5%8C%96%E8%BF%90%E7%BB%B4/">自动化运维</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><p>上篇博文主要总结了一下elk、基于kafka的zookeeper集群搭建，以及系统日志通过zookeeper集群达到我们集群的整个过程。下面我们接着下面这个未完成的几个主题 4.Kibana部署; 5.Nginx负载均衡Kibana请求; 6.案例：nginx日志收集以及MySQL慢日志收集; 7.Kibana报表基本使用; &nbsp;</p>
+<h3 id="Kibana的部署"><a href="#Kibana的部署" class="headerlink" title="Kibana的部署;"></a>Kibana的部署;</h3><p>Kibana的作用，想必大家都知道了就是一个展示工具，报表内容非常的丰富； 下面我们在两台es上面搭建两套kibana 1.获取kibana软件包</p>
+<p>[root@es1 ~]# wget <a href="https://download.elastic.co/kibana/kibana/kibana-4.1.2-linux-x64.tar.gz">https://download.elastic.co/kibana/kibana/kibana-4.1.2-linux-x64.tar.gz</a><br>[root@es1 ~]# tar -xf kibana-4.2.0-linux-x64.tar.gz -C /usr/local/</p>
+<p>2.修改配置文件</p>
+<p>[root@es1 ~]# cd /usr/local/<br>[root@es1 local]# ln -sv kibana-4.1.2-linux-x64 kibana<br>`kibana’ -&gt; `kibana-4.2.0-linux-x64’<br>[root@es1 local]# cd kibana</p>
+<p>[root@es1 kibana]# vim config/kibana.yml<br>server.port: 5601      #默认端口可以修改的<br>server.host: “0.0.0.0” #kibana监听的ip<br>elasticsearch.url: “<a href="http://localhost:9200/">http://localhost:9200</a>“ #由于es在本地主机上面，所以这个选项打开注释即可</p>
+<p>3.提供kibana服务管理脚本，我这里写了个相对简单的脚本</p>
+<p>[root@es1 config]# cat /etc/init.d/kibana<br>#!/bin/bash<br>#chkconfig: 2345 55 24<br>#description: kibana service manager</p>
+<p>KIBBIN=’/usr/local/kibana/bin/kibana’<br>LOCK=’/usr/local/kibana/locks’</p>
+<p>START() {<br>	if [ -f $LOCK ];then<br>		echo -e “kibana is already \033[32mrunning\033[0m, do nothing.”<br>	else<br>		echo -e “Start kibana service.\033[32mdone\033[m”<br>		cd  /usr/local/kibana/bin<br>    	nohup ./kibana &amp; &gt;/dev/null<br> 		touch $LOCK<br>	fi<br>}</p>
+<p>STOP() {<br>	if [ ! -f $LOCK ];then<br>		echo -e “kibana is already stop, do nothing.”<br>	else<br>		echo -e “Stop kibana serivce \033[32mdone\033[m”<br>		rm -rf $LOCK<br>		ps -ef | grep kibana | grep -v “grep” | awk ‘{print $2}’ | xargs kill -s 9 &gt;/dev/null<br>	fi<br>}</p>
+<p>STATUS() {<br>        Port=$(netstat -tunl | grep “:5602”)<br>	if [ “$Port” != “” ] &amp;&amp; [ -f $LOCK ];then<br>		echo -e “kibana is: \033[32mrunning\033[0m…”<br>	else<br>		echo -e “kibana is: \033[31mstopped\033[0m…”<br>	fi<br>}</p>
+<p>case “$1” in<br>  start)<br>	START<br>	;;<br>  stop)<br>	STOP<br>	;;<br>  status)<br>	STATUS<br>	;;<br>  restart)<br>	STOP<br>    sleep 2<br>    START<br>	;;<br>  *)<br>	echo “Usage: /etc/init.d/kibana (|start|stop|status|restart)”<br>	;;<br>esac</p>
+<p>4.启动kibana服务</p>
+<p>[root@es1 config]# chkconfig –add kibana<br>[root@es1 config]# service kibana start<br>Start kibana service.done<br>[root@es1 config]#</p>
+<p>5.服务检查</p>
+<p>[root@es1 config]# ss -tunl | grep “5601”<br>tcp    LISTEN     0      511                    *:5601                  <em>:</em><br>[root@es1 config]#</p>
+<p>ok，此时我直接访问es1这台主机的5601端口 <a href="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/11/11.png"><img src="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/11/11.png" alt="11"></a> ok，能成功的访问5601端口，那我把es1这台的配置放到es2上面去然后启动，效果跟访问es1一样</p>
+<h3 id="Nginx负载均衡kibana的请求"><a href="#Nginx负载均衡kibana的请求" class="headerlink" title="Nginx负载均衡kibana的请求"></a>Nginx负载均衡kibana的请求</h3><p>1.在nginx-proxy上面yum安装nginx</p>
+<p>yum install -y nignx</p>
+<p>2.编写配置文件es.conf</p>
+<p>[root@saltstack-node1 conf.d]# pwd<br>/etc/nginx/conf.d<br>[root@saltstack-node1 conf.d]# cat es.conf<br>upstream es {<br>    server 192.168.2.18:5601 max_fails=3 fail_timeout=30s;<br>    server 192.168.2.19:5601 max_fails=3 fail_timeout=30s;<br>}</p>
+<p>server {<br>    listen       80;<br>    server_name  localhost;</p>
+<pre><code>location / {
+    proxy_pass http://es/;
+    index index.html index.htm;
+    #auth
+    auth_basic "ELK Private";
+    auth\_basic\_user_file /etc/nginx/.htpasswd;
+}
+</code></pre>
+<p> }</p>
+<p>3.创建认证</p>
+<p>[root@saltstack-node1 conf.d]# htpasswd -cm /etc/nginx/.htpasswd elk<br>New password:<br>Re-type new password:<br>Adding password for user elk-user<br>[root@saltstack-node1 conf.d]# /etc/init.d/nginx restart<br>Stopping nginx:                                            [  OK  ]<br>Starting nginx:                                            [  OK  ]<br>[root@saltstack-node1 conf.d]# </p>
+<p>4.直接输入认证用户及密码就可访问啦<a href="http://192.168.2.21/">http://192.168.2.21/</a> <a href="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/11/22.png"><img src="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/11/22.png" alt="22"></a></p>
+<h3 id="Nginx及MySQL慢日志收集"><a href="#Nginx及MySQL慢日志收集" class="headerlink" title="Nginx及MySQL慢日志收集"></a>Nginx及MySQL慢日志收集</h3><p>首先我们在webserver1上面都分别安装了nginx 及mysql. 1.为了方便nginx日志的统计搜索，这里设置nginx访问日志格式为json (1)修改nginx主配置文件 说明：如果想实现日志的报表展示，最好将业务日志直接以json格式输出，这样可以极大减轻cpu负载，也省得运维需要写负载的filter过滤正则。</p>
+<p>[root@webserver1 nginx]# vim nginx.conf<br>log_format json ‘{“@timestamp”:”$time_iso8601”,’<br>                ‘“@version”:”1”,’<br>                ‘“client”:”$remote_addr”,’<br>                ‘“url”:”$uri”,’<br>                ‘“status”:”$status”,’<br>                ‘“domain”:”$host”,’<br>                ‘“host”:”$server_addr”,’<br>                ‘“size”:$body_bytes_sent,’<br>                ‘“responsetime”:$request_time,’<br>                ‘“referer”: “$http_referer”,’<br>                ‘“ua”: “$http_user_agent”‘<br>                ‘}’;<br>  access_log  /var/log/access_json.log  json;</p>
+<p>(2)收集nginx日志和MySQL日志到消息队列中；这个文件我们是定义在客户端，即生产服务器上面的Logstash文件哦. 注意：这里刚搭建完毕，没有什么数据，为了展示效果，我这里导入了线上的nginx和MySQL慢日志</p>
+<p>input {<br>  file {             #从nginx日志读入<br>    type =&gt; “nginx-access”<br>    path =&gt; “/var/log/nginx/access.log”<br>    start_position =&gt; “beginning”<br>    codec =&gt; “json”  #这里指定 codec格式为json<br>  }<br>  file {  #从MySQL慢日志读入<br>   type =&gt; “slow-mysql”<br>   path =&gt; “/var/log/mysql/slow-mysql.log”<br>   start_position =&gt; “beginning”<br>   codec =&gt; multiline {         #这里用到了logstash的插件功能，将本来属于一行的多行日志条目整合在一起，让他属于一条<br>     pattern =&gt; “^# User@Host”  #用到了正则去匹配<br>     negate =&gt; true<br>     what =&gt; “previous”<br>   }<br>  }<br>}</p>
+<p>output {<br>#  stdout { codec=&gt; rubydebug }<br>  if [type] == “nginx-access” {    #通过判断input中定义的type，来让它在kafka集群中生成的主题名称<br>    kafka {                        #输出到kafka集群<br>      bootstrap_servers =&gt; “192.168.2.22:9092,192.168.2.23:9092,192.168.2.24:9092”  #生产者们<br>      topic_id =&gt; “nginx-access”   #主题名称<br>      compression_type =&gt; “snappy” #压缩类型<br>    }<br> }<br>  if [type] == “slow-mysql” {<br>    kafka {<br>      bootstrap_servers =&gt; “192.168.2.22:9092,192.168.2.23:9092,192.168.2.24:9092”<br>      topic_id =&gt; “slow-mysql”<br>      compression_type =&gt; “snappy”<br>    }<br> }<br>}</p>
+<p>(3)Logstash 从kafka集群中读取日志存储到es中，这里的定义logstash文件是在三台kafka服务器上面的哦，并且要保持一致，你可以在一台上面修改测试好之后，拷贝至另外两台即可。</p>
+<p>input {<br>    kafka {<br>        zk_connect =&gt; “192.168.2.22:2181,192.168.2.23:2181,192.168.2.24:2181”<br>        type =&gt; “nginx-access”<br>        topic_id =&gt; “nginx-access”<br>        codec =&gt; plain<br>        reset_beginning =&gt; false<br>        consumer_threads =&gt; 5<br>        decorate_events =&gt; true<br>    }<br>    kafka {<br>        zk_connect =&gt; “192.168.2.22:2181,192.168.2.23:2181,192.168.2.24:2181”<br>        type =&gt; “slow-mysql”<br>        topic_id =&gt; “slow-mysql”<br>        codec =&gt; plain<br>        reset_beginning =&gt; false<br>        consumer_threads =&gt; 5<br>        decorate_events =&gt; true<br>    }<br>}</p>
+<p>output {<br>#  stdout { codec=&gt; rubydebug }<br>  if [type] == “nginx-access” {<br>    elasticsearch {<br>      hosts =&gt; [“192.168.2.18:9200”,”192.168.2.19:9200”]<br>      index =&gt; “nginx-access-%{+YYYY-MM}”<br>    }<br>  }<br>  if [type] == “slow-mysql” {<br>    elasticsearch {<br>      hosts =&gt; [“192.168.2.18:9200”,”192.168.2.19:9200”]<br>      index =&gt; “slow-mysql-%{+YYYY-MM}”<br>    }<br>  }<br>}</p>
+<p><a href="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/11/13.png"><img src="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/11/13.png" alt="13"></a> 通过上图可以看到，nginx日志以及MySQL慢日志已经成功抵达es集群 然后我们在kibana上面创建索引就可以啦 (4)创建nginx-access 日志索引 <a href="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/11/11.png"><img src="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/11/11.png" alt="11"></a> 此时就可以看到索引啦 <a href="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/11/16.png"><img src="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/11/16.png" alt="16"></a> (5)创建MySQL慢日志索引 p<a href="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/11/15.png"><img src="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/11/15.png" alt="15"></a> MySQL的索引也出来啦 <a href="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/11/17.png"><img src="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/11/17.png" alt="17"></a>Kibana报表展示 kibana报表功能非常的强大，也就是可视化；可以制作出下面不同类型的图形 <a href="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/11/18.png"><img src="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/11/18.png" alt="18"></a> 下面就是我简单的一些图形展示 <img src="https://qcloud.coding.net/u/guomaoqiu/p/guomaoqiu/git/raw/master/uploads/2015/11/19.png" alt="19"> 由于篇幅问题，可以看官方介绍。 参考： <a href="https://github.com/liquanzhou/ops_doc/tree/master/Service/kafka">https://github.com/liquanzhou/ops_doc/tree/master/Service/kafka</a> <a href="http://www.lujinhong.com/kafka%E9%9B%86%E7%BE%A4%E6%93%8D%E4%BD%9C%E6%8C%87%E5%8D%97.html">http://www.lujinhong.com/kafka%E9%9B%86%E7%BE%A4%E6%93%8D%E4%BD%9C%E6%8C%87%E5%8D%97.html</a> <a href="http://www.it165.net/admin/html/201405/3192.html">http://www.it165.net/admin/html/201405/3192.html</a> <a href="http://blog.csdn.net/lizhitao/article/details/39499283">http://blog.csdn.net/lizhitao/article/details/39499283</a> <a href="https://taoistwar.gitbooks.io/spark-operationand-maintenance-management/content/spark_relate_software/zookeeper_install.html">https://taoistwar.gitbooks.io/spark-operationand-maintenance-management/content/spark_relate_software/zookeeper_install.html</a></p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://blog.sctux.cc">NoardGuo-Ops</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://blog.sctux.cc/2015/11/14/elkkafka-e4-bc-81-e4-b8-9a-e6-97-a5-e5-bf-97-e6-94-b6-e9-9b-86-e5-b9-b3-e5-8f-b0-e4-ba-8c/">https://blog.sctux.cc/2015/11/14/elkkafka-e4-bc-81-e4-b8-9a-e6-97-a5-e5-bf-97-e6-94-b6-e9-9b-86-e5-b9-b3-e5-8f-b0-e4-ba-8c/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="https://blog.sctux.cc" target="_blank">OpsThoughts</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/ELK/">ELK</a><a class="post-meta__tags" href="/tags/kafka/">kafka</a><a class="post-meta__tags" href="/tags/zookeeper/">zookeeper</a></div></div><div class="post-reward"><div class="reward-button"><i class="fas fa-qrcode"></i>赞助</div><div class="reward-main"><ul class="reward-all"><li class="reward-item"><a href="/img/wechat.png" target="_blank"><img class="post-qr-code-img" src="/img/wechat.png" alt="wechat"/></a><div class="post-qr-code-desc">wechat</div></li><li class="reward-item"><a href="/img/zhifubao.png" target="_blank"><img class="post-qr-code-img" src="/img/zhifubao.png" alt="alipay"/></a><div class="post-qr-code-desc">alipay</div></li></ul></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/2015/11/19/saltstack-e5-88-a9-e7-94-a8returners-e7-a8-8b-e5-ba-8f-e4-bf-9d-e5-ad-98-e6-89-a7-e8-a1-8c-e7-bb-93-e6-9e-9c-e5-88-b0mysql/" title="Saltstack利用Returners程序保存执行结果到mysql"><img class="cover" src="https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=800&amp;h=400" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="info"><div class="info-1"><div class="info-item-1">上一篇</div><div class="info-item-2">Saltstack利用Returners程序保存执行结果到mysql</div></div><div class="info-2"><div class="info-item-1">在我们执行saltstack的时候，minion端会返回一大堆的执行结果显示在master端，那如何将每一次slat执行的结果这些结果保存起来便于日后查询，这里就用到了saltstack的返回程序Returners，可以保存在Redis，Mongodb，MySQL等这些程序当中； 注意这的返回并不是将执行结果返回给master，master再写入到MySQL或者Redis中，而是salt-minion端直接向MySQL或者Redis中写， 下面是操作步骤： 1.安装软件包 master端：yum install -y MySQL-python mysql mysql-serverminion端：yum install -y MySQL-python 2.建立数据库，创建salt所需要的数据库及表结构 CREATE DATABASE  `salt`  DEFAULT CHARACTER SET utf8  DEFAULT COLLATE utf8_general_ci; USE `salt`; ---- Table structure for table `jids`DROP TA...</div></div></div></a><a class="pagination-related" href="/2015/11/14/elkkafka-e4-bc-81-e4-b8-9a-e6-97-a5-e5-bf-97-e6-94-b6-e9-9b-86-e5-b9-b3-e5-8f-b0-e4-b8-80/" title="ELK+Kafka 企业日志收集平台(一)"><img class="cover" src="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=800&amp;h=400" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">ELK+Kafka 企业日志收集平台(一)</div></div><div class="info-2"><div class="info-item-1">背景：最近线上上了ELK，但是只用了一台Redis在中间作为消息队列，以减轻前端es集群的压力，Redis的集群解决方案暂时没有接触过，并且Redis作为消息队列并不是它的强项；所以最近将Redis换成了专业的消息信息发布订阅系统Kafka, Kafka的更多介绍大家可以看这里：传送门&nbsp; ,关于ELK的知识网上有很多的哦，&nbsp;此篇博客主要是总结一下目前线上这个平台的实施步骤，ELK是怎么跟Kafka结合起来的。好吧，动手！ ELK架构拓扑：然而我这里的整个日志收集平台就是这样的拓扑：  1，使用一台Nginx代理访问kibana的请求; 2，两台es组成es集群，并且在两台es上面都安装kibana;（以下对elasticsearch简称es） 3，中间三台服务器就是我的kafka(zookeeper)集群啦; 上面写的消费者/生产者这是kafka(zookeeper)中的概念; 4，最后面的就是一大堆的生产服务器啦，上面使用的是logstash，当然除了logstash也可以使用其他的工具来收集你的应用程序的日志，例如：Flume，Scribe，Rsyslog...</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/2015/11/14/elkkafka-e4-bc-81-e4-b8-9a-e6-97-a5-e5-bf-97-e6-94-b6-e9-9b-86-e5-b9-b3-e5-8f-b0-e4-b8-80/" title="ELK+Kafka 企业日志收集平台(一)"><img class="cover" src="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=800&h=400" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2015-11-14</div><div class="info-item-2">ELK+Kafka 企业日志收集平台(一)</div></div><div class="info-2"><div class="info-item-1">背景：最近线上上了ELK，但是只用了一台Redis在中间作为消息队列，以减轻前端es集群的压力，Redis的集群解决方案暂时没有接触过，并且Redis作为消息队列并不是它的强项；所以最近将Redis换成了专业的消息信息发布订阅系统Kafka, Kafka的更多介绍大家可以看这里：传送门&nbsp; ,关于ELK的知识网上有很多的哦，&nbsp;此篇博客主要是总结一下目前线上这个平台的实施步骤，ELK是怎么跟Kafka结合起来的。好吧，动手！ ELK架构拓扑：然而我这里的整个日志收集平台就是这样的拓扑：  1，使用一台Nginx代理访问kibana的请求; 2，两台es组成es集群，并且在两台es上面都安装kibana;（以下对elasticsearch简称es） 3，中间三台服务器就是我的kafka(zookeeper)集群啦; 上面写的消费者/生产者这是kafka(zookeeper)中的概念; 4，最后面的就是一大堆的生产服务器啦，上面使用的是logstash，当然除了logstash也可以使用其他的工具来收集你的应用程序的日志，例如：Flume，Scribe，Rsyslog...</div></div></div></a></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/avatar.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">NoardGuo-Ops</div><div class="author-info-description">Happiness is not something ready-made. It comes from your own actions💪🏻.</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">100</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">93</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">30</div></a></div><a id="card-info-btn" href="https://github.com/guomaoqiu"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons"><a class="social-icon" href="https://github.com/guomaoqiu" target="_blank" title="Github"><i class="fab fa-github" style="color: #24292e;"></i></a><a class="social-icon" href="mailto:guomaoqiu@icloud.com" target="_blank" title="Email"><i class="fas fa-envelope" style="color: #4a7dbe;"></i></a></div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#Kibana%E7%9A%84%E9%83%A8%E7%BD%B2"><span class="toc-number">1.</span> <span class="toc-text">Kibana的部署;</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Nginx%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1kibana%E7%9A%84%E8%AF%B7%E6%B1%82"><span class="toc-number">2.</span> <span class="toc-text">Nginx负载均衡kibana的请求</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Nginx%E5%8F%8AMySQL%E6%85%A2%E6%97%A5%E5%BF%97%E6%94%B6%E9%9B%86"><span class="toc-number">3.</span> <span class="toc-text">Nginx及MySQL慢日志收集</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2025/08/29/%E6%B1%82%E8%81%8C%E5%B8%96/" title="求职-系统运维/SRE方向"><img src="https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=800&amp;h=400" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="求职-系统运维/SRE方向"/></a><div class="content"><a class="title" href="/2025/08/29/%E6%B1%82%E8%81%8C%E5%B8%96/" title="求职-系统运维/SRE方向">求职-系统运维/SRE方向</a><time datetime="2025-08-28T16:01:01.000Z" title="发表于 2025-08-29 00:01:01">2025-08-29</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2024/07/23/Docker%E6%9E%84%E5%BB%BA%E6%97%A5%E5%BF%97%E6%94%B6%E9%9B%86%E5%B9%B3%E5%8F%B0EFK-TLS/" title="Docker构建日志收集平台EFK(TLS)"><img src="https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=800&amp;h=400" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Docker构建日志收集平台EFK(TLS)"/></a><div class="content"><a class="title" href="/2024/07/23/Docker%E6%9E%84%E5%BB%BA%E6%97%A5%E5%BF%97%E6%94%B6%E9%9B%86%E5%B9%B3%E5%8F%B0EFK-TLS/" title="Docker构建日志收集平台EFK(TLS)">Docker构建日志收集平台EFK(TLS)</a><time datetime="2024-07-23T01:56:27.000Z" title="发表于 2024-07-23 09:56:27">2024-07-23</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2024/07/16/%E5%A6%82%E4%BD%95%E5%88%A9%E7%94%A8ElastAlert2%E5%AF%B9ES%E4%B8%AD%E7%9A%84%E6%97%A5%E5%BF%97%E5%88%9B%E5%BB%BA%E5%91%8A%E8%AD%A6/" title="如何利用ElastAlert2对ES中的日志创建告警"><img src="https://images.unsplash.com/photo-1542831371-29b0f74f9713?w=800&amp;h=400" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="如何利用ElastAlert2对ES中的日志创建告警"/></a><div class="content"><a class="title" href="/2024/07/16/%E5%A6%82%E4%BD%95%E5%88%A9%E7%94%A8ElastAlert2%E5%AF%B9ES%E4%B8%AD%E7%9A%84%E6%97%A5%E5%BF%97%E5%88%9B%E5%BB%BA%E5%91%8A%E8%AD%A6/" title="如何利用ElastAlert2对ES中的日志创建告警">如何利用ElastAlert2对ES中的日志创建告警</a><time datetime="2024-07-16T09:56:39.000Z" title="发表于 2024-07-16 17:56:39">2024-07-16</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2024/07/09/%E5%A6%82%E4%BD%95%E5%88%A9%E7%94%A8Python%E8%8E%B7%E5%8F%96%E6%89%80%E6%9C%89pod%E5%AE%B9%E5%99%A8%E7%8A%B6%E6%80%81/" title="如何利用Python获取所有pod容器状态"><img src="https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=800&amp;h=400" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="如何利用Python获取所有pod容器状态"/></a><div class="content"><a class="title" href="/2024/07/09/%E5%A6%82%E4%BD%95%E5%88%A9%E7%94%A8Python%E8%8E%B7%E5%8F%96%E6%89%80%E6%9C%89pod%E5%AE%B9%E5%99%A8%E7%8A%B6%E6%80%81/" title="如何利用Python获取所有pod容器状态">如何利用Python获取所有pod容器状态</a><time datetime="2024-07-09T09:38:00.000Z" title="发表于 2024-07-09 17:38:00">2024-07-09</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2024/05/10/K8S%E4%B8%ADMySQL%E4%BD%BF%E7%94%A8NFS%E6%8C%82%E8%BD%BD%E7%9A%84%E5%BC%82%E5%B8%B8%E9%97%AE%E9%A2%98%E5%A4%84%E7%90%86/" title="K8S中MySQL使用NFS挂载的异常问题处理"><img src="https://images.unsplash.com/photo-1573164713714-d95e436ab8d6?w=800&amp;h=400" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="K8S中MySQL使用NFS挂载的异常问题处理"/></a><div class="content"><a class="title" href="/2024/05/10/K8S%E4%B8%ADMySQL%E4%BD%BF%E7%94%A8NFS%E6%8C%82%E8%BD%BD%E7%9A%84%E5%BC%82%E5%B8%B8%E9%97%AE%E9%A2%98%E5%A4%84%E7%90%86/" title="K8S中MySQL使用NFS挂载的异常问题处理">K8S中MySQL使用NFS挂载的异常问题处理</a><time datetime="2024-05-10T12:58:02.000Z" title="发表于 2024-05-10 20:58:02">2024-05-10</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2022/09/12/Prometheus-Consul%E5%AE%9E%E7%8E%B0%E4%BC%81%E4%B8%9A%E7%BA%A7%E5%AE%BF%E4%B8%BB%E6%9C%BA-%E5%AE%B9%E5%99%A8%E7%9B%91%E6%8E%A7%E5%91%8A%E8%AD%A6/" title="Prometheus+Consul实现企业级宿主机+容器监控告警"><img src="https://images.unsplash.com/photo-1504639725590-34d0984388bd?w=800&amp;h=400" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Prometheus+Consul实现企业级宿主机+容器监控告警"/></a><div class="content"><a class="title" href="/2022/09/12/Prometheus-Consul%E5%AE%9E%E7%8E%B0%E4%BC%81%E4%B8%9A%E7%BA%A7%E5%AE%BF%E4%B8%BB%E6%9C%BA-%E5%AE%B9%E5%99%A8%E7%9B%91%E6%8E%A7%E5%91%8A%E8%AD%A6/" title="Prometheus+Consul实现企业级宿主机+容器监控告警">Prometheus+Consul实现企业级宿主机+容器监控告警</a><time datetime="2022-09-12T06:45:26.000Z" title="发表于 2022-09-12 14:45:26">2022-09-12</time></div></div></div></div></div></div></main><footer id="footer" style="background-image: url(https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=800&amp;h=400);"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2013 - 2025 By NoardGuo-Ops</span><span class="framework-info"><span>框架 </span><a href="https://hexo.io">Hexo 7.3.0</a><span class="footer-separator">|</span><span>主题 </span><a href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.4.3</a></span></div><div class="footer_custom_text">Hi, welcome to my <a href="https://blog.sctux.cc/">blog</a>!</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="translateLink" type="button" title="简繁转换">繁</button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="/js/tw_cn.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox/fancybox.umd.min.js"></script><script src="https://cdn.jsdelivr.net/npm/instant.page/instantpage.min.js" type="module"></script><script src="https://cdn.jsdelivr.net/npm/node-snackbar/dist/snackbar.min.js"></script><div class="js-pjax"></div><canvas class="fireworks" mobile="true"></canvas><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/dist/fireworks.min.js"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="text-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js"></script></div></div></body></html>
