@@ -8,7 +8,7 @@
       <link href="/2025/09/04/%E6%B1%82%E8%81%8C%E5%B8%96/"/>
       <url>/2025/09/04/%E6%B1%82%E8%81%8C%E5%B8%96/</url>
       
-        <content type="html"><![CDATA[<p>各位朋友，大家好！</p><p>我于今年7月底正式离职，结束了上一段工作旅程。目前正在寻找下一份系统运维或SRE相关的工作，希望能借助大家的力量。</p><p>我有10年左右的运维经验，在这期间从事过<code>IDC</code>、<code>游戏</code>、<code>物联网</code>、<code>区块链</code>行业。熟练使用Linux操作系统、Kubernetes集群部署维护、监控系统部署维护以及二次开发以及一些自动化脚本工具开发的能力。在过去的工作中，我负责维护系统的稳定运行，处理过一些故障，也参与从传统架构到云原生架构的迁移和转型。我可能不是最顶尖的大牛，但我相信自己有很强的责任心、学习能力和团队协作精神，能脚踏实地地完成任务。</p><p>我个人非常热爱运维这个事业，作为运维/SRE在为公司创造价值的同时能满足自己的成就感是非常完美的一件事情。非常渴望能加入一个优秀的团队，与大家共同成长，为公司贡献出自己的全部能力。</p><p>如果您所在团队有招聘需求，或者有相关的信息，恳请您不吝推荐或联系我。感激不尽！</p><p><strong>📞 我的联系方式</strong><br>欢迎通过以下方式与我交流：</p><ul><li>📧 邮箱：<a href="mailto:guomaoqiu@icloud.com">guomaoqiu@icloud.com</a></li><li>🍓 TG: <a href="https://t.me/noardguo_devops">@noardguo_devops</a></li><li>💻 GitHub：<a href="https://github.com/guomaoqiu">https://github.com/guomaoqiu</a></li></ul><hr><p><a href="https://blog.sctux.cc/resume/">我的个人简历(详细版)</a></p>]]></content>
+        <content type="html"><![CDATA[<p>各位朋友，大家好！</p><p>我于今年7月底正式离职，结束了上一段工作旅程。目前正在寻找下一份系统运维或SRE相关的工作，希望能借助大家的力量。</p><p>我有10年左右的运维经验，在这期间从事过<code>IDC</code>、<code>游戏</code>、<code>物联网</code>、<code>区块链</code>行业。熟练使用Linux操作系统、Kubernetes集群部署维护、监控系统部署维护以及二次开发以及一些自动化脚本工具开发的能力。在过去的工作中，我负责维护系统的稳定运行，处理过一些故障，也参与从传统架构到云原生架构的迁移和转型。我可能不是最顶尖的大牛，但我相信自己有很强的责任心、学习能力和团队协作精神，能脚踏实地地完成任务。</p><p>我个人非常热爱运维这个事业，作为运维/SRE在为公司创造价值的同时能满足自己的成就感是非常完美的一件事情。非常渴望能加入一个优秀的团队，与大家共同成长，为公司贡献出自己的全部能力。</p><p>如果您所在团队有招聘需求，或者有相关的信息，恳请您不吝推荐或联系我。感激不尽！</p><p><strong>📞 我的联系方式</strong><br>欢迎通过以下方式与我交流：</p><ul><li>📧 邮箱：<a href="mailto:guomaoqiu@icloud.com">guomaoqiu@icloud.com</a></li><li>🍓 TG: <a href="https://t.me/noardguo_devops">@noardguo_devops</a></li><li>💻 GitHub：<a href="https://github.com/guomaoqiu">https://github.com/guomaoqiu</a></li></ul>]]></content>
       
       
       
@@ -1743,9 +1743,9 @@
       
         <tags>
             
-            <tag> zabbix </tag>
-            
             <tag> grafana </tag>
+            
+            <tag> zabbix </tag>
             
         </tags>
       
