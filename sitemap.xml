@@ -74,15 +74,6 @@
   </url>
   
   <url>
-    <loc>https://blog.sctux.cc/categories/index.html</loc>
-    
-    <lastmod>2025-09-01</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
     <loc>https://blog.sctux.cc/tags/index.html</loc>
     
     <lastmod>2025-09-01</lastmod>
@@ -101,7 +92,25 @@
   </url>
   
   <url>
+    <loc>https://blog.sctux.cc/categories/index.html</loc>
+    
+    <lastmod>2025-09-01</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
     <loc>https://blog.sctux.cc/2018/05/30/01k8s-ji-qun-da-jian-yixi-tong-chu-shi-hua-pei-zhi/</loc>
+    
+    <lastmod>2025-09-01</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://blog.sctux.cc/2018/06/02/03k8s-ji-qun-da-jian-sanbu-shuetcd-ji-qun/</loc>
     
     <lastmod>2025-09-01</lastmod>
     
@@ -120,15 +129,6 @@
   
   <url>
     <loc>https://blog.sctux.cc/2018/06/02/04k8s-ji-qun-da-jianmaster-jie-dian-bu-shu/</loc>
-    
-    <lastmod>2025-09-01</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://blog.sctux.cc/2018/06/02/03k8s-ji-qun-da-jian-sanbu-shuetcd-ji-qun/</loc>
     
     <lastmod>2025-09-01</lastmod>
     
@@ -164,25 +164,16 @@
   </url>
   
   <url>
-    <loc>https://blog.sctux.cc/2018/06/03/08k8s-ji-qun-da-jiancoredns-chuang-jiandashboard/</loc>
-    
-    <lastmod>2025-09-01</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://blog.sctux.cc/2018/06/08/09k8s-ji-qun-da-jianjian-kong-zhan-shi-jie-mian-an/</loc>
-    
-    <lastmod>2025-09-01</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
     <loc>https://blog.sctux.cc/2018/06/29/10k8s-ji-qun-da-jianxin-zengnode-jie-dian/</loc>
+    
+    <lastmod>2025-09-01</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://blog.sctux.cc/2018/06/03/08k8s-ji-qun-da-jiancoredns-chuang-jiandashboard/</loc>
     
     <lastmod>2025-09-01</lastmod>
     
@@ -245,7 +236,7 @@
   </url>
   
   <url>
-    <loc>https://blog.sctux.cc/2016/08/05/docker-zhigitlabce/</loc>
+    <loc>https://blog.sctux.cc/2018/06/08/09k8s-ji-qun-da-jianjian-kong-zhan-shi-jie-mian-an/</loc>
     
     <lastmod>2025-09-01</lastmod>
     
@@ -272,7 +263,7 @@
   </url>
   
   <url>
-    <loc>https://blog.sctux.cc/2014/06/16/e5-a6-82-e4-bd-95-e8-ae-a9-e8-ae-a1-e5-88-92-e4-bb-bb-e5-8a-a1-e5-ae-9e-e7-8e-b0-e7-a7-92-e7-ba-a7-e6-89-a7-e8-a1-8c/</loc>
+    <loc>https://blog.sctux.cc/2016/08/05/docker-zhigitlabce/</loc>
     
     <lastmod>2025-09-01</lastmod>
     
@@ -282,15 +273,6 @@
   
   <url>
     <loc>https://blog.sctux.cc/2015/08/12/e5-ad-a6-e4-b9-a0saltstack-e5-b0-8f-e8-ae-b0-e7-ac-ac-e4-b8-80-e7-ab-a0-e3-80-8a-e5-ae-89-e8-a3-85-e5-8f-8a-e7-ae-80-e5-8d-95-e6-b5-8b-e8-af-95-e3-80-8b/</loc>
-    
-    <lastmod>2025-09-01</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://blog.sctux.cc/2015/08/13/e5-ad-a6-e4-b9-a0saltstack-e5-b0-8f-e8-ae-b0-e7-ac-ac-e4-ba-8c-e7-ab-a0-e3-80-8a-e7-bc-96-e5-86-99-e9-85-8d-e7-bd-ae-e5-8f-8a-e5-ba-94-e7-94-a8-e3-80-8b/</loc>
     
     <lastmod>2025-09-01</lastmod>
     
@@ -309,6 +291,24 @@
   
   <url>
     <loc>https://blog.sctux.cc/2015/04/15/e6-95-b0-e6-8d-ae-e5-ba-93-e9-93-be-e6-8e-a5-e8-b6-85-e6-97-b6-ef-bc-8c-e5-8f-af-e8-83-bd-e5-8e-9f-e5-9b-a0-e7-94-b1-e4-ba-8e-e7-a9-ba-e9-97-b4-e4-b8-8d-e8-b6-b3-e9-80-a0-e6-88-90/</loc>
+    
+    <lastmod>2025-09-01</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://blog.sctux.cc/2015/08/13/e5-ad-a6-e4-b9-a0saltstack-e5-b0-8f-e8-ae-b0-e7-ac-ac-e4-ba-8c-e7-ab-a0-e3-80-8a-e7-bc-96-e5-86-99-e9-85-8d-e7-bd-ae-e5-8f-8a-e5-ba-94-e7-94-a8-e3-80-8b/</loc>
+    
+    <lastmod>2025-09-01</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://blog.sctux.cc/2014/06/16/e5-a6-82-e4-bd-95-e8-ae-a9-e8-ae-a1-e5-88-92-e4-bb-bb-e5-8a-a1-e5-ae-9e-e7-8e-b0-e7-a7-92-e7-ba-a7-e6-89-a7-e8-a1-8c/</loc>
     
     <lastmod>2025-09-01</lastmod>
     
@@ -344,15 +344,6 @@
   </url>
   
   <url>
-    <loc>https://blog.sctux.cc/2015/10/23/e8-bf-90-e7-bb-b4-e4-ba-ba-e4-bd-a0-e5-ba-94-e8-af-a5-e4-ba-86-e8-a7-a3-e7-9a-84-e4-b8-89-e5-bc-a0-e6-ad-a6-e5-8a-9f-e5-bf-83-e6-b3-95-e5-9b-be-e8-bd-ac-e8-bd-bd/</loc>
-    
-    <lastmod>2025-09-01</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
     <loc>https://blog.sctux.cc/2015/04/23/e9-80-9a-e8-bf-87-ulimit-e6-94-b9-e5-96-84-e7-b3-bb-e7-bb-9f-e6-80-a7-e8-83-bd/</loc>
     
     <lastmod>2025-09-01</lastmod>
@@ -371,7 +362,7 @@
   </url>
   
   <url>
-    <loc>https://blog.sctux.cc/2015/11/14/elkkafka-e4-bc-81-e4-b8-9a-e6-97-a5-e5-bf-97-e6-94-b6-e9-9b-86-e5-b9-b3-e5-8f-b0-e4-b8-80/</loc>
+    <loc>https://blog.sctux.cc/2015/11/14/elkkafka-e4-bc-81-e4-b8-9a-e6-97-a5-e5-bf-97-e6-94-b6-e9-9b-86-e5-b9-b3-e5-8f-b0-e4-ba-8c/</loc>
     
     <lastmod>2025-09-01</lastmod>
     
@@ -380,7 +371,7 @@
   </url>
   
   <url>
-    <loc>https://blog.sctux.cc/2015/11/14/elkkafka-e4-bc-81-e4-b8-9a-e6-97-a5-e5-bf-97-e6-94-b6-e9-9b-86-e5-b9-b3-e5-8f-b0-e4-ba-8c/</loc>
+    <loc>https://blog.sctux.cc/2015/11/14/elkkafka-e4-bc-81-e4-b8-9a-e6-97-a5-e5-bf-97-e6-94-b6-e9-9b-86-e5-b9-b3-e5-8f-b0-e4-b8-80/</loc>
     
     <lastmod>2025-09-01</lastmod>
     
@@ -407,15 +398,6 @@
   </url>
   
   <url>
-    <loc>https://blog.sctux.cc/2018/06/27/flask_kubenertes/</loc>
-    
-    <lastmod>2025-09-01</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
     <loc>https://blog.sctux.cc/2016/07/14/flaskbootstrap-e5-86-99-e7-99-bb-e5-bd-95-e9-a1-b5-e9-9d-a2/</loc>
     
     <lastmod>2025-09-01</lastmod>
@@ -434,6 +416,15 @@
   </url>
   
   <url>
+    <loc>https://blog.sctux.cc/2018/06/27/flask_kubenertes/</loc>
+    
+    <lastmod>2025-09-01</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
     <loc>https://blog.sctux.cc/2015/09/14/git-e4-bb-a3-e7-a0-81-e6-8b-89-e5-8f-96-e3-80-81-e5-90-8c-e6-ad-a5-e3-80-81-e9-80-9a-e7-9f-a5/</loc>
     
     <lastmod>2025-09-01</lastmod>
@@ -443,7 +434,7 @@
   </url>
   
   <url>
-    <loc>https://blog.sctux.cc/2018/07/03/how-to-change-ingressnginx-nginxs-configuration/</loc>
+    <loc>https://blog.sctux.cc/2017/02/21/how-to-install-gateonewebssh/</loc>
     
     <lastmod>2025-09-01</lastmod>
     
@@ -452,7 +443,7 @@
   </url>
   
   <url>
-    <loc>https://blog.sctux.cc/2017/02/21/how-to-install-gateonewebssh/</loc>
+    <loc>https://blog.sctux.cc/2018/07/03/how-to-change-ingressnginx-nginxs-configuration/</loc>
     
     <lastmod>2025-09-01</lastmod>
     
@@ -488,6 +479,15 @@
   </url>
   
   <url>
+    <loc>https://blog.sctux.cc/2018/12/09/k8s-yaml-bian-xie-xiao-ji-qiao/</loc>
+    
+    <lastmod>2025-09-01</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
     <loc>https://blog.sctux.cc/2018/12/07/k8s-ji-qun-zhongpause-rong-qi-shi-gan-ma-de/</loc>
     
     <lastmod>2025-09-01</lastmod>
@@ -497,7 +497,7 @@
   </url>
   
   <url>
-    <loc>https://blog.sctux.cc/2018/12/09/k8s-yaml-bian-xie-xiao-ji-qiao/</loc>
+    <loc>https://blog.sctux.cc/2018/12/03/kubernetes-diao-du-zhinodeselector-trashed/</loc>
     
     <lastmod>2025-09-01</lastmod>
     
@@ -524,16 +524,7 @@
   </url>
   
   <url>
-    <loc>https://blog.sctux.cc/2018/12/10/kubernetes-deployment-rollingupdate/</loc>
-    
-    <lastmod>2025-09-01</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://blog.sctux.cc/2018/12/03/kubernetes-diao-du-zhinodeselector-trashed/</loc>
+    <loc>https://blog.sctux.cc/2018/12/18/kubernetes-liveness/</loc>
     
     <lastmod>2025-09-01</lastmod>
     
@@ -560,7 +551,7 @@
   </url>
   
   <url>
-    <loc>https://blog.sctux.cc/2018/12/18/kubernetes-liveness/</loc>
+    <loc>https://blog.sctux.cc/2018/12/10/kubernetes-deployment-rollingupdate/</loc>
     
     <lastmod>2025-09-01</lastmod>
     
@@ -596,15 +587,6 @@
   </url>
   
   <url>
-    <loc>https://blog.sctux.cc/2018/12/22/kubernetes-static-pod/</loc>
-    
-    <lastmod>2025-09-01</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
     <loc>https://blog.sctux.cc/2018/12/12/kubernetes_pod_access/</loc>
     
     <lastmod>2025-09-01</lastmod>
@@ -614,7 +596,7 @@
   </url>
   
   <url>
-    <loc>https://blog.sctux.cc/2017/05/31/lan-jing-ping-tai-shi-jian-ji-ying-yong-2/</loc>
+    <loc>https://blog.sctux.cc/2018/12/15/kubernetes-storage/</loc>
     
     <lastmod>2025-09-01</lastmod>
     
@@ -623,7 +605,7 @@
   </url>
   
   <url>
-    <loc>https://blog.sctux.cc/2018/12/15/kubernetes-storage/</loc>
+    <loc>https://blog.sctux.cc/2018/12/04/li-jiekubernetes-de-qin-he-xing-diao-du/</loc>
     
     <lastmod>2025-09-01</lastmod>
     
@@ -650,6 +632,24 @@
   </url>
   
   <url>
+    <loc>https://blog.sctux.cc/2017/05/31/lan-jing-ping-tai-shi-jian-ji-ying-yong-2/</loc>
+    
+    <lastmod>2025-09-01</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://blog.sctux.cc/2018/12/22/kubernetes-static-pod/</loc>
+    
+    <lastmod>2025-09-01</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
     <loc>https://blog.sctux.cc/2016/03/29/lvm-chuang-jian/</loc>
     
     <lastmod>2025-09-01</lastmod>
@@ -668,7 +668,7 @@
   </url>
   
   <url>
-    <loc>https://blog.sctux.cc/2018/12/04/li-jiekubernetes-de-qin-he-xing-diao-du/</loc>
+    <loc>https://blog.sctux.cc/2016/05/02/mongodb-ji-ben-cao-zuo/</loc>
     
     <lastmod>2025-09-01</lastmod>
     
@@ -677,7 +677,7 @@
   </url>
   
   <url>
-    <loc>https://blog.sctux.cc/2016/05/02/mongodb-ji-ben-cao-zuo/</loc>
+    <loc>https://blog.sctux.cc/2016/03/19/mysql-e6-8a-a5-e9-94-99error-1030-hy000-e8-a7-a3-e5-86-b3-e8-bf-87-e7-a8-8b/</loc>
     
     <lastmod>2025-09-01</lastmod>
     
@@ -704,15 +704,6 @@
   </url>
   
   <url>
-    <loc>https://blog.sctux.cc/2016/03/19/mysql-e6-8a-a5-e9-94-99error-1030-hy000-e8-a7-a3-e5-86-b3-e8-bf-87-e7-a8-8b/</loc>
-    
-    <lastmod>2025-09-01</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
     <loc>https://blog.sctux.cc/2014/08/21/perl-warning-falling-back-to-the-standard-locale-c/</loc>
     
     <lastmod>2025-09-01</lastmod>
@@ -731,15 +722,6 @@
   </url>
   
   <url>
-    <loc>https://blog.sctux.cc/2015/09/10/python-e9-93-be-e6-8e-a5mysql-e6-95-b0-e6-8d-ae-e5-ba-93-e7-9a-84-e4-b8-80-e4-ba-9b-e6-93-8d-e4-bd-9c/</loc>
-    
-    <lastmod>2025-09-01</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
     <loc>https://blog.sctux.cc/2015/09/10/python-e5-8f-91-e9-80-81-e9-82-ae-e4-bb-b6-e9-82-ae-e4-bb-b6-e5-86-85-e5-ae-b9-e4-bb-8e-e6-96-87-e4-bb-b6-e8-af-bb-e5-85-a5/</loc>
     
     <lastmod>2025-09-01</lastmod>
@@ -749,7 +731,7 @@
   </url>
   
   <url>
-    <loc>https://blog.sctux.cc/2016/05/08/qianlima/</loc>
+    <loc>https://blog.sctux.cc/2015/09/10/python-e9-93-be-e6-8e-a5mysql-e6-95-b0-e6-8d-ae-e5-ba-93-e7-9a-84-e4-b8-80-e4-ba-9b-e6-93-8d-e4-bd-9c/</loc>
     
     <lastmod>2025-09-01</lastmod>
     
@@ -759,6 +741,15 @@
   
   <url>
     <loc>https://blog.sctux.cc/2015/09/15/python-os-system-e7-9a-84-e7-bb-93-e6-9e-9c-e4-b8-8d-e8-83-bd-e8-b5-8b-e5-80-bc-e5-88-b0-e5-8f-98-e9-87-8f/</loc>
+    
+    <lastmod>2025-09-01</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://blog.sctux.cc/2016/05/08/qianlima/</loc>
     
     <lastmod>2025-09-01</lastmod>
     
@@ -785,7 +776,7 @@
   </url>
   
   <url>
-    <loc>https://blog.sctux.cc/2018/07/14/ru-he-jiangpod-zhong-decontainer-shi-qu-geng-gai-w/</loc>
+    <loc>https://blog.sctux.cc/2015/10/23/e8-bf-90-e7-bb-b4-e4-ba-ba-e4-bd-a0-e5-ba-94-e8-af-a5-e4-ba-86-e8-a7-a3-e7-9a-84-e4-b8-89-e5-bc-a0-e6-ad-a6-e5-8a-9f-e5-bf-83-e6-b3-95-e5-9b-be-e8-bd-ac-e8-bd-bd/</loc>
     
     <lastmod>2025-09-01</lastmod>
     
@@ -794,7 +785,7 @@
   </url>
   
   <url>
-    <loc>https://blog.sctux.cc/2018/03/18/ru-he-shi-xianmysql-shu-ju-ku-cha-yi-hua-dui-bi/</loc>
+    <loc>https://blog.sctux.cc/2018/07/14/ru-he-jiangpod-zhong-decontainer-shi-qu-geng-gai-w/</loc>
     
     <lastmod>2025-09-01</lastmod>
     
@@ -812,97 +803,7 @@
   </url>
   
   <url>
-    <loc>https://blog.sctux.cc/2015/08/18/saltstack-pillar-de-shi-xian-fang-shi/</loc>
-    
-    <lastmod>2025-09-01</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
     <loc>https://blog.sctux.cc/2015/11/19/saltstack-e5-88-a9-e7-94-a8returners-e7-a8-8b-e5-ba-8f-e4-bf-9d-e5-ad-98-e6-89-a7-e8-a1-8c-e7-bb-93-e6-9e-9c-e5-88-b0mysql/</loc>
-    
-    <lastmod>2025-09-01</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://blog.sctux.cc/2014/08/28/tomcat-e7-8e-af-e5-a2-83-e6-90-ad-e5-bb-ba-e5-8f-8ajsp-e7-ab-99-e7-82-b9-e5-ae-9e-e7-8e-b0/</loc>
-    
-    <lastmod>2025-09-01</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://blog.sctux.cc/2014/08/27/snmp-e5-8d-8f-e8-ae-ae-e8-af-a6-e8-a7-a3/</loc>
-    
-    <lastmod>2025-09-01</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://blog.sctux.cc/2018/08/06/tong-guoconsultemplate-shi-xian-dong-tai-pei-zhi-f/</loc>
-    
-    <lastmod>2025-09-01</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://blog.sctux.cc/2015/03/09/vim-nginx-e9-85-8d-e7-bd-ae-e6-96-87-e4-bb-b6-e8-af-ad-e6-b3-95-e9-ab-98-e4-ba-ae/</loc>
-    
-    <lastmod>2025-09-01</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://blog.sctux.cc/2014/07/19/vmware-clone-e9-99-b7-e9-98-b1/</loc>
-    
-    <lastmod>2025-09-01</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://blog.sctux.cc/2013/06/19/vsftp-e5-bc-80-e5-90-af-pasv-e6-a8-a1-e5-bc-8f/</loc>
-    
-    <lastmod>2025-09-01</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://blog.sctux.cc/2015/11/21/zabbix-e5-be-ae-e4-bf-a1-e6-8a-a5-e8-ad-a6/</loc>
-    
-    <lastmod>2025-09-01</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://blog.sctux.cc/2014/11/04/zabbix-e6-b8-85-e7-90-86-e8-bf-87-e4-b9-85-e7-9a-84-e5-8e-86-e5-8f-b2-e4-bf-a1-e6-81-af/</loc>
-    
-    <lastmod>2025-09-01</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://blog.sctux.cc/2015/04/02/vsftp-xu-ni-yong-hu-she-zhi-bu-tong-quan-xian/</loc>
     
     <lastmod>2025-09-01</lastmod>
     
@@ -920,6 +821,87 @@
   </url>
   
   <url>
+    <loc>https://blog.sctux.cc/2014/08/27/snmp-e5-8d-8f-e8-ae-ae-e8-af-a6-e8-a7-a3/</loc>
+    
+    <lastmod>2025-09-01</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://blog.sctux.cc/2018/03/18/ru-he-shi-xianmysql-shu-ju-ku-cha-yi-hua-dui-bi/</loc>
+    
+    <lastmod>2025-09-01</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://blog.sctux.cc/2018/08/06/tong-guoconsultemplate-shi-xian-dong-tai-pei-zhi-f/</loc>
+    
+    <lastmod>2025-09-01</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://blog.sctux.cc/2014/08/28/tomcat-e7-8e-af-e5-a2-83-e6-90-ad-e5-bb-ba-e5-8f-8ajsp-e7-ab-99-e7-82-b9-e5-ae-9e-e7-8e-b0/</loc>
+    
+    <lastmod>2025-09-01</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://blog.sctux.cc/2015/03/09/vim-nginx-e9-85-8d-e7-bd-ae-e6-96-87-e4-bb-b6-e8-af-ad-e6-b3-95-e9-ab-98-e4-ba-ae/</loc>
+    
+    <lastmod>2025-09-01</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://blog.sctux.cc/2013/06/19/vsftp-e5-bc-80-e5-90-af-pasv-e6-a8-a1-e5-bc-8f/</loc>
+    
+    <lastmod>2025-09-01</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://blog.sctux.cc/2014/07/19/vmware-clone-e9-99-b7-e9-98-b1/</loc>
+    
+    <lastmod>2025-09-01</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://blog.sctux.cc/2015/11/21/zabbix-e5-be-ae-e4-bf-a1-e6-8a-a5-e8-ad-a6/</loc>
+    
+    <lastmod>2025-09-01</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://blog.sctux.cc/2015/04/02/vsftp-xu-ni-yong-hu-she-zhi-bu-tong-quan-xian/</loc>
+    
+    <lastmod>2025-09-01</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
     <loc>https://blog.sctux.cc/2015/10/23/zabbix-e7-9b-91-e6-8e-a7mysql-e7-8a-b6-e6-80-81-e4-bb-a5-e5-8f-8amysql-e4-b8-bb-e4-bb-8e/</loc>
     
     <lastmod>2025-09-01</lastmod>
@@ -929,7 +911,7 @@
   </url>
   
   <url>
-    <loc>https://blog.sctux.cc/2014/06/16/zabbix-server-is-not-running-e9-94-99-e8-af-af-e7-9a-84-e8-a7-a3-e5-86-b3/</loc>
+    <loc>https://blog.sctux.cc/2014/11/04/zabbix-e6-b8-85-e7-90-86-e8-bf-87-e4-b9-85-e7-9a-84-e5-8e-86-e5-8f-b2-e4-bf-a1-e6-81-af/</loc>
     
     <lastmod>2025-09-01</lastmod>
     
@@ -947,7 +929,25 @@
   </url>
   
   <url>
+    <loc>https://blog.sctux.cc/2014/06/16/zabbix-server-is-not-running-e9-94-99-e8-af-af-e7-9a-84-e8-a7-a3-e5-86-b3/</loc>
+    
+    <lastmod>2025-09-01</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
     <loc>https://blog.sctux.cc/2022/05/12/%E8%87%AA%E5%8A%A8%E5%8C%96%E5%B7%A1%E6%A3%80%E7%9A%84%E5%BF%85%E8%A6%81%E6%80%A7%E4%BB%A5%E5%8F%8A%E9%87%8D%E8%A6%81%E6%80%A7/</loc>
+    
+    <lastmod>2025-09-01</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://blog.sctux.cc/2015/08/18/saltstack-pillar-de-shi-xian-fang-shi/</loc>
     
     <lastmod>2025-09-01</lastmod>
     
@@ -1058,13 +1058,6 @@
   </url>
   
   <url>
-    <loc>https://blog.sctux.cc/tags/Alertmanager/</loc>
-    <lastmod>2026-09-16</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
     <loc>https://blog.sctux.cc/tags/%E6%8B%A8%E6%B5%8B%E7%9B%91%E6%8E%A7/</loc>
     <lastmod>2026-09-16</lastmod>
     <changefreq>weekly</changefreq>
@@ -1093,6 +1086,13 @@
   </url>
   
   <url>
+    <loc>https://blog.sctux.cc/tags/Alertmanager/</loc>
+    <lastmod>2026-09-16</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
     <loc>https://blog.sctux.cc/tags/docker-registry/</loc>
     <lastmod>2026-09-16</lastmod>
     <changefreq>weekly</changefreq>
@@ -1114,13 +1114,6 @@
   </url>
   
   <url>
-    <loc>https://blog.sctux.cc/tags/crond/</loc>
-    <lastmod>2026-09-16</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
     <loc>https://blog.sctux.cc/tags/saltstack/</loc>
     <lastmod>2026-09-16</lastmod>
     <changefreq>weekly</changefreq>
@@ -1136,6 +1129,13 @@
   
   <url>
     <loc>https://blog.sctux.cc/tags/nospace/</loc>
+    <lastmod>2026-09-16</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>https://blog.sctux.cc/tags/crond/</loc>
     <lastmod>2026-09-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
@@ -1212,13 +1212,6 @@
   </url>
   
   <url>
-    <loc>https://blog.sctux.cc/tags/kubernets/</loc>
-    <lastmod>2026-09-16</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
     <loc>https://blog.sctux.cc/tags/bootstrap/</loc>
     <lastmod>2026-09-16</lastmod>
     <changefreq>weekly</changefreq>
@@ -1227,6 +1220,13 @@
   
   <url>
     <loc>https://blog.sctux.cc/tags/flask/</loc>
+    <lastmod>2026-09-16</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>https://blog.sctux.cc/tags/kubernets/</loc>
     <lastmod>2026-09-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
@@ -1338,6 +1338,48 @@
   </url>
   
   <url>
+    <loc>https://blog.sctux.cc/tags/liveness-probe/</loc>
+    <lastmod>2026-09-16</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>https://blog.sctux.cc/tags/readiness-probe/</loc>
+    <lastmod>2026-09-16</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>https://blog.sctux.cc/tags/restartPolicy/</loc>
+    <lastmod>2026-09-16</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>https://blog.sctux.cc/tags/etcd-cluster/</loc>
+    <lastmod>2026-09-16</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>https://blog.sctux.cc/tags/etcd-secret/</loc>
+    <lastmod>2026-09-16</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>https://blog.sctux.cc/tags/log/</loc>
+    <lastmod>2026-09-16</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
     <loc>https://blog.sctux.cc/tags/deployment/</loc>
     <lastmod>2026-09-16</lastmod>
     <changefreq>weekly</changefreq>
@@ -1373,48 +1415,6 @@
   </url>
   
   <url>
-    <loc>https://blog.sctux.cc/tags/etcd-cluster/</loc>
-    <lastmod>2026-09-16</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
-    <loc>https://blog.sctux.cc/tags/etcd-secret/</loc>
-    <lastmod>2026-09-16</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
-    <loc>https://blog.sctux.cc/tags/log/</loc>
-    <lastmod>2026-09-16</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
-    <loc>https://blog.sctux.cc/tags/liveness-probe/</loc>
-    <lastmod>2026-09-16</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
-    <loc>https://blog.sctux.cc/tags/readiness-probe/</loc>
-    <lastmod>2026-09-16</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
-    <loc>https://blog.sctux.cc/tags/restartPolicy/</loc>
-    <lastmod>2026-09-16</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
     <loc>https://blog.sctux.cc/tags/kuberntes/</loc>
     <lastmod>2026-09-16</lastmod>
     <changefreq>weekly</changefreq>
@@ -1444,13 +1444,6 @@
   
   <url>
     <loc>https://blog.sctux.cc/tags/%E6%8C%81%E4%B9%85%E5%8C%96%E5%AD%98%E5%82%A8/</loc>
-    <lastmod>2026-09-16</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
-    <loc>https://blog.sctux.cc/tags/Static-Pod/</loc>
     <lastmod>2026-09-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
@@ -1500,6 +1493,13 @@
   
   <url>
     <loc>https://blog.sctux.cc/tags/NFS-PV%E5%8A%A8%E6%80%81%E4%BE%9B%E7%BB%99/</loc>
+    <lastmod>2026-09-16</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>https://blog.sctux.cc/tags/Static-Pod/</loc>
     <lastmod>2026-09-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
@@ -1576,14 +1576,14 @@
   </url>
   
   <url>
-    <loc>https://blog.sctux.cc/tags/nrpe/</loc>
+    <loc>https://blog.sctux.cc/tags/mysql-error/</loc>
     <lastmod>2026-09-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
-    <loc>https://blog.sctux.cc/tags/mysql-error/</loc>
+    <loc>https://blog.sctux.cc/tags/nrpe/</loc>
     <lastmod>2026-09-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
@@ -1653,6 +1653,13 @@
   </url>
   
   <url>
+    <loc>https://blog.sctux.cc/tags/consul/</loc>
+    <lastmod>2026-09-16</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
     <loc>https://blog.sctux.cc/tags/Java/</loc>
     <lastmod>2026-09-16</lastmod>
     <changefreq>weekly</changefreq>
@@ -1668,13 +1675,6 @@
   
   <url>
     <loc>https://blog.sctux.cc/tags/tomcat/</loc>
-    <lastmod>2026-09-16</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
-    <loc>https://blog.sctux.cc/tags/consul/</loc>
     <lastmod>2026-09-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
@@ -1760,13 +1760,6 @@
   </url>
   
   <url>
-    <loc>https://blog.sctux.cc/categories/monitor/</loc>
-    <lastmod>2026-09-16</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
     <loc>https://blog.sctux.cc/categories/%E7%9B%91%E6%8E%A7%E5%91%8A%E8%AD%A6/</loc>
     <lastmod>2026-09-16</lastmod>
     <changefreq>weekly</changefreq>
@@ -1774,14 +1767,14 @@
   </url>
   
   <url>
-    <loc>https://blog.sctux.cc/categories/docker/</loc>
+    <loc>https://blog.sctux.cc/categories/monitor/</loc>
     <lastmod>2026-09-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
-    <loc>https://blog.sctux.cc/categories/Monitor/</loc>
+    <loc>https://blog.sctux.cc/categories/docker/</loc>
     <lastmod>2026-09-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
@@ -1802,6 +1795,13 @@
   </url>
   
   <url>
+    <loc>https://blog.sctux.cc/categories/Monitor/</loc>
+    <lastmod>2026-09-16</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
     <loc>https://blog.sctux.cc/categories/%E6%95%85%E9%9A%9C%E5%A4%84%E7%90%86/</loc>
     <lastmod>2026-09-16</lastmod>
     <changefreq>weekly</changefreq>
@@ -1816,21 +1816,7 @@
   </url>
   
   <url>
-    <loc>https://blog.sctux.cc/categories/%E5%BF%83%E6%83%85%E9%9A%8F%E7%AC%94/</loc>
-    <lastmod>2026-09-16</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
     <loc>https://blog.sctux.cc/categories/Monitor/Other/</loc>
-    <lastmod>2026-09-16</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
-    <loc>https://blog.sctux.cc/categories/kubernets/</loc>
     <lastmod>2026-09-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
@@ -1851,7 +1837,7 @@
   </url>
   
   <url>
-    <loc>https://blog.sctux.cc/categories/Docker/</loc>
+    <loc>https://blog.sctux.cc/categories/kubernets/</loc>
     <lastmod>2026-09-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
@@ -1865,7 +1851,7 @@
   </url>
   
   <url>
-    <loc>https://blog.sctux.cc/categories/kubernetes/</loc>
+    <loc>https://blog.sctux.cc/categories/Docker/</loc>
     <lastmod>2026-09-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
@@ -1873,6 +1859,13 @@
   
   <url>
     <loc>https://blog.sctux.cc/categories/Python/%E8%84%9A%E6%9C%AC%E7%BC%96%E7%A8%8B/</loc>
+    <lastmod>2026-09-16</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>https://blog.sctux.cc/categories/kubernetes/</loc>
     <lastmod>2026-09-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
@@ -1908,6 +1901,13 @@
   
   <url>
     <loc>https://blog.sctux.cc/categories/Docker/%E8%87%AA%E5%8A%A8%E5%8C%96%E8%BF%90%E7%BB%B4/</loc>
+    <lastmod>2026-09-16</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>https://blog.sctux.cc/categories/%E5%BF%83%E6%83%85%E9%9A%8F%E7%AC%94/</loc>
     <lastmod>2026-09-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
