@@ -6,7 +6,7 @@
   <link href="https://blog.sctux.cc/atom.xml" rel="self"/>
   
   <link href="https://blog.sctux.cc/"/>
-  <updated>2026-09-16T13:37:25.167Z</updated>
+  <updated>2026-09-12T08:31:06.692Z</updated>
   <id>https://blog.sctux.cc/</id>
   
   <author>
@@ -15,33 +15,6 @@
   </author>
   
   <generator uri="https://hexo.io/">Hexo</generator>
-  
-  <entry>
-    <title>Cloudflare Origin Rules 架构与配置指南</title>
-    <link href="https://blog.sctux.cc/2026/09/16/Cloudflare-Origin-Rules-jia-gou-yu-pei-zhi-zhi-nan/"/>
-    <id>https://blog.sctux.cc/2026/09/16/Cloudflare-Origin-Rules-jia-gou-yu-pei-zhi-zhi-nan/</id>
-    <published>2026-09-16T06:00:00.000Z</published>
-    <updated>2026-09-16T13:37:25.167Z</updated>
-    
-    <content type="html"><![CDATA[<h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>在单负载均衡器（LB）绑定多端口的后端架构中，Cloudflare 的 <strong>Origin Rules（源站规则）</strong> 提供了灵活的 HTTP 请求重写能力。通过在 Cloudflare 边缘节点匹配特定请求条件（如主机名），动态修改发往源站的目标连接端口，实现了流量的精准分发与统一安全暴露。</p><hr><h2 id="工作原理"><a href="#工作原理" class="headerlink" title="工作原理"></a>工作原理</h2><ol><li><strong>客户端请求</strong>：用户使用标准的 HTTP/HTTPS 端口（如 80 或 443）访问目标域名。</li><li><strong>边缘节点匹配</strong>：流量到达 Cloudflare 边缘节点后，匹配预设的 Origin Rules 条件（例如 <code>主机名 等于 example.com</code>）。</li><li><strong>端口动态重写</strong>：边缘节点将请求的目标端口动态更改为后端负载均衡器实际监听的自定义端口（例如 <code>1031</code>）。</li><li><strong>回源与响应</strong>：Cloudflare 节点直接连接后端负载均衡器的指定端口，并将回源响应返回给客户端。</li></ol><hr><h2 id="核心优势"><a href="#核心优势" class="headerlink" title="核心优势"></a>核心优势</h2><ul><li><strong>隐藏真实端口与服务结构</strong><br>外部客户端始终只需访问标准的 80/443 端口，后端真实服务端口（如 1031、8080 等）完全隐藏在 Cloudflare 代理之后，显著降低被直接扫描和攻击的风险。</li><li><strong>突破标准 CDN 代理限制</strong><br>Cloudflare 默认仅支持特定标准端口代理。利用 Origin Rules 的端口重写功能，可将任意非标准后端端口映射到标准域名，免去改动后端端口监听的成本。</li><li><strong>简化负载均衡器（LB）路由配置</strong><br>无需在后端负载均衡器前端配置复杂的域名匹配与转发规则，所有的域名到端口映射逻辑收敛在 Cloudflare 端统一管理。</li><li><strong>灵活的域名与 微服务路由</strong><br>支持按域名或子域名精准分发至后端同一 LB 的不同端口，实现微服务与多站点的便捷路由控制。</li></ul><hr><h2 id="端口映射配置参考"><a href="#端口映射配置参考" class="headerlink" title="端口映射配置参考"></a>端口映射配置参考</h2><table><thead><tr><th>域名条件 (Matching Condition)</th><th>边缘访问端口</th><th>源站重写端口 (Origin Port)</th><th>适用场景 / 对应服务</th></tr></thead><tbody><tr><td><code>example.com</code></td><td>443</td><td>1031</td><td>主站服务</td></tr><tr><td><code>www.example.com</code></td><td>443</td><td>1031</td><td>主站 Web 镜像</td></tr><tr><td><code>api.example.com</code> <em>(配置示例)</em></td><td>443</td><td>8080</td><td>后端 API 服务</td></tr><tr><td><code>admin.example.com</code> <em>(配置示例)</em></td><td>443</td><td>9000</td><td>管理后台</td></tr></tbody></table><blockquote><p>注：以上 <code>example.com / api.example.com / admin.example.com</code> 均为<strong>脱敏占位</strong>，生产环境请替换为真实域名。</p></blockquote><hr><h2 id="适用场景"><a href="#适用场景" class="headerlink" title="适用场景"></a>适用场景</h2><ul><li>单台 LB 对外暴露多个不同端口的服务（主站、API、管理后台、内部工具）</li><li>后端服务已绑定非标准端口，不便改动监听</li><li>需要在 Cloudflare 边缘统一接入 HTTPS / WAF / Bot 防护</li><li>想收敛后端路由配置，把「域名 → 端口」映射交给边缘处理</li></ul><hr><h2 id="注意事项与限制"><a href="#注意事项与限制" class="headerlink" title="注意事项与限制"></a>注意事项与限制</h2><ol><li><strong>Cloudflare 套餐要求</strong>：Origin Rules 在 Free 套餐下数量受限（10 条以内），多端口场景建议至少 Pro 套餐。</li><li><strong>HTTPS 回源</strong>：源站必须是 Cloudflare 可信任的证书（Origin CA / 自签 / CA 签发均可），否则会回源失败。</li><li><strong>WebSocket / gRPC</strong>：Origin Rules 重写的是 TCP 端口，应用层协议透传，仍需后端服务自身支持。</li><li><strong>回源 IP 白名单</strong>：Cloudflare 边缘 IP 段需要加入 LB / 安全组白名单，否则 403。</li><li><strong>调试建议</strong>：先在 Cloudflare 后台 → Rules → Origin Rules 中<strong>用 <code>Evaluate</code> 工具测试单条规则</strong>，确认匹配后再批量启用；建议每条规则配独立注释，便于维护。</li></ol><hr><h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><ul><li>Cloudflare 官方文档：<a href="https://developers.cloudflare.com/rules/origin-rules/">Origin Rules</a></li><li>Cloudflare IP 段列表：<a href="https://www.cloudflare.com/ips/">https://www.cloudflare.com/ips/</a></li></ul>]]></content>
-    
-    
-    <summary type="html">在单 LB 绑定多端口后端的架构中，通过 Cloudflare Origin Rules 实现标准 443 端口对外、按域名精准分发到后端自定义端口，隐藏真实服务结构。</summary>
-    
-    
-    
-    <category term="必备知识" scheme="https://blog.sctux.cc/categories/%E5%BF%85%E5%A4%87%E7%9F%A5%E8%AF%86/"/>
-    
-    
-    <category term="Cloudflare" scheme="https://blog.sctux.cc/tags/Cloudflare/"/>
-    
-    <category term="CDN" scheme="https://blog.sctux.cc/tags/CDN/"/>
-    
-    <category term="网络架构" scheme="https://blog.sctux.cc/tags/%E7%BD%91%E7%BB%9C%E6%9E%B6%E6%9E%84/"/>
-    
-    <category term="反向代理" scheme="https://blog.sctux.cc/tags/%E5%8F%8D%E5%90%91%E4%BB%A3%E7%90%86/"/>
-    
-  </entry>
   
   <entry>
     <title>Boce-Site · 自托管拨测监控平台</title>
@@ -182,6 +155,33 @@
     <category term="自动化运维" scheme="https://blog.sctux.cc/tags/%E8%87%AA%E5%8A%A8%E5%8C%96%E8%BF%90%E7%BB%B4/"/>
     
     <category term="SRE" scheme="https://blog.sctux.cc/tags/SRE/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>Cloudflare Origin Rules 架构与配置指南</title>
+    <link href="https://blog.sctux.cc/2026/04/22/Cloudflare-Origin-Rules-jia-gou-yu-pei-zhi-zhi-nan/"/>
+    <id>https://blog.sctux.cc/2026/04/22/Cloudflare-Origin-Rules-jia-gou-yu-pei-zhi-zhi-nan/</id>
+    <published>2026-04-22T06:00:00.000Z</published>
+    <updated>2026-09-16T13:40:31.282Z</updated>
+    
+    <content type="html"><![CDATA[<h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>在单负载均衡器（LB）绑定多端口的后端架构中，Cloudflare 的 <strong>Origin Rules（源站规则）</strong> 提供了灵活的 HTTP 请求重写能力。通过在 Cloudflare 边缘节点匹配特定请求条件（如主机名），动态修改发往源站的目标连接端口，实现了流量的精准分发与统一安全暴露。</p><hr><h2 id="工作原理"><a href="#工作原理" class="headerlink" title="工作原理"></a>工作原理</h2><ol><li><strong>客户端请求</strong>：用户使用标准的 HTTP/HTTPS 端口（如 80 或 443）访问目标域名。</li><li><strong>边缘节点匹配</strong>：流量到达 Cloudflare 边缘节点后，匹配预设的 Origin Rules 条件（例如 <code>主机名 等于 example.com</code>）。</li><li><strong>端口动态重写</strong>：边缘节点将请求的目标端口动态更改为后端负载均衡器实际监听的自定义端口（例如 <code>1031</code>）。</li><li><strong>回源与响应</strong>：Cloudflare 节点直接连接后端负载均衡器的指定端口，并将回源响应返回给客户端。</li></ol><hr><h2 id="核心优势"><a href="#核心优势" class="headerlink" title="核心优势"></a>核心优势</h2><ul><li><strong>隐藏真实端口与服务结构</strong><br>外部客户端始终只需访问标准的 80/443 端口，后端真实服务端口（如 1031、8080 等）完全隐藏在 Cloudflare 代理之后，显著降低被直接扫描和攻击的风险。</li><li><strong>突破标准 CDN 代理限制</strong><br>Cloudflare 默认仅支持特定标准端口代理。利用 Origin Rules 的端口重写功能，可将任意非标准后端端口映射到标准域名，免去改动后端端口监听的成本。</li><li><strong>简化负载均衡器（LB）路由配置</strong><br>无需在后端负载均衡器前端配置复杂的域名匹配与转发规则，所有的域名到端口映射逻辑收敛在 Cloudflare 端统一管理。</li><li><strong>灵活的域名与 微服务路由</strong><br>支持按域名或子域名精准分发至后端同一 LB 的不同端口，实现微服务与多站点的便捷路由控制。</li></ul><hr><h2 id="端口映射配置参考"><a href="#端口映射配置参考" class="headerlink" title="端口映射配置参考"></a>端口映射配置参考</h2><table><thead><tr><th>域名条件 (Matching Condition)</th><th>边缘访问端口</th><th>源站重写端口 (Origin Port)</th><th>适用场景 / 对应服务</th></tr></thead><tbody><tr><td><code>example.com</code></td><td>443</td><td>1031</td><td>主站服务</td></tr><tr><td><code>www.example.com</code></td><td>443</td><td>1031</td><td>主站 Web 镜像</td></tr><tr><td><code>api.example.com</code> <em>(配置示例)</em></td><td>443</td><td>8080</td><td>后端 API 服务</td></tr><tr><td><code>admin.example.com</code> <em>(配置示例)</em></td><td>443</td><td>9000</td><td>管理后台</td></tr></tbody></table><blockquote><p>注：以上 <code>example.com / api.example.com / admin.example.com</code> 均为<strong>脱敏占位</strong>，生产环境请替换为真实域名。</p></blockquote><hr><h2 id="适用场景"><a href="#适用场景" class="headerlink" title="适用场景"></a>适用场景</h2><ul><li>单台 LB 对外暴露多个不同端口的服务（主站、API、管理后台、内部工具）</li><li>后端服务已绑定非标准端口，不便改动监听</li><li>需要在 Cloudflare 边缘统一接入 HTTPS / WAF / Bot 防护</li><li>想收敛后端路由配置，把「域名 → 端口」映射交给边缘处理</li></ul><hr><h2 id="注意事项与限制"><a href="#注意事项与限制" class="headerlink" title="注意事项与限制"></a>注意事项与限制</h2><ol><li><strong>Cloudflare 套餐要求</strong>：Origin Rules 在 Free 套餐下数量受限（10 条以内），多端口场景建议至少 Pro 套餐。</li><li><strong>HTTPS 回源</strong>：源站必须是 Cloudflare 可信任的证书（Origin CA / 自签 / CA 签发均可），否则会回源失败。</li><li><strong>WebSocket / gRPC</strong>：Origin Rules 重写的是 TCP 端口，应用层协议透传，仍需后端服务自身支持。</li><li><strong>回源 IP 白名单</strong>：Cloudflare 边缘 IP 段需要加入 LB / 安全组白名单，否则 403。</li><li><strong>调试建议</strong>：先在 Cloudflare 后台 → Rules → Origin Rules 中<strong>用 <code>Evaluate</code> 工具测试单条规则</strong>，确认匹配后再批量启用；建议每条规则配独立注释，便于维护。</li></ol><hr><h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><ul><li>Cloudflare 官方文档：<a href="https://developers.cloudflare.com/rules/origin-rules/">Origin Rules</a></li><li>Cloudflare IP 段列表：<a href="https://www.cloudflare.com/ips/">https://www.cloudflare.com/ips/</a></li></ul>]]></content>
+    
+    
+    <summary type="html">在单 LB 绑定多端口后端的架构中，通过 Cloudflare Origin Rules 实现标准 443 端口对外、按域名精准分发到后端自定义端口，隐藏真实服务结构。</summary>
+    
+    
+    
+    <category term="必备知识" scheme="https://blog.sctux.cc/categories/%E5%BF%85%E5%A4%87%E7%9F%A5%E8%AF%86/"/>
+    
+    
+    <category term="Cloudflare" scheme="https://blog.sctux.cc/tags/Cloudflare/"/>
+    
+    <category term="CDN" scheme="https://blog.sctux.cc/tags/CDN/"/>
+    
+    <category term="网络架构" scheme="https://blog.sctux.cc/tags/%E7%BD%91%E7%BB%9C%E6%9E%B6%E6%9E%84/"/>
+    
+    <category term="反向代理" scheme="https://blog.sctux.cc/tags/%E5%8F%8D%E5%90%91%E4%BB%A3%E7%90%86/"/>
     
   </entry>
   
